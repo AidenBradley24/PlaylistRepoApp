@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalPlaylistMasterLib", "LocalPlaylistMasterLib\LocalPlaylistMasterLib.csproj", "{CEC88AFC-A37F-4249-822D-78307C510EC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalPlaylistMasterCLI", "LocalPlaylistMasterCLI\LocalPlaylistMasterCLI.csproj", "{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CEC88AFC-A37F-4249-822D-78307C510EC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEC88AFC-A37F-4249-822D-78307C510EC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEC88AFC-A37F-4249-822D-78307C510EC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEC88AFC-A37F-4249-822D-78307C510EC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {71764DEB-B862-4D65-8488-E6C1D9A595B7}
+	EndGlobalSection
+EndGlobal
