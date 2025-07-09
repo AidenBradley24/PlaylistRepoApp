@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LocalPlaylistMasterCLI": {
+      "commandName": "Project",
+      "commandLineArgs": "init"
+    }
+  }
+}
