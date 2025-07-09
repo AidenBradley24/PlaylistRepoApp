@@ -1,4 +1,4 @@
-﻿using LocalPlaylistMasterLib;
+﻿using LocalPlaylistMasterLib.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LocalPlaylistMasterAPI;

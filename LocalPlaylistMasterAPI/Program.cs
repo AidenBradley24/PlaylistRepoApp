@@ -1,5 +1,6 @@
 using LocalPlaylistMasterAPI;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 // collect repo
 if (args.Length == 0) 
@@ -19,10 +20,12 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<PlayRepoDbContext>(serviceProvider =>
+builder.Services.AddScoped(serviceProvider =>
 {
-	var options = serviceProvider.GetRequiredService<DbContextOptions<PlayRepoDbContext>>();
-	return new PlayRepoDbContext(options, path.FullName);
+	var optionsBuilder = new DbContextOptionsBuilder<PlayRepoDbContext>();
+	var db = new PlayRepoDbContext(optionsBuilder.Options, path.FullName);
+	db.Database.EnsureCreated();
+	return db;
 });
 
 // Add Swagger services
