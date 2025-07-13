@@ -1,3 +1,4 @@
+using LocalPlaylistMasterLib;
 using LocalPlaylistMasterLib.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -5,7 +6,7 @@ namespace LocalPlaylistMasterAPI.Controllers
 {
 	[ApiController]
 	[Route("[controller]")]
-	public class RepoController(PlayRepoDbContext db) : ControllerBase
+	public class RepoController(PlayRepoDbContext db, ITaskService taskService) : ControllerBase
 	{
 		[HttpGet("get-media")]
 		public IEnumerable<Media> GetMedia([FromQuery] int pageSize, [FromQuery] int currentPage)
@@ -13,12 +14,23 @@ namespace LocalPlaylistMasterAPI.Controllers
 			return db.Media.Skip(pageSize * currentPage).Take(pageSize);
 		}
 
-		[HttpPost("post-media")]
-		public IActionResult PostMedia([FromBody] Media media)
+		[HttpPost("test")]
+		public IActionResult TestDelay([FromQuery] int milliseconds)
 		{
-			db.Add(media);
-			db.SaveChanges();
-			return CreatedAtAction(nameof(Media.Id), media.Id);
+			var id = taskService.StartTask(async (progress) =>
+			{
+				int remaining = milliseconds;
+				while (remaining > 0)
+				{
+					remaining -= 1000;
+					await Task.Delay(1000);
+					progress.Report(new TaskProgress { Progress = 100 * (milliseconds - remaining) / milliseconds, Status = "Running" });
+				}
+
+				progress.Report(TaskProgress.CompletedTask);
+			});
+
+			return CreatedAtAction(nameof(TestDelay), id);
 		}
 
 		[HttpPut("update-media")]

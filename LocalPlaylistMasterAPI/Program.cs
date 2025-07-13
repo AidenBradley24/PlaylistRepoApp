@@ -1,6 +1,5 @@
 using LocalPlaylistMasterAPI;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 // collect repo
 if (args.Length == 0) 
@@ -15,6 +14,7 @@ DirectoryInfo path = new(args[0]);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSingleton<ITaskService, TaskService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
