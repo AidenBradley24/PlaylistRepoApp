@@ -14,19 +14,20 @@ DirectoryInfo path = new(args[0]);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole(); 
+
 builder.Services.AddSingleton<ITaskService, TaskService>();
+builder.Services.AddSingleton<IPlayRepoService, PlayRepoService>(serviceProvider =>
+{
+	return new PlayRepoService(path.FullName);
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped(serviceProvider =>
-{
-	var optionsBuilder = new DbContextOptionsBuilder<PlayRepoDbContext>();
-	var db = new PlayRepoDbContext(optionsBuilder.Options, path.FullName);
-	db.Database.EnsureCreated();
-	return db;
-});
+builder.Services.AddDbContext<PlayRepoDbContext>();
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();

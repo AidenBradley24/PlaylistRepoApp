@@ -11,7 +11,7 @@ namespace LocalPlaylistMasterAPI.Controllers
 		[HttpGet("get-media")]
 		public IEnumerable<Media> GetMedia([FromQuery] int pageSize, [FromQuery] int currentPage)
 		{
-			return db.Media.Skip(pageSize * currentPage).Take(pageSize);
+			return db.Medias.Skip(pageSize * currentPage).Take(pageSize);
 		}
 
 		[HttpPost("test")]
@@ -27,10 +27,10 @@ namespace LocalPlaylistMasterAPI.Controllers
 					progress.Report(new TaskProgress { Progress = 100 * (milliseconds - remaining) / milliseconds, Status = "Running" });
 				}
 
-				progress.Report(TaskProgress.CompletedTask);
+				progress.Report(TaskProgress.FromCompleted());
 			});
 
-			return CreatedAtAction(nameof(TestDelay), id);
+			return AcceptedAtAction(nameof(TestDelay), id);
 		}
 
 		[HttpPut("update-media")]
@@ -47,6 +47,25 @@ namespace LocalPlaylistMasterAPI.Controllers
 			db.UpdateRange(media);
 			db.SaveChanges();
 			return Ok();
+		}
+
+		[HttpPost("ingest")]
+		public IActionResult Ingest([FromBody] string fileSpec)
+		{
+			FileSpec files;
+			Guid id;
+
+			try
+			{
+				files = new FileSpec(fileSpec);
+				id = taskService.StartTaskWithDb((progress, db) => db.Ingest([.. files], progress));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
+
+			return AcceptedAtAction(nameof(TestDelay), id);
 		}
 	}
 }
