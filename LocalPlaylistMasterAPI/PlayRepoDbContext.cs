@@ -44,7 +44,7 @@ public class PlayRepoDbContext : DbContext
 			if (matchCount == 1)
 			{
 				media = await matching.FirstAsync();
-				media.Name = Path.GetFileNameWithoutExtension(file.Name);
+				media.SyncFromMediaFile();
 				media.FilePath = playRepo.GetRelativePath(file);
 				updateCount++;
 			}
@@ -56,7 +56,7 @@ public class PlayRepoDbContext : DbContext
 			{
 				media = new()
 				{
-					Name = Path.GetFileNameWithoutExtension(file.Name),
+					Title = Path.GetFileNameWithoutExtension(file.Name),
 					Hash = hash,
 					FilePath = playRepo.GetRelativePath(file),
 				};

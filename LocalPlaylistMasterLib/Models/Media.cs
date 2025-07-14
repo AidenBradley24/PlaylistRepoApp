@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
 
 namespace LocalPlaylistMasterLib.Models;
@@ -9,19 +10,20 @@ public partial class Media
 
     public string? FilePath { get; set; }
     public byte[]? Hash { get; set; }
+	public required string Title { get; set; }
 
-    public required string Name { get; set; }
-
-    public string? Artists { get; set; }
+    public string[]? Artists { get; set; }
     public string? Album { get; set; }
     public string? Description { get; set; }
     public int Rating { get; set; }
-    public double TimeInSeconds { get; set; }
+    public TimeSpan? MediaLength { get; set; }
 
 	public const int UNINITIALIZED = -1;
 
 	public MediaSettings Settings { get; set; }
-    public bool Locked
+
+	[NotMapped]
+	public bool Locked
     {
         get => Settings.HasFlag(MediaSettings.locked);
         set
@@ -37,6 +39,7 @@ public partial class Media
         }
     }
 
+	[NotMapped]
 	public bool Downloaded
     {
         get => Settings.HasFlag(MediaSettings.downloaded);
@@ -53,8 +56,10 @@ public partial class Media
         }
     }
 
-	public string LengthString { get => TimeInSeconds == UNINITIALIZED ? "?" : TimeSpan.FromSeconds(TimeInSeconds).ToString(@"hh\:mm\:ss"); }
+	[NotMapped]
+	public string LengthString => MediaLength?.ToString(@"hh\:mm\:ss") ?? "?";
 
+	[NotMapped]
 	public string TruncatedDescription
 	{
 		get
@@ -63,13 +68,6 @@ public partial class Media
 			return WhiteSpace().Replace(truncated, " ");
 		}
 	}
-
-	public TimeSpan Length { get => TimeSpan.FromSeconds(TimeInSeconds); }
-
-	public string[] GetArtists()
-    {
-        return Artists?.Split(',') ?? [];
-    }
 
     [GeneratedRegex("\\s+")]
     private static partial Regex WhiteSpace();
@@ -81,7 +79,7 @@ public partial class Media
 
     public override string ToString()
     {
-        return $"#{Id} -- {Name}";
+        return $"#{Id} || {Title} || {(Hash != null ? Convert.ToBase64String(Hash) : "no hash")}";
     }
 }
 
