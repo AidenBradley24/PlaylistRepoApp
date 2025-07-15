@@ -1,8 +1,7 @@
-using LocalPlaylistMasterAPI;
-using Microsoft.EntityFrameworkCore;
+using PlaylistRepoAPI;
 
 // collect repo
-if (args.Length == 0) 
+if (args.Length == 0)
 {
 	Console.Error.WriteLine("Provide a repo directory path.");
 	Environment.Exit(1);
@@ -15,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole(); 
+builder.Logging.AddConsole();
 
 builder.Services.AddSingleton<ITaskService, TaskService>();
 builder.Services.AddSingleton<IPlayRepoService, PlayRepoService>(serviceProvider =>

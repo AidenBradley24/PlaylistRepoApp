@@ -1,4 +1,4 @@
-﻿namespace LocalPlaylistMasterAPI
+﻿namespace PlaylistRepoAPI
 {
 	public interface IYTDlpService
 	{

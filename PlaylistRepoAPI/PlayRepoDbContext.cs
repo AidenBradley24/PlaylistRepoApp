@@ -1,10 +1,9 @@
-﻿using LocalPlaylistMasterLib;
-using LocalPlaylistMasterLib.Models;
+﻿using PlaylistRepoLib;
+using PlaylistRepoLib.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using TagLib;
 
-namespace LocalPlaylistMasterAPI;
+namespace PlaylistRepoAPI;
 
 public class PlayRepoDbContext : DbContext
 {

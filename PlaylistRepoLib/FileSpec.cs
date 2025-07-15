@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace LocalPlaylistMasterLib
+namespace PlaylistRepoLib
 {
 	/// <summary>
 	/// Includes all files recursively inside of <paramref name="src"/>. Excludes files inside of dot directories.

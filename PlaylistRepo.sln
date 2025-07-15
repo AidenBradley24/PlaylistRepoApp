@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalPlaylistMasterLib", "LocalPlaylistMasterLib\LocalPlaylistMasterLib.csproj", "{CEC88AFC-A37F-4249-822D-78307C510EC1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaylistRepoLib", "PlaylistRepoLib\PlaylistRepoLib.csproj", "{CEC88AFC-A37F-4249-822D-78307C510EC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalPlaylistMasterCLI", "LocalPlaylistMasterCLI\LocalPlaylistMasterCLI.csproj", "{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaylistRepoCLI", "PlaylistRepoCLI\PlaylistRepoCLI.csproj", "{9588D41E-8EE4-4AD4-8124-BAF56BBACBBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalPlaylistMasterAPI", "LocalPlaylistMasterAPI\LocalPlaylistMasterAPI.csproj", "{EAD9102E-18EF-4E4F-9799-656784F20E61}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaylistRepoAPI", "PlaylistRepoAPI\PlaylistRepoAPI.csproj", "{EAD9102E-18EF-4E4F-9799-656784F20E61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,8 +1,8 @@
-using LocalPlaylistMasterLib;
-using LocalPlaylistMasterLib.Models;
+using PlaylistRepoLib;
+using PlaylistRepoLib.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LocalPlaylistMasterAPI.Controllers
+namespace PlaylistRepoAPI.Controllers
 {
 	[ApiController]
 	[Route("[controller]")]

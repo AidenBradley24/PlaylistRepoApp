@@ -1,6 +1,6 @@
-﻿using LocalPlaylistMasterLib.Models;
+﻿using PlaylistRepoLib.Models;
 
-namespace LocalPlaylistMasterAPI
+namespace PlaylistRepoAPI
 {
 	public static class MediaExtensions
 	{

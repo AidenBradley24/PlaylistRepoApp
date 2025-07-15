@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LocalPlaylistMasterLib\LocalPlaylistMasterLib.csproj" />
+    <ProjectReference Include="..\PlaylistRepoLib\PlaylistRepoLib.csproj" />
   </ItemGroup>
 
 </Project>

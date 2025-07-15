@@ -1,4 +1,4 @@
-namespace LocalPlaylistMasterLib
+namespace PlaylistRepoLib
 {
 	public class TaskProgress
 	{

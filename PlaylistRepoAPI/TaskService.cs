@@ -1,7 +1,7 @@
-﻿using LocalPlaylistMasterLib;
+﻿using PlaylistRepoLib;
 using System.Collections.Concurrent;
 
-namespace LocalPlaylistMasterAPI
+namespace PlaylistRepoAPI
 {
 	public interface ITaskService
 	{
@@ -31,7 +31,7 @@ namespace LocalPlaylistMasterAPI
 			Progress<TaskProgress> progress = new();
 			progress.ProgressChanged += (o, p) => ongoingTasks[id] = p;
 			((IProgress<TaskProgress>)progress).Report(new TaskProgress { Progress = -1, Status = "Running" });
-			var task = Task.Run(async () => 
+			var task = Task.Run(async () =>
 			{
 				try
 				{
