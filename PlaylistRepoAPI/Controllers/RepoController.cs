@@ -8,29 +8,16 @@ namespace PlaylistRepoAPI.Controllers
 	[Route("[controller]")]
 	public class RepoController(PlayRepoDbContext db, ITaskService taskService) : ControllerBase
 	{
+		[HttpGet("get-info")]
+		public string GetInfo()
+		{
+			return $"Media Count: {db.Medias.Count()}";
+		}
+
 		[HttpGet("get-media")]
 		public IEnumerable<Media> GetMedia([FromQuery] int pageSize, [FromQuery] int currentPage)
 		{
 			return db.Medias.Skip(pageSize * currentPage).Take(pageSize);
-		}
-
-		[HttpPost("test")]
-		public IActionResult TestDelay([FromQuery] int milliseconds)
-		{
-			var id = taskService.StartTask(async (progress) =>
-			{
-				int remaining = milliseconds;
-				while (remaining > 0)
-				{
-					remaining -= 1000;
-					await Task.Delay(1000);
-					progress.Report(new TaskProgress { Progress = 100 * (milliseconds - remaining) / milliseconds, Status = "Running" });
-				}
-
-				progress.Report(TaskProgress.FromCompleted());
-			});
-
-			return AcceptedAtAction(nameof(TestDelay), id);
 		}
 
 		[HttpPut("update-media")]
@@ -65,7 +52,7 @@ namespace PlaylistRepoAPI.Controllers
 				return BadRequest(ex.Message);
 			}
 
-			return AcceptedAtAction(nameof(TestDelay), id);
+			return AcceptedAtAction(nameof(Ingest), id);
 		}
 	}
 }

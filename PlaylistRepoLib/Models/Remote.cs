@@ -1,4 +1,4 @@
-﻿namespace PlaylistRepoLib;
+﻿namespace PlaylistRepoLib.Models;
 
 /// <summary>
 /// A bundle of data related to a remote playlist.

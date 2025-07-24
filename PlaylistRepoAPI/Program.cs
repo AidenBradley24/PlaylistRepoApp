@@ -11,6 +11,9 @@ DirectoryInfo path = new(args[0]);
 
 // build api
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddCommandLine(args);
+string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:4271";
+builder.WebHost.UseUrls(url);
 
 // Add services to the container.
 builder.Logging.ClearProviders();

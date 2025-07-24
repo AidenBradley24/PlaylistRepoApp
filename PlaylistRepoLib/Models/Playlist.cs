@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace LocalPlaylistMaster.Backend;
+namespace PlaylistRepoLib.Models;
 
 public partial record Playlist
 {

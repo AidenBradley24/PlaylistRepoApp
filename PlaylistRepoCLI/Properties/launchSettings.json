@@ -1,8 +1,19 @@
 {
   "profiles": {
-    "LocalPlaylistMasterCLI": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Init": {
       "commandName": "Project",
-      "commandLineArgs": "init"
+      "commandLineArgs": "init",
+      "workingDirectory": "..\\testrepos\\"
+    },
+    "Ingest": {
+      "commandName": "Project",
+      "commandLineArgs": "ingest",
+      "workingDirectory": "..\\testrepos\\",
+      "remoteDebugEnabled": false
     }
   }
 }

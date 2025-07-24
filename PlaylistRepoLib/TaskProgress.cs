@@ -6,8 +6,12 @@ namespace PlaylistRepoLib
 		public string? Status { get; init; }
 
 		public const int INDETERMINATE_PROGRESS = -1;
+		public const int ERROR = -2;
+		public const int COMPLETE = 100;
 
-		public bool IsCompleted => Progress == 100;
+		public bool IsCompleted => IsSuccess || IsError;
+		public bool IsSuccess => Progress == COMPLETE;
+		public bool IsError => Progress == ERROR;
 
 		public static TaskProgress FromCompleted(string message = "Completed")
 		{
@@ -22,7 +26,7 @@ namespace PlaylistRepoLib
 		{
 			return new TaskProgress()
 			{
-				Progress = INDETERMINATE_PROGRESS,
+				Progress = ERROR,
 				Status = ex.Message,
 			};
 		}
@@ -30,7 +34,7 @@ namespace PlaylistRepoLib
 		public static TaskProgress FromNumbers(int completed, int total, string message = "Running")
 		{
 			int progress = 100 * completed / total;
-			if (progress == 100) progress = 99;
+			if (progress == COMPLETE) progress = COMPLETE - 1;
 			return new TaskProgress()
 			{
 				Progress = progress,
