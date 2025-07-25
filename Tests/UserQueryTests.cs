@@ -1,106 +1,90 @@
-﻿using PlaylistRepoLib;
-using PlaylistRepoLib.Models;
+﻿using PlaylistRepoLib.UserQueries;
 using Xunit.Abstractions;
 
 namespace Tests
 {
 	public class UserQueryTests
 	{
-		private static readonly IEnumerable<Media> root =
+		private static readonly IEnumerable<TestModel> root =
 		[
-			new Media() { Title = "Item1", Rating = 1},
-			new Media() { Title = "Item2", Rating = 5},
-			new Media() { Title = "Item3", Rating = 10},
+			new TestModel() { Name = "Item1", IntValue = 1 },
+			new TestModel() { Name = "Item2", IntValue = 5 },
+			new TestModel() { Name = "Item3", IntValue = 10 },
 		];
 
 		private readonly ITestOutputHelper output;
+
 		public UserQueryTests(ITestOutputHelper output)
 		{
 			this.output = output;
 		}
 
-		private static UserQueryProvider<Media> GetProvider()
+		private static UserQueryProvider<TestModel> GetProvider()
 		{
-			return new UserQueryProvider<Media>(root.AsQueryable());
+			return new UserQueryProvider<TestModel>(root.AsQueryable());
 		}
 
-		private void Fail(string TEST)
+		[Theory]
+		[InlineData("ivalue = 1", new[] { "Item1" })]
+		[InlineData("ivalue != 5", new[] { "Item1", "Item3" })]
+		[InlineData("ivalue < 5", new[] { "Item1" })]
+		[InlineData("ivalue <= 5", new[] { "Item1", "Item2" })]
+		[InlineData("ivalue > 1", new[] { "Item2", "Item3" })]
+		[InlineData("ivalue >= 10", new[] { "Item3" })]
+		[InlineData("name = 'Item1'", new[] { "Item1" })]
+		[InlineData("name != 'Item1'", new[] { "Item2", "Item3" })]
+		[InlineData("name ^ 'Item'", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("name !^ 'Item3'", new[] { "Item1", "Item2" })]
+		[InlineData("name * 'em2'", new[] { "Item2" })]
+		[InlineData("name !* '3'", new[] { "Item1", "Item2" })]
+		public void Operator_Tests(string query, string[] expectedNames)
 		{
 			var provider = GetProvider();
-			var ex = Assert.Throws<InvalidUserQueryException>(() =>
-			{
-				var result = provider.EvaluateUserQuery(TEST);
-				output.WriteLine(result.Count().ToString());
-			});
+			var result = provider.EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		[Theory]
+		[InlineData("ivalue = 1 & name = 'Item1'", new[] { "Item1" })]
+		[InlineData("ivalue > 1 & ivalue < 10", new[] { "Item2" })]
+		[InlineData("name * 'Item' & ivalue >= 5", new[] { "Item2", "Item3" })]
+		[InlineData("ivalue = 1 & ivalue = 5", new string[] { })] // no match
+		public void AndOperator_Tests(string query, string[] expectedNames)
+		{
+			var result = GetProvider().EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		[Theory]
+		[InlineData("ivalue = 1, ivalue = 5", new[] { "Item1", "Item2" })]
+		[InlineData("name = 'Item2', name = 'Item3'", new[] { "Item2", "Item3" })]
+		[InlineData("ivalue = 1, ivalue = 5 & name = 'Item2'", new[] { "Item1", "Item2" })]
+		[InlineData("ivalue = 1, ivalue = 5 & name = 'Item3'", new[] { "Item1" })] // Item2 fails inner AND
+		public void OrOperator_Tests(string query, string[] expectedNames)
+		{
+			var result = GetProvider().EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		public static IEnumerable<object[]> InvalidQueries =>
+		[
+			["ivalue =="],
+			["name ^"],
+			["name = "],
+			["ivalue ^ 10"], // invalid operator on int
+			["name > 'z'"],  // invalid operator on string (if not allowed)
+		];
+
+		[Theory]
+		[MemberData(nameof(InvalidQueries))]
+		public void Invalid_Queries_Throw(string query)
+		{
+			var provider = GetProvider();
+			var ex = Assert.Throws<InvalidUserQueryException>(() => provider.EvaluateUserQuery(query).ToList());
 			output.WriteLine(ex.Message);
-		}
-
-		[Fact]
-		public void Test1()
-		{
-			const string TEST = "\"item\"";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.True(result.Any(i => i.Title == "Item1"));
-			Assert.True(result.Any(i => i.Title == "Item2"));
-			Assert.True(result.Any(i => i.Title == "Item3"));
-		}
-
-		[Fact]
-		public void Test2()
-		{
-			const string TEST = "\"b\"";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.Empty(result);
-		}
-
-		[Fact]
-		public void Test3()
-		{
-			const string TEST = "rating = 1";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.True(result.Any(i => i.Title == "Item1"));
-			Assert.False(result.Any(i => i.Title == "Item2"));
-			Assert.False(result.Any(i => i.Title == "Item3"));
-		}
-
-		[Fact]
-		public void Test4()
-		{
-			const string TEST = "rating > 1";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.False(result.Any(i => i.Title == "Item1"));
-			Assert.True(result.Any(i => i.Title == "Item2"));
-			Assert.True(result.Any(i => i.Title == "Item3"));
-		}
-
-		[Fact]
-		public void Test5()
-		{
-			const string TEST = "rating <= 5";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.True(result.Any(i => i.Title == "Item1"));
-			Assert.True(result.Any(i => i.Title == "Item2"));
-			Assert.False(result.Any(i => i.Title == "Item3"));
-		}
-
-		[Fact]
-		public void Test6()
-		{
-			const string TEST = "rating = 1, rating = 5";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.True(result.Any(i => i.Title == "Item1"));
-			Assert.True(result.Any(i => i.Title == "Item2"));
-			Assert.False(result.Any(i => i.Title == "Item3"));
-		}
-
-		[Fact]
-		public void Test7()
-		{
-			const string TEST = "rating = 1, rating = 5 & title * 'beans'";
-			var result = GetProvider().EvaluateUserQuery(TEST);
-			Assert.True(result.Any(i => i.Title == "Item1"));
-			Assert.False(result.Any(i => i.Title == "Item2"));
-			Assert.False(result.Any(i => i.Title == "Item3"));
 		}
 	}
 }

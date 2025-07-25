@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace PlaylistRepoLib;
+namespace PlaylistRepoLib.UserQueries;
 
 /// <summary>
 /// A safe way of allowing users to specify a string to query a database.
@@ -112,26 +112,19 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		IEnumerator<Token> tokens = Tokenize(queryText);
 
 		Mode mode = Mode.first;
-		Stack<Expression> Ores = [];
-		Expression? currentOre = null;
-
+		Stack<Expression> terms = [];
+		Expression? currentTerm = null;
+		
 		while (tokens.MoveNext())
 		{
 			switch (mode)
 			{
 				case Mode.first:
+					Expression newTerm;
 					if (tokens.Current.IsLiteral)
 					{
 						ArgumentNullException.ThrowIfNull(defaultTarget);
-						var newOre = EvaluateTerm(defaultTarget, tokens.Current, null);
-						if (currentOre == null)
-						{
-							currentOre = newOre;
-						}
-						else
-						{
-							currentOre = Expression.AndAlso(currentOre, newOre);
-						}
+						newTerm = EvaluateTerm(defaultTarget, tokens.Current, null);
 					}
 					else
 					{
@@ -139,8 +132,10 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete query: {queryText} ...");
 						Token op = tokens.Current;
 						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete query: {queryText} ...");
-						currentOre = EvaluateTerm(target, tokens.Current, op);
+						newTerm = EvaluateTerm(target, tokens.Current, op);
 					}
+					// if current term exists logical AND with existing
+					currentTerm = currentTerm == null ? newTerm : Expression.AndAlso(currentTerm, newTerm);
 					mode = Mode.finish;
 				break;
 				case Mode.finish:
@@ -148,11 +143,8 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 						throw new InvalidUserQueryException($"Literal must be seperated with a comma or &: {tokens.Current.Value}");
 					if (tokens.Current.Value == ",")
 					{
-						if (currentOre != null)
-						{
-							Ores.Push(currentOre);
-						}
-						currentOre = null;
+						if (currentTerm != null) terms.Push(currentTerm);
+						currentTerm = null;
 						mode = Mode.first;
 					}
 					else if (tokens.Current.Value == "&")
@@ -166,16 +158,18 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 				break;
 			}
 		}
-		if (currentOre != null) 
-			Ores.Push(currentOre);
 
-		if (Ores.TryPop(out currentOre))
+		if (currentTerm != null) 
+			terms.Push(currentTerm);
+
+		// Logical OR together terms
+		if (terms.TryPop(out currentTerm))
 		{
-			while (Ores.TryPop(out var ex))
+			while (terms.TryPop(out var ex))
 			{
-				currentOre = Expression.OrElse(currentOre, ex);
+				currentTerm = Expression.OrElse(currentTerm, ex);
 			}
-			var lambda = Expression.Lambda<Func<TModel, bool>>(currentOre, model);
+			var lambda = Expression.Lambda<Func<TModel, bool>>(currentTerm, model);
 			return root.Where(lambda);
 		}
 		else
@@ -348,7 +342,8 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 						start = i + 1;
 						break;
 					default:
-						if (char.IsNumber(c)) mode = LITERAL_MODE;
+						// words starting with a number are considered literal
+						if (i == start && char.IsNumber(c)) mode = LITERAL_MODE;
 						break;
 				}
 			}
@@ -356,18 +351,26 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 		part = input[start..];
 		currentSegment.Append(part);
-		yield return new Token(currentSegment.ToString(), mode == LITERAL_MODE);
+		yield return new Token(currentSegment.ToString(), mode != NON_LITERAL_MODE);
 	}
 
-	record Token(string Value, bool IsLiteral)
-	{
-		public bool IsOperator => !IsLiteral && operators.Contains(Value);
-	}
+	record Token(string Value, bool IsLiteral);
 
 	enum Mode
 	{
 		first = 0,
 		finish = 1,
+	}
+}
+
+public static class UserQueryExtensions
+{
+	/// <inheritdoc cref="UserQueryProvider{TModel}.EvaluateUserQuery(string)"/>
+	/// <exception cref="UserQueryableMisconfigurationException"></exception>
+	public static IQueryable<TModel> EvaluateUserQuery<TModel>(this IQueryable<TModel> baseQueryable, string userQuery)
+	{
+		var provider = new UserQueryProvider<TModel>(baseQueryable);
+		return provider.EvaluateUserQuery(userQuery);
 	}
 }
 
