@@ -4,18 +4,24 @@ using System.Text.RegularExpressions;
 
 namespace PlaylistRepoLib.Models;
 
+[PrimaryUserQueryable(nameof(Title))]
 public partial class Media
 {
 	[Key] public int Id { get; set; }
 
 	public string? FilePath { get; set; }
 	public byte[]? Hash { get; set; }
+
+	[UserQueryable("title")]
 	public required string Title { get; set; }
 
 	public string[]? Artists { get; set; }
 	public string? Album { get; set; }
 	public string? Description { get; set; }
+
+	[UserQueryable("rating")]
 	public int Rating { get; set; }
+
 	public TimeSpan? MediaLength { get; set; }
 
 	public const int UNINITIALIZED = -1;
