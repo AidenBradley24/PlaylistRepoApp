@@ -1,87 +1,120 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Frozen;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Frozen;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PlaylistRepoLib;
 
-/*
-	   QUERYABLES:
-	   id -- implicit                  int
-	   remote                          int
-	   name                            string
-	   artists                         string
-	   album                           string
-	   description                     string
-	   rating                          int
-	   time                            int
-
-	   OPERATORS:
-	   =   equals
-	   !=  not equals
-	   ^   starts with                 string only
-	   !^  does not start with         string only
-	   $   ends with                   string only
-	   !$  does not end with           string only
-	   *   contains                    string only
-	   !*  does not contain            string only
-	   <   less than                   int only
-	   >   greater than                int only
-	   <=  less than or equal to       int only
-	   >=  greater than or equal to    int only
-
-	   &   and (another term)
-
-	   commas act as a seperate section which are ored together    
-	   quotes inside values are parsed as strings, \" and \\ can be used
-	   everything is case insensitive
-	   whitespace outside of quotes is ignored
-
-*/
-
 /// <summary>
-/// A safe way of allowing users to specify a string to query a database indirectly.
+/// A safe way of allowing users to specify a string to query a database.
 /// </summary>
-public sealed class UserQueryProvider<T>
+/// <remarks>
+/// Use <see cref="UserQueryableAttribute"/> to specify queryable public properties in the model class. <br/>
+/// Use <see cref="PrimaryUserQueryableAttribute"/> to specify the primary property to compare on the model class.
+/// </remarks>
+/// <typeparam name="TModel">The type of queryable model</typeparam>
+public interface IUserQueryProvider<TModel>
 {
-	private readonly IQueryable<T> root;
+	/// <summary>
+	/// Parse a user defined query of the <typeparamref name="TModel"/> type.
+	/// </summary>
+	/// <remarks>
+	/// <para><b>Supported Operators:</b></para>
+	/// <list type="table">
+	///   <listheader>
+	///     <term>Operator</term>
+	///     <description>Description</description>
+	///   </listheader>
+	///   <item><term><c>=</c></term><description>equals</description></item>
+	///   <item><term><c>!=</c></term><description>not equals</description></item>
+	///   <item><term><c>^</c></term><description>starts with (string only)</description></item>
+	///   <item><term><c>!^</c></term><description>does not start with (string only)</description></item>
+	///   <item><term><c>$</c></term><description>ends with (string only)</description></item>
+	///   <item><term><c>!$</c></term><description>does not end with (string only)</description></item>
+	///   <item><term><c>*</c></term><description>contains (string only)</description></item>
+	///   <item><term><c>!*</c></term><description>does not contain (string only)</description></item>
+	///   <item><term><c>&lt;</c></term><description>less than (int only)</description></item>
+	///   <item><term><c>&gt;</c></term><description>greater than (int only)</description></item>
+	///   <item><term><c>&lt;=</c></term><description>less than or equal to (int only)</description></item>
+	///   <item><term><c>&gt;=</c></term><description>greater than or equal to (int only)</description></item>
+	///   <item><term><c>&amp;</c></term><description>logical AND with another term</description></item>
+	/// </list>
+	///
+	/// <para><b>Notes:</b></para>
+	/// <list type="bullet">
+	///   <item>Commas (<c>,</c>) separate sections that are ORed together.</item>
+	///   <item>Quotes inside values are parsed as string literals. Escape characters: <c>\"</c> and <c>\\</c>.</item>
+	///   <item>All comparisons are case-insensitive.</item>
+	///   <item>Whitespace outside of quotes is ignored.</item>
+	/// </list>
+	/// </remarks>
+	/// <exception cref="InvalidUserQueryException"></exception>
+	public IQueryable<TModel> EvaluateUserQuery(string queryText);
+}
+
+/// <inheritdoc cref="IUserQueryProvider{TModel}"/>
+public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
+{
+	private readonly IQueryable<TModel> root;
 	private readonly FrozenDictionary<string, PropertyInfo> queryableProperties;
 	private readonly Token? defaultTarget;
 
-	public UserQueryProvider(IQueryable<T> root)
+	private static readonly FrozenSet<string> operators = 
+	[
+		"=",     // equals
+		"!=",    // not equals
+		"^",     // starts with (string only)
+		"!^",    // does not start with (string only)
+		"$",     // ends with (string only)
+		"!$",    // does not end with (string only)
+		"*",     // contains (string only)
+		"!*",    // does not contain (string only)
+		"<",     // less than (int only)
+		"<=",    // less than or equal to (int only)
+		">",     // greater than (int only)
+		">="     // greater than or equal to (int only)
+	];
+
+	/// <summary>
+	/// Initialize a new provider for <typeparamref name="TModel"/>
+	/// </summary>
+	/// <param name="root">The base <see cref="IQueryable"/> to evaluate queries off of.<br/>
+	/// To restrict access to certain entities, provide those restictions to this root.</param>
+	/// <exception cref="UserQueryableMisconfigurationException"></exception>
+	public UserQueryProvider(IQueryable<TModel> root)
 	{
 		this.root = root;
-		queryableProperties = FrozenDictionary.ToFrozenDictionary(typeof(T).GetProperties()
+		queryableProperties = FrozenDictionary.ToFrozenDictionary(typeof(TModel).GetProperties()
 			.Where(p => p.GetCustomAttributes<UserQueryableAttribute>(true).Any())
 			.Select(p =>
 			{
-				if (!p.CanRead) throw new UserQueryableMisconfigurationException($"Type {typeof(T).FullName} {p.Name} is not readable.");
+				if (!p.CanRead) throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {p.Name} is not readable.");
 				return new KeyValuePair<string, PropertyInfo>(p.GetCustomAttributes<UserQueryableAttribute>(true).First().QueryName, p);
 			}));
-		string? defaultPropName = typeof(T).GetCustomAttribute<PrimaryUserQueryableAttribute>()?.PropertyName;
-		var defaultProperty = defaultPropName != null ? typeof(T).GetProperty(defaultPropName) : null;
+		string? defaultPropName = typeof(TModel).GetCustomAttribute<PrimaryUserQueryableAttribute>()?.PropertyName;
+		var defaultProperty = defaultPropName != null ? typeof(TModel).GetProperty(defaultPropName) : null;
 		if (defaultProperty == null && defaultPropName != null) 
-			throw new UserQueryableMisconfigurationException($"Type {typeof(T).FullName} {defaultPropName} not found.");
+			throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {defaultPropName} not found.");
 		if (defaultProperty != null && !defaultProperty.CanRead) 
-			throw new UserQueryableMisconfigurationException($"Type {typeof(T).FullName} {defaultProperty.Name} is not readable.");
+			throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {defaultProperty.Name} is not readable.");
 		if (defaultProperty != null)
 		{
 			var att = defaultProperty.GetCustomAttribute<UserQueryableAttribute>() 
-				?? throw new UserQueryableMisconfigurationException($"Type {typeof(T).FullName} {defaultProperty.Name} is not user queryable.");
+				?? throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {defaultProperty.Name} is not user queryable.");
 			defaultTarget = new Token(att.QueryName, false);
 		}
 	}
 
-	public IQueryable<T> EvaluateUserQuery(string queryText)
+	private readonly ParameterExpression model = Expression.Parameter(typeof(TModel), "x");
+
+	public IQueryable<TModel> EvaluateUserQuery(string queryText)
 	{
+		IEnumerator<Token> tokens = Tokenize(queryText);
+
 		Mode mode = Mode.first;
-		IQueryable<T> query = root;
-		var tokens = Tokenize(queryText);
+		Stack<Expression> Ores = [];
+		Expression? currentOre = null;
+
 		while (tokens.MoveNext())
 		{
 			switch (mode)
@@ -90,7 +123,15 @@ public sealed class UserQueryProvider<T>
 					if (tokens.Current.IsLiteral)
 					{
 						ArgumentNullException.ThrowIfNull(defaultTarget);
-						query = query.Where(GetPredicate(defaultTarget, tokens.Current, null));
+						var newOre = EvaluateTerm(defaultTarget, tokens.Current, null);
+						if (currentOre == null)
+						{
+							currentOre = newOre;
+						}
+						else
+						{
+							currentOre = Expression.AndAlso(currentOre, newOre);
+						}
 					}
 					else
 					{
@@ -98,32 +139,65 @@ public sealed class UserQueryProvider<T>
 						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete query: {queryText} ...");
 						Token op = tokens.Current;
 						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete query: {queryText} ...");
-						query = query.Where(GetPredicate(target, tokens.Current, op));
+						currentOre = EvaluateTerm(target, tokens.Current, op);
+					}
+					mode = Mode.finish;
+				break;
+				case Mode.finish:
+					if (tokens.Current.IsLiteral) 
+						throw new InvalidUserQueryException($"Literal must be seperated with a comma or &: {tokens.Current.Value}");
+					if (tokens.Current.Value == ",")
+					{
+						if (currentOre != null)
+						{
+							Ores.Push(currentOre);
+						}
+						currentOre = null;
+						mode = Mode.first;
+					}
+					else if (tokens.Current.Value == "&")
+					{
+						mode = Mode.first;
+					}
+					else
+					{
+						throw new InvalidUserQueryException($"Invalid operator: {tokens.Current.Value}");
 					}
 				break;
 			}
-
 		}
+		if (currentOre != null) 
+			Ores.Push(currentOre);
 
-		return query;
+		if (Ores.TryPop(out currentOre))
+		{
+			while (Ores.TryPop(out var ex))
+			{
+				currentOre = Expression.OrElse(currentOre, ex);
+			}
+			var lambda = Expression.Lambda<Func<TModel, bool>>(currentOre, model);
+			return root.Where(lambda);
+		}
+		else
+		{
+			return root;
+		}
 	}
 
 	private PropertyInfo GetProperty(Token token)
 	{
 		bool exists = queryableProperties.TryGetValue(token.Value.ToLowerInvariant(), out var property);
-		if (!exists) throw new InvalidUserQueryException($"Property \"{token.Value}\" not in type {typeof(T).FullName}\n" +
+		if (!exists) throw new InvalidUserQueryException($"Property \"{token.Value}\" not in type {typeof(TModel).FullName}\n" +
 			$"Use {nameof(UserQueryableAttribute)} to specify properties as queryable.");
 		return property!;
 	}
 
-	private Expression<Func<T, bool>> GetPredicate(Token target, Token compared, Token? op)
+	private Expression EvaluateTerm(Token target, Token compared, Token? op)
 	{
 		op ??= new Token("*", true);
 
-		var param = Expression.Parameter(typeof(T), "x");
-
 		PropertyInfo targetProp = GetProperty(target);
-		Expression left = Expression.Property(param, targetProp);
+		Expression left = Expression.Property(model, targetProp);
 
 		Expression right;
 		if (compared.IsLiteral)
@@ -134,7 +208,7 @@ public sealed class UserQueryProvider<T>
 		else
 		{
 			PropertyInfo comparedProp = GetProperty(compared);
-			right = Expression.Property(param, comparedProp);
+			right = Expression.Property(model, comparedProp);
 		}
 
 		// Normalize for string-insensitive comparison where applicable
@@ -161,7 +235,7 @@ public sealed class UserQueryProvider<T>
 			_ => throw new InvalidUserQueryException($"Unsupported or type-mismatched operator \"{op.Value}\" for property \"{target.Value}\"")
 		};
 
-		return Expression.Lambda<Func<T, bool>>(body, param);
+		return body;
 	}
 
 
@@ -251,15 +325,19 @@ public sealed class UserQueryProvider<T>
 							currentSegment.Append(part); start = i + 1;
 						mode = DOUBLE_QUOTE_MODE;
 						break;
+					case ',':
+					case '&':
 					case ' ':
 						part = input[start..i];
 						if (currentSegment.Length != 0 || !string.IsNullOrWhiteSpace(part))
 						{
 							currentSegment.Append(part);
 							yield return new Token(currentSegment.ToString(), mode == LITERAL_MODE);
+							mode = NON_LITERAL_MODE;
 							currentSegment.Clear();
 						}
 						start = i + 1;
+						if (c == ',' || c == '&') yield return new Token(c.ToString(), false);
 						break;
 					case '\\':
 						// preserve previous characters of segment
@@ -268,6 +346,9 @@ public sealed class UserQueryProvider<T>
 						// keep next character
 						currentSegment.Append(input[++i]);
 						start = i + 1;
+						break;
+					default:
+						if (char.IsNumber(c)) mode = LITERAL_MODE;
 						break;
 				}
 			}
@@ -278,7 +359,10 @@ public sealed class UserQueryProvider<T>
 		yield return new Token(currentSegment.ToString(), mode == LITERAL_MODE);
 	}
 
-	record Token(string Value, bool IsLiteral);
+	record Token(string Value, bool IsLiteral)
+	{
+		public bool IsOperator => !IsLiteral && operators.Contains(Value);
+	}
 
 	enum Mode
 	{
@@ -318,4 +402,3 @@ public class InvalidUserQueryException : Exception
 	{
 	}
 }
-
