@@ -5,53 +5,6 @@ using System.Text;
 
 namespace PlaylistRepoLib.UserQueries;
 
-/// <summary>
-/// A safe way of allowing users to specify a string to query a database.
-/// </summary>
-/// <remarks>
-/// Use <see cref="UserQueryableAttribute"/> to specify queryable public properties in the model class. <br/>
-/// Use <see cref="PrimaryUserQueryableAttribute"/> to specify the primary property to compare on the model class.
-/// </remarks>
-/// <typeparam name="TModel">The type of queryable model</typeparam>
-public interface IUserQueryProvider<TModel>
-{
-	/// <summary>
-	/// Parse a user defined query of the <typeparamref name="TModel"/> type.
-	/// </summary>
-	/// <remarks>
-	/// <para><b>Supported Operators:</b></para>
-	/// <list type="table">
-	///   <listheader>
-	///     <term>Operator</term>
-	///     <description>Description</description>
-	///   </listheader>
-	///   <item><term><c>=</c></term><description>equals</description></item>
-	///   <item><term><c>!=</c></term><description>not equals</description></item>
-	///   <item><term><c>^</c></term><description>starts with (string only)</description></item>
-	///   <item><term><c>!^</c></term><description>does not start with (string only)</description></item>
-	///   <item><term><c>$</c></term><description>ends with (string only)</description></item>
-	///   <item><term><c>!$</c></term><description>does not end with (string only)</description></item>
-	///   <item><term><c>*</c></term><description>contains (string only)</description></item>
-	///   <item><term><c>!*</c></term><description>does not contain (string only)</description></item>
-	///   <item><term><c>&lt;</c></term><description>less than (int only)</description></item>
-	///   <item><term><c>&gt;</c></term><description>greater than (int only)</description></item>
-	///   <item><term><c>&lt;=</c></term><description>less than or equal to (int only)</description></item>
-	///   <item><term><c>&gt;=</c></term><description>greater than or equal to (int only)</description></item>
-	///   <item><term><c>&amp;</c></term><description>logical AND with another term</description></item>
-	/// </list>
-	///
-	/// <para><b>Notes:</b></para>
-	/// <list type="bullet">
-	///   <item>Commas (<c>,</c>) separate sections that are ORed together.</item>
-	///   <item>Quotes inside values are parsed as string literals. Escape characters: <c>\"</c> and <c>\\</c>.</item>
-	///   <item>All comparisons are case-insensitive.</item>
-	///   <item>Whitespace outside of quotes is ignored.</item>
-	/// </list>
-	/// </remarks>
-	/// <exception cref="InvalidUserQueryException"></exception>
-	public IQueryable<TModel> EvaluateUserQuery(string queryText);
-}
-
 /// <inheritdoc cref="IUserQueryProvider{TModel}"/>
 public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 {
@@ -196,7 +149,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		Expression right;
 		if (compared.IsLiteral)
 		{
-			object? parsed = ParseValue(targetProp.PropertyType, compared.Value);
+			object? parsed = UserQueryTypeParsers.Parse(targetProp.PropertyType, compared.Value);
 			right = Expression.Constant(parsed, targetProp.PropertyType);
 		}
 		else
@@ -206,25 +159,25 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		}
 
 		// Normalize for string-insensitive comparison where applicable
-		bool isString = targetProp.PropertyType == typeof(string);
-		bool isInt = targetProp.PropertyType == typeof(int);
+		bool supportsString = UserQueryOperatorCapabilities.SupportsStringMatch(targetProp.PropertyType);
+		bool supportsComparision = UserQueryOperatorCapabilities.SupportsComparison(targetProp.PropertyType);
 
 		Expression body = op.Value switch
 		{
 			"=" => Expression.Equal(left, right),
 			"!=" => Expression.NotEqual(left, right),
 
-			"<" when isInt => Expression.LessThan(left, right),
-			"<=" when isInt => Expression.LessThanOrEqual(left, right),
-			">" when isInt => Expression.GreaterThan(left, right),
-			">=" when isInt => Expression.GreaterThanOrEqual(left, right),
+			"<" when supportsComparision => Expression.LessThan(left, right),
+			"<=" when supportsComparision => Expression.LessThanOrEqual(left, right),
+			">" when supportsComparision => Expression.GreaterThan(left, right),
+			">=" when supportsComparision => Expression.GreaterThanOrEqual(left, right),
 
-			"^" when isString => CallInsensitive(left, right, nameof(string.StartsWith)),
-			"!^" when isString => Expression.Not(CallInsensitive(left, right, nameof(string.StartsWith))),
-			"$" when isString => CallInsensitive(left, right, nameof(string.EndsWith)),
-			"!$" when isString => Expression.Not(CallInsensitive(left, right, nameof(string.EndsWith))),
-			"*" when isString => CallInsensitive(left, right, nameof(string.Contains)),
-			"!*" when isString => Expression.Not(CallInsensitive(left, right, nameof(string.Contains))),
+			"^" when supportsString => CallInsensitive(left, right, nameof(string.StartsWith)),
+			"!^" when supportsString => Expression.Not(CallInsensitive(left, right, nameof(string.StartsWith))),
+			"$" when supportsString => CallInsensitive(left, right, nameof(string.EndsWith)),
+			"!$" when supportsString => Expression.Not(CallInsensitive(left, right, nameof(string.EndsWith))),
+			"*" when supportsString => CallInsensitive(left, right, nameof(string.Contains)),
+			"!*" when supportsString => Expression.Not(CallInsensitive(left, right, nameof(string.Contains))),
 
 			_ => throw new InvalidUserQueryException($"Unsupported or type-mismatched operator \"{op.Value}\" for property \"{target.Value}\"")
 		};
@@ -237,22 +190,6 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 	{
 		var comparison = Expression.Constant(StringComparison.OrdinalIgnoreCase, typeof(StringComparison));
 		return Expression.Call(left, typeof(string).GetMethod(methodName, new[] { typeof(string), typeof(StringComparison) })!, right, comparison);
-	}
-
-	private static object ParseValue(Type targetType, string value)
-	{
-		try
-		{
-			if (targetType == typeof(int))
-				return int.Parse(value);
-			if (targetType == typeof(string))
-				return value;
-			throw new InvalidUserQueryException($"Unsupported target type: {targetType.Name}");
-		}
-		catch (Exception ex)
-		{
-			throw new InvalidUserQueryException($"Could not parse value \"{value}\" as {targetType.Name}", ex);
-		}
 	}
 
 	/// <summary>
@@ -360,48 +297,5 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 	{
 		first = 0,
 		finish = 1,
-	}
-}
-
-public static class UserQueryExtensions
-{
-	/// <inheritdoc cref="UserQueryProvider{TModel}.EvaluateUserQuery(string)"/>
-	/// <exception cref="UserQueryableMisconfigurationException"></exception>
-	public static IQueryable<TModel> EvaluateUserQuery<TModel>(this IQueryable<TModel> baseQueryable, string userQuery)
-	{
-		var provider = new UserQueryProvider<TModel>(baseQueryable);
-		return provider.EvaluateUserQuery(userQuery);
-	}
-}
-
-/// <summary>
-/// When there is no specified property target, assume this property is the target.
-/// </summary>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple=false, Inherited=false)]
-public sealed class PrimaryUserQueryableAttribute(string propertyName) : Attribute
-{
-	public string PropertyName { get; } = propertyName;
-}
-
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class UserQueryableAttribute(string queryName) : Attribute
-{
-	public string QueryName { get; } = queryName;
-}
-
-public class UserQueryableMisconfigurationException(string? message) : Exception(message) { }
-
-public class InvalidUserQueryException : Exception
-{
-	public InvalidUserQueryException(string message) : base(message)
-	{
-	}
-
-	public InvalidUserQueryException()
-	{
-	}
-
-	public InvalidUserQueryException(string? message, Exception? innerException) : base(message, innerException)
-	{
 	}
 }
