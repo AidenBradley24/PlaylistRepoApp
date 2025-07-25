@@ -52,7 +52,7 @@ namespace PlaylistRepoCLI
 		public async Task<string?> TaskRequest(HttpMethod method, string uri, HttpContent? content = null)
 		{
 			ObjectDisposedException.ThrowIf(isDisposed, this);
-			
+
 			using var http = new HttpClient();
 			var httpRequest = new HttpRequestMessage(method, ApiUrl + uri)
 			{
@@ -96,7 +96,7 @@ namespace PlaylistRepoCLI
 			var httpRequest = new HttpRequestMessage(method, ApiUrl + uri)
 			{
 				Content = content
-			}; 
+			};
 			var response = await http.SendAsync(httpRequest);
 			if (!response.IsSuccessStatusCode)
 			{

@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PlaylistRepoLib.UserQueries;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
-using PlaylistRepoLib.UserQueries;
 
 namespace PlaylistRepoLib.Models;
 

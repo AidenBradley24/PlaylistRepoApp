@@ -12,7 +12,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 	private readonly FrozenDictionary<string, PropertyInfo> queryableProperties;
 	private readonly Token? defaultTarget;
 
-	private static readonly FrozenSet<string> operators = 
+	private static readonly FrozenSet<string> operators =
 	[
 		"=",     // equals
 		"!=",    // not equals
@@ -46,13 +46,13 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 			}));
 		string? defaultPropName = typeof(TModel).GetCustomAttribute<PrimaryUserQueryableAttribute>()?.PropertyName;
 		var defaultProperty = defaultPropName != null ? typeof(TModel).GetProperty(defaultPropName) : null;
-		if (defaultProperty == null && defaultPropName != null) 
+		if (defaultProperty == null && defaultPropName != null)
 			throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {defaultPropName} not found.");
-		if (defaultProperty != null && !defaultProperty.CanRead) 
+		if (defaultProperty != null && !defaultProperty.CanRead)
 			throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {defaultProperty.Name} is not readable.");
 		if (defaultProperty != null)
 		{
-			var att = defaultProperty.GetCustomAttribute<UserQueryableAttribute>() 
+			var att = defaultProperty.GetCustomAttribute<UserQueryableAttribute>()
 				?? throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {defaultProperty.Name} is not user queryable.");
 			defaultTarget = new Token(att.QueryName, false);
 		}
@@ -67,7 +67,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		Mode mode = Mode.first;
 		Stack<Expression> terms = [];
 		Expression? currentTerm = null;
-		
+
 		while (tokens.MoveNext())
 		{
 			switch (mode)
@@ -90,9 +90,9 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 					// if current term exists logical AND with existing
 					currentTerm = currentTerm == null ? newTerm : Expression.AndAlso(currentTerm, newTerm);
 					mode = Mode.finish;
-				break;
+					break;
 				case Mode.finish:
-					if (tokens.Current.IsLiteral) 
+					if (tokens.Current.IsLiteral)
 						throw new InvalidUserQueryException($"Literal must be seperated with a comma or &: {tokens.Current.Value}");
 					if (tokens.Current.Value == ",")
 					{
@@ -108,11 +108,11 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 					{
 						throw new InvalidUserQueryException($"Invalid operator: {tokens.Current.Value}");
 					}
-				break;
+					break;
 			}
 		}
 
-		if (currentTerm != null) 
+		if (currentTerm != null)
 			terms.Push(currentTerm);
 
 		// Logical OR together terms
