@@ -28,14 +28,21 @@ public class PlayRepoDbContext : DbContext
 		base.OnModelCreating(modelBuilder);
 	}
 
-	public async Task Ingest(FileInfo[] files, IProgress<TaskProgress> progress)
+	/// <summary>
+	/// Ingest media files for untracked media.
+	/// </summary>
+	/// <exception cref="InvalidOperationException"></exception>
+	public async Task IngestUntracked(FileInfo[] files, IProgress<TaskProgress>? progress)
 	{
 		int addedCount = 0, updateCount = 0, completedCount = 0;
 		Dictionary<byte[], Media> medias = [];
 		foreach (FileInfo file in files)
 		{
-			using var fs = file.OpenRead();
-			byte[] hash = await SHA256.HashDataAsync(fs);
+			byte[] hash;
+			using (var fs = file.OpenRead())
+			{
+				hash = await SHA256.HashDataAsync(fs);
+			}
 
 			Media media;
 			var matching = Medias.Where(m => m.Hash == hash);
@@ -63,16 +70,44 @@ public class PlayRepoDbContext : DbContext
 				addedCount++;
 			}
 
-			progress.Report(TaskProgress.FromNumbers(++completedCount, files.Length));
+			progress?.Report(TaskProgress.FromNumbers(++completedCount, files.Length));
 		}
 
-		progress.Report(TaskProgress.FromIndeterminate("Finalizing"));
+		progress?.Report(TaskProgress.FromIndeterminate("Finalizing"));
 		await Medias.AddRangeAsync(medias.Values);
 		await SaveChangesAsync();
-		progress.Report(TaskProgress.FromCompleted($"COMPLETE\n" +
+		progress?.Report(TaskProgress.FromCompleted($"COMPLETE\n" +
 			$"Added {addedCount} new media files.\n" +
 			$"Updated {updateCount} media files.\n" +
 			string.Join('\n', medias.Values.Select(m => $"ADDED: {m}")) +
 			string.Join('\n', medias.Values.Select(m => $"ADDED: {m}"))));
+	}
+
+	/// <summary>
+	/// Ingest media files for existing media.
+	/// </summary>
+	/// <param name="mediaBundles">Media must already be tracked by db.</param>
+	/// <param name="progress"></param>
+	/// <returns></returns>
+	public async Task IngestExisting((FileInfo, Media)[] mediaBundles, IProgress<TaskProgress>? progress)
+	{
+		int completedCount = 0;
+		foreach (var tuple in mediaBundles)
+		{
+			(FileInfo file, Media media) = tuple;
+			byte[] hash;
+			using (var fs = file.OpenRead())
+			{
+				hash = await SHA256.HashDataAsync(fs);
+			}
+			media.Hash = hash;
+			progress?.Report(TaskProgress.FromNumbers(++completedCount, mediaBundles.Length));
+		}
+
+		progress?.Report(TaskProgress.FromIndeterminate("Finalizing"));
+		await SaveChangesAsync();
+		progress?.Report(TaskProgress.FromCompleted($"COMPLETE\n" +
+			$"Ingested {completedCount} media files.\n" +
+			string.Join('\n', mediaBundles.Select(m => $"ADDED: {m.Item2.Title}"))));
 	}
 }

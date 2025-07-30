@@ -1,6 +1,7 @@
 ﻿using PlaylistRepoLib.UserQueries;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace PlaylistRepoLib.Models;
@@ -10,58 +11,44 @@ public partial class Media
 {
 	[Key] public int Id { get; set; }
 
+	[ForeignKey(nameof(Source))] public int? RemoteSource { get; set; }
+	public RemotePlaylist? Source { get; set; }
+
+	/// <summary>
+	/// A unique identifier for this media on any remote server.
+	/// </summary>
+	public string? RemoteUID { get; set; }
+
+	[NotMapped] public FileInfo? File => FilePath != null ? new(FilePath) : null;
+
 	public string? FilePath { get; set; }
 	public byte[]? Hash { get; set; }
 
 	[UserQueryable("title")]
-	public required string Title { get; set; }
+	public string Title { get; set; } = "unnamed media";
+
+	[UserQueryable("artist")]
+	[NotMapped]
+	public string? PrimaryArtist => Artists?.FirstOrDefault();
 
 	public string[]? Artists { get; set; }
+
+	[UserQueryable("album")]
 	public string? Album { get; set; }
+
+	[UserQueryable("description")]
 	public string? Description { get; set; }
 
 	[UserQueryable("rating")]
 	public int Rating { get; set; }
 
+	[UserQueryable("length")]
 	public TimeSpan? MediaLength { get; set; }
 
-	public const int UNINITIALIZED = -1;
+	[UserQueryable("order")]
+	public int? Order { get; set; } = null;
 
-	public MediaSettings Settings { get; set; }
-
-	[NotMapped]
-	public bool Locked
-	{
-		get => Settings.HasFlag(MediaSettings.locked);
-		set
-		{
-			if (value)
-			{
-				Settings |= MediaSettings.locked;
-			}
-			else
-			{
-				Settings &= ~MediaSettings.locked;
-			}
-		}
-	}
-
-	[NotMapped]
-	public bool Downloaded
-	{
-		get => Settings.HasFlag(MediaSettings.downloaded);
-		internal set
-		{
-			if (value)
-			{
-				Settings |= MediaSettings.downloaded;
-			}
-			else
-			{
-				Settings &= ~MediaSettings.downloaded;
-			}
-		}
-	}
+	public bool Locked { get; set; } = false;
 
 	[NotMapped]
 	public string LengthString => MediaLength?.ToString(@"hh\:mm\:ss") ?? "?";
@@ -88,13 +75,30 @@ public partial class Media
 	{
 		return $"#{Id} || {Title} || {(Hash != null ? Convert.ToBase64String(Hash) : "no hash")}";
 	}
-}
 
-[Flags]
-public enum MediaSettings
-{
-	none = 0,
-	removeMe = 1 << 0,
-	locked = 1 << 1,
-	downloaded = 1 << 2,
+	public string GenerateFileName(string extension)
+	{
+		StringBuilder sb = new(Title);
+		if (Album != null)
+		{
+			sb.Append(" – ");
+			sb.Append(Album);
+			if (Order != null)
+			{
+				sb.Append('[');
+				sb.Append(Order);
+				sb.Append(']');
+			}
+		}
+
+		if (PrimaryArtist != null)
+		{
+			sb.Append(" – ");
+			sb.Append(PrimaryArtist);
+		}
+
+		sb.Append('.');
+		sb.Append(extension);
+		return sb.ToString();
+	}
 }

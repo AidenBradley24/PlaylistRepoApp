@@ -2,9 +2,9 @@
 
 namespace PlaylistRepoLib.Models;
 
-public class Playlist
+public class RemotePlaylist
 {
-	[Key] public string Title { get; set; } = null!;
+	[Key] public string Name { get; set; } = null!;
 	public string? Description { get; set; }
-	public string UserQuery { get; set; } = "";
+	public required string Link { get; set; }
 }

@@ -188,9 +188,16 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 	private static MethodCallExpression CallInsensitive(Expression left, Expression right, string methodName)
 	{
-		var comparison = Expression.Constant(StringComparison.OrdinalIgnoreCase, typeof(StringComparison));
-		return Expression.Call(left, typeof(string).GetMethod(methodName, new[] { typeof(string), typeof(StringComparison) })!, right, comparison);
+		// Convert both expressions to lowercase: left.ToLower().method(right.ToLower())
+		var toLowerMethod = typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)!;
+
+		var leftToLower = Expression.Call(left, toLowerMethod);
+		var rightToLower = Expression.Call(right, toLowerMethod);
+
+		var method = typeof(string).GetMethod(methodName, new[] { typeof(string) })!;
+		return Expression.Call(leftToLower, method, rightToLower);
 	}
+
 
 	/// <summary>
 	/// Split a string into segments based on single or double quotes. Otherwise split by spaces. Removes quotes.

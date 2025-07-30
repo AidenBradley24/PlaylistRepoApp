@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PlaylistRepoLib;
 using PlaylistRepoLib.Models;
+using PlaylistRepoLib.UserQueries;
 
 namespace PlaylistRepoAPI.Controllers
 {
@@ -15,9 +16,16 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpGet("get-media")]
-		public IEnumerable<Media> GetMedia([FromQuery] int pageSize, [FromQuery] int currentPage)
+		public IActionResult GetMedia([FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0, [FromQuery] string query = "")
 		{
-			return db.Medias.Skip(pageSize * currentPage).Take(pageSize);
+			try
+			{
+				return Ok(db.Medias.EvaluateUserQuery(query).Skip(pageSize * currentPage).Take(pageSize));
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
 		}
 
 		[HttpPut("update-media")]
@@ -45,7 +53,7 @@ namespace PlaylistRepoAPI.Controllers
 			try
 			{
 				files = new FileSpec(fileSpec);
-				id = taskService.StartTaskWithDb((progress, db) => db.Ingest([.. files], progress));
+				id = taskService.StartTaskWithDb((progress, db) => db.IngestUntracked([.. files], progress));
 			}
 			catch (Exception ex)
 			{
@@ -53,6 +61,16 @@ namespace PlaylistRepoAPI.Controllers
 			}
 
 			return AcceptedAtAction(nameof(Ingest), id);
+		}
+
+		[HttpGet("file")]
+		public IActionResult GetFile([FromQuery] int mediaId)
+		{
+			var media = db.Medias.Find(mediaId);
+			if (media == null) return NotFound();
+			using var tagFile = media.GetTagFile();
+			var fs = media.File!.OpenRead();
+			return File(fs, tagFile.MimeType, true);
 		}
 	}
 }
