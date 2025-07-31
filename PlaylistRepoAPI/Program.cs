@@ -24,6 +24,7 @@ builder.Services.AddSingleton<IPlayRepoService, PlayRepoService>(serviceProvider
 {
 	return new PlayRepoService(path.FullName);
 });
+builder.Services.AddScoped<YtDlpService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

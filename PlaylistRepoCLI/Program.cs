@@ -39,7 +39,7 @@ public class Program
 	private static async Task<int> RunInitAsync(InitOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Get, "/Repo/get-info");
+		var response = await api.Request(HttpMethod.Get, "/view/info");
 		Console.WriteLine(await response.Content.ReadAsStringAsync());
 		Console.WriteLine($"Created new playlist repository. Use ingest to add existing media files.");
 		return 0;
@@ -55,7 +55,7 @@ public class Program
 	{
 		using var api = opts.CreateAPI();
 		HttpContent content = new StringContent($"\"{opts.FileSpec}\"", Encoding.UTF8, "application/json");
-		var response = await api.TaskRequest(HttpMethod.Post, "/Repo/ingest", content);
+		var response = await api.TaskRequest(HttpMethod.Post, "/action/ingest", content);
 		Console.WriteLine(response);
 		return 0;
 	}

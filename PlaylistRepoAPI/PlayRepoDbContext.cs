@@ -16,6 +16,8 @@ public class PlayRepoDbContext : DbContext
 	}
 
 	public DbSet<Media> Medias { get; set; }
+	public DbSet<RemotePlaylist> RemotePlaylists { get; set; }
+	public DbSet<Playlist> Playlists { get; set; }
 
 	protected override void OnConfiguring(DbContextOptionsBuilder options)
 	{
@@ -101,6 +103,7 @@ public class PlayRepoDbContext : DbContext
 				hash = await SHA256.HashDataAsync(fs);
 			}
 			media.Hash = hash;
+			media.FilePath = playRepo.GetRelativePath(file);
 			progress?.Report(TaskProgress.FromNumbers(++completedCount, mediaBundles.Length));
 		}
 
