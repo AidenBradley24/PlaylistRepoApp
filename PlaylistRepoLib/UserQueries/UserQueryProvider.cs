@@ -64,28 +64,50 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 	{
 		IEnumerator<Token> tokens = Tokenize(queryText);
 
-		Mode mode = Mode.first;
+		Mode mode = Mode.inital;
 		Stack<Expression> terms = [];
 		Expression? currentTerm = null;
+
+		Token? sortProperty = null;
+		bool descending = false;
 
 		while (tokens.MoveNext())
 		{
 			switch (mode)
 			{
-				case Mode.first:
+				case Mode.inital:
+					if (!tokens.Current.IsLiteral)
+					{
+						if (tokens.Current.Value == "orderby")
+						{
+							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+							sortProperty = tokens.Current;
+							descending = false;
+							break;
+						}
+						else if (tokens.Current.Value == "orderbydescending")
+						{
+							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+							sortProperty = tokens.Current;
+							descending = true;
+							break;
+						}
+					}
+					goto case Mode.ready;
+				case Mode.ready:
 					Expression newTerm;
 					if (tokens.Current.IsLiteral)
 					{
 						ArgumentNullException.ThrowIfNull(defaultTarget);
-						newTerm = EvaluateTerm(defaultTarget, tokens.Current, null);
+						newTerm = EvaluateComparison(defaultTarget, tokens.Current, null);
 					}
 					else
 					{
 						Token target = tokens.Current;
-						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete query: {queryText} ...");
+						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include operator: {queryText} ...");
 						Token op = tokens.Current;
-						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete query: {queryText} ...");
-						newTerm = EvaluateTerm(target, tokens.Current, op);
+						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property or literal to compare to: {queryText} ...");
+						newTerm = EvaluateComparison(target, tokens.Current, op);
 					}
 					// if current term exists logical AND with existing
 					currentTerm = currentTerm == null ? newTerm : Expression.AndAlso(currentTerm, newTerm);
@@ -98,11 +120,25 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 					{
 						if (currentTerm != null) terms.Push(currentTerm);
 						currentTerm = null;
-						mode = Mode.first;
+						mode = Mode.ready;
 					}
 					else if (tokens.Current.Value == "&")
 					{
-						mode = Mode.first;
+						mode = Mode.ready;
+					}
+					else if (tokens.Current.Value == "orderby")
+					{
+						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+						sortProperty = tokens.Current;
+						descending = false;
+						break;
+					}
+					else if (tokens.Current.Value == "orderbydescending")
+					{
+						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+						sortProperty = tokens.Current;
+						descending = true;
+						break;
 					}
 					else
 					{
@@ -116,6 +152,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 			terms.Push(currentTerm);
 
 		// Logical OR together terms
+		IQueryable<TModel> returnValue;
 		if (terms.TryPop(out currentTerm))
 		{
 			while (terms.TryPop(out var ex))
@@ -123,11 +160,21 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 				currentTerm = Expression.OrElse(currentTerm, ex);
 			}
 			var lambda = Expression.Lambda<Func<TModel, bool>>(currentTerm, model);
-			return root.Where(lambda);
+			returnValue = root.Where(lambda);
 		}
 		else
 		{
-			return root;
+			returnValue = root;
+		}
+
+		if (sortProperty != null)
+		{
+			var lambda = CreateOrderByExpression(sortProperty);
+			return descending ? returnValue.OrderByDescending(lambda) : returnValue.OrderBy(lambda);
+		}
+		else
+		{
+			return returnValue;
 		}
 	}
 
@@ -139,7 +186,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		return property!;
 	}
 
-	private Expression EvaluateTerm(Token target, Token compared, Token? op)
+	private Expression EvaluateComparison(Token target, Token compared, Token? op)
 	{
 		op ??= new Token("*", true);
 
@@ -185,6 +232,16 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		return body;
 	}
 
+	private Expression<Func<TModel, object>> CreateOrderByExpression(Token sortProperty)
+	{
+		var property = Expression.Property(model, GetProperty(sortProperty));
+
+		Expression conversion = property.Type.IsValueType
+			? Expression.Convert(property, typeof(object))
+			: (Expression)property;
+
+		return Expression.Lambda<Func<TModel, object>>(conversion, model);
+	}
 
 	private static MethodCallExpression CallInsensitive(Expression left, Expression right, string methodName)
 	{
@@ -302,7 +359,8 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 	enum Mode
 	{
-		first = 0,
+		ready = 0,
 		finish = 1,
+		inital = 2,
 	}
 }

@@ -159,7 +159,7 @@ public class Program
 		result.Append("Page ");
 		result.Append(opts.PageNumber);
 		result.Append(" listing ");
-		result.Append(opts.PageNumber);
+		result.Append(opts.PageSize);
 		result.AppendLine(" entries per page.");
 		string userQuery = HttpUtility.UrlEncode(opts.UserQuery);
 

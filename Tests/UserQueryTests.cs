@@ -83,6 +83,23 @@ namespace Tests
 			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
 		}
 
+		[Theory]
+		[InlineData("orderby intvalue", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("orderby floatvalue", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("orderby doublevalue", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("orderby timespanvalue", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("orderby name", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("intvalue > 5 orderby timespanvalue", new[] { "Item3" })]
+		[InlineData("intvalue > 1 orderby name", new[] { "Item2", "Item3" })]
+		[InlineData("orderbydescending intvalue", new[] { "Item3", "Item2", "Item1" })]
+		[InlineData("intvalue > 1 orderbydescending name", new[] { "Item3", "Item2" })]
+		public void OrderBy_Tests(string query, string[] expectedNames)
+		{
+			var result = GetProvider().EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames, actualNames);
+		}
+
 		public static IEnumerable<object[]> InvalidQueries =>
 		[
 			["intvalue =="],
