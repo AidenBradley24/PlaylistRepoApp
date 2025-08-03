@@ -1,6 +1,7 @@
 ﻿using PlaylistRepoLib;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 
@@ -49,15 +50,18 @@ namespace PlaylistRepoCLI
 			return port;
 		}
 
-		public async Task<string?> TaskRequest(HttpMethod method, string uri, HttpContent? content = null)
+		/// <summary>
+		/// Request a task on the API be started an tracked
+		/// </summary>
+		/// <param name="requestUrl">Segment of url including leading forward slash</param>
+		/// <param name="mutateHttpRequest">Use to modify the created HTTP request to include data.</param>
+		public async Task<string?> TaskRequest(HttpMethod httpMethod, string requestUrl, Action<HttpRequestMessage>? mutateHttpRequest = null)
 		{
 			ObjectDisposedException.ThrowIf(isDisposed, this);
 
 			using var http = new HttpClient();
-			var httpRequest = new HttpRequestMessage(method, ApiUrl + uri)
-			{
-				Content = content
-			};
+			HttpRequestMessage httpRequest = new(httpMethod, ApiUrl + requestUrl);
+			mutateHttpRequest?.Invoke(httpRequest);
 			var response = await http.SendAsync(httpRequest);
 			if (!response.IsSuccessStatusCode)
 			{
@@ -88,15 +92,19 @@ namespace PlaylistRepoCLI
 			return taskProgress?.Status;
 		}
 
-		public async Task<HttpResponseMessage> Request(HttpMethod method, string uri, HttpContent? content = null)
+		/// <summary>
+		/// Request a function on the API
+		/// </summary>
+		/// <param name="requestUrl">Segment of url including leading forward slash</param>
+		/// <param name="mutateHttpRequest">Use to modify the created HTTP request to include data.</param>
+		public async Task<HttpResponseMessage> Request(HttpMethod httpMethod, string requestUrl, Action<HttpRequestMessage>? mutateHttpRequest = null)
 		{
 			ObjectDisposedException.ThrowIf(isDisposed, this);
 
 			using var http = new HttpClient();
-			var httpRequest = new HttpRequestMessage(method, ApiUrl + uri)
-			{
-				Content = content
-			};
+			HttpRequestMessage httpRequest = new(httpMethod, ApiUrl + requestUrl);
+			mutateHttpRequest?.Invoke(httpRequest);
+
 			var response = await http.SendAsync(httpRequest);
 			if (!response.IsSuccessStatusCode)
 			{

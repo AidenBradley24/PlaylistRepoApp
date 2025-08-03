@@ -4,49 +4,13 @@ using PlaylistRepoLib.Models;
 
 namespace PlaylistRepoAPI.Controllers
 {
+	/// <summary>
+	/// Controller for indirect operations
+	/// </summary>
 	[ApiController]
 	[Route("action")]
 	public class RepoActionsController(PlayRepoDbContext db, ITaskService taskService) : ControllerBase
 	{
-		[HttpPut("update-media")]
-		public IActionResult AddOrUpdateMedia([FromBody] Media media)
-		{
-			Media? existing = db.Medias.FirstOrDefault(m => m.Id == media.Id);
-			if (existing == null)
-				db.Add(media);
-			else
-				db.Update(media);
-
-			db.SaveChanges();
-			return Ok();
-		}
-
-		[HttpPost("update-remote")]
-		public IActionResult AddOrUpdateRemote([FromBody] RemotePlaylist remotePlaylist)
-		{
-			RemotePlaylist? existing = db.RemotePlaylists.FirstOrDefault(m => m.Id == remotePlaylist.Id);
-			if (existing == null)
-				db.Add(remotePlaylist);
-			else
-				db.Update(remotePlaylist);
-
-			db.SaveChanges();
-			return Ok();
-		}
-
-		[HttpPost("update-playlist")]
-		public IActionResult AddOrUpdatePlaylist([FromBody] Playlist playlist)
-		{
-			Playlist? existing = db.Playlists.FirstOrDefault(m => m.Id == playlist.Id);
-			if (existing == null)
-				db.Add(playlist);
-			else
-				db.Update(playlist);
-
-			db.SaveChanges();
-			return Ok();
-		}
-
 		[HttpPost("ingest")]
 		public IActionResult Ingest([FromBody] string fileSpec)
 		{

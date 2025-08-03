@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace PlaylistRepoLib.Models;
@@ -11,7 +12,9 @@ public partial class Media
 {
 	[Key] public int Id { get; set; }
 
-	[ForeignKey(nameof(Source))] public int? RemoteSource { get; set; }
+	[ForeignKey(nameof(Source))] public int? RemoteId { get; set; }
+
+	[JsonIgnore]
 	public RemotePlaylist? Source { get; set; }
 
 	/// <summary>
@@ -19,6 +22,7 @@ public partial class Media
 	/// </summary>
 	public string? RemoteUID { get; set; }
 
+	[JsonIgnore]
 	[NotMapped] public FileInfo? File => FilePath != null ? new(FilePath) : null;
 
 	public string? FilePath { get; set; }
@@ -29,6 +33,7 @@ public partial class Media
 
 	[UserQueryable("artist")]
 	[NotMapped]
+	[JsonIgnore]
 	public string? PrimaryArtist => Artists?.FirstOrDefault();
 
 	public string[]? Artists { get; set; }
@@ -73,7 +78,38 @@ public partial class Media
 
 	public override string ToString()
 	{
-		return $"#{Id} || {Title} || {(Hash != null ? Convert.ToBase64String(Hash) : "no hash")}";
+		StringBuilder sb = new();
+		sb.Append(Id);
+		sb.Append('\t');
+		sb.Append(Title);
+
+		if (Album != null)
+		{
+			sb.Append(" – ");
+			sb.Append(Album);
+			if (Order != null)
+			{
+				sb.Append('[');
+				sb.Append(Order);
+				sb.Append(']');
+			}
+		}
+
+		if (PrimaryArtist != null)
+		{
+			sb.Append(" – ");
+			sb.Append(PrimaryArtist);
+		}
+
+		if (Hash != null)
+		{
+			sb.Append('\t');
+			sb.Append('[');
+			sb.Append(Convert.ToBase64String(Hash));
+			sb.Append(']');
+		}
+
+		return sb.ToString();
 	}
 
 	public string GenerateFileName(string extension)
