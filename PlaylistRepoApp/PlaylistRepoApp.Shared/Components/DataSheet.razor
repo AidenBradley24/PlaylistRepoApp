@@ -1,0 +1,84 @@
+﻿@* 
+A standard generic data view.
+Generates a HTTP GET query and displays the response.
+Interacts with User Queries
+*@
+
+@typeparam TItem
+@using System.Linq;
+@using PlaylistRepoLib.UserQueries;
+@using System.Reflection;
+@inject HttpClient Http
+
+<table class="table">
+    <thead>
+        @if (PageSize > 0)
+        {
+            <Pagination CurrentPage="pageNum" PageSize="PageSize" OnPageChanged="@ChangePage" />
+        }
+        <tr>
+            @foreach (string column in columns)
+            {
+                <th @onclick="() => SortBy(column)">
+                    @column @(sortColumn == column ? (SortAscending ? "▲" : "▼") : "")
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in rows)
+        {
+            <tr>
+                @foreach (string? cell in row)
+                {
+                    <td>@cell</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public string Filter { get; set; } = "";
+    [Parameter] public required string BaseURL { get; set; }
+    [Parameter] public int PageSize { get; set; } = -1;
+
+    private string? sortColumn = null;
+    private string[] columns = null!;
+    private string[][] rows = Array.Empty<string[]>();
+
+    private bool SortAscending = true;
+    private int pageNum = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        columns = UserQueryExtensions.GetQueryableProperties(typeof(TItem));
+        string requestURL = UserQueryExtensions.ConstructRequest(BaseURL, Filter, sortColumn, !SortAscending, PageSize, pageNum);
+
+        // Make async HTTP GET request
+        var response = await Http.GetAsync(requestURL);
+        if (response.IsSuccessStatusCode)
+        {
+            // Assume the response is JSON encoded as type TItem
+            TItem[]? data = await response.Content.ReadFromJsonAsync<TItem[]>();
+            if (data == null) throw new Exception("invalid response");
+            rows = [.. data.Select(UserQueryExtensions.GetQueryablePropertiesRecord)];
+        }
+        else
+        {
+            rows = Array.Empty<string[]>();
+        }
+    }
+
+    public void SortBy(string columnName)
+    {
+        sortColumn = columnName;
+        StateHasChanged();
+    }
+
+    public void ChangePage(int page)
+    {
+        pageNum = page;
+        StateHasChanged();
+    }
+}

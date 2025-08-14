@@ -1,0 +1,33 @@
+﻿@* page selector *@
+
+<div class="pagination-container">
+    <button class="page-btn" @onclick="() => ChangePage(CurrentPage - 1)" disabled="@IsFirstPage">Previous</button>
+
+    @for (int i = 1; i <= TotalPages; i++)
+    {
+        <button class="page-btn @(i == CurrentPage ? "active" : "")" @onclick="() => ChangePage(i)">
+            @i
+        </button>
+    }
+
+    <button class="page-btn" @onclick="() => ChangePage(CurrentPage + 1)" disabled="@IsLastPage">Next</button>
+</div>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public int TotalItems { get; set; }
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
+    private bool IsFirstPage => CurrentPage <= 1;
+    private bool IsLastPage => CurrentPage >= TotalPages;
+
+    private async Task ChangePage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            await OnPageChanged.InvokeAsync(page);
+        }
+    }
+}

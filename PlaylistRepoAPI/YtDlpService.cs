@@ -89,7 +89,7 @@ namespace PlaylistRepoAPI
 				counter++;
 			}
 
-			await dbContext.AddRangeAsync(newMedias);
+			dbContext.Medias.AddRange(newMedias);
 			await dbContext.SaveChangesAsync();
 			downloadDir.Delete(true);
 
@@ -109,6 +109,7 @@ namespace PlaylistRepoAPI
 			
 			process.OutputDataReceived += (sender, args) =>
 			{
+				Console.WriteLine(args.Data);
 				if (string.IsNullOrEmpty(args.Data) || progress == null) return;
 				if (args.Data.StartsWith("[download] Downloading item "))
 				{
@@ -145,8 +146,12 @@ namespace PlaylistRepoAPI
 			using var process = GetProcessTemplate();
 			var downloadDir = Directory.CreateTempSubdirectory();
 			string extension = downloadFormat != null ? "--format " + downloadFormat : "";
-			// TODO filter out existing media files
-			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" -f bestaudio --write-description --write-playlist-metafiles --yes-playlist {extension}";
+
+			// Filter out existing media files
+			string filter = "--match-filter \"" + string.Join('&', dbContext.Medias.Where(m => m.RemoteId == remote.Id && m.FilePath != null)
+				.Select(s => $"id!={s}")) + "\"";
+
+			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" -f bestaudio --write-description --write-playlist-metafiles --yes-playlist {extension} {filter}";
 			process.StartInfo.RedirectStandardOutput = true;
 
 			process.OutputDataReceived += (sender, args) =>
@@ -222,7 +227,7 @@ namespace PlaylistRepoAPI
 				}				
 			}
 
-			await dbContext.AddRangeAsync(newMedias);
+			await dbContext.Medias.AddRangeAsync(newMedias);
 			await dbContext.IngestExisting([.. newMedias.Concat(existingMedias).Select(m => (fileMap[m.RemoteUID!], m))], progress);
 		}
 

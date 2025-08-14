@@ -96,7 +96,7 @@ public class Program
 	private static async Task<int> RunAddAsync(AddOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.TaskRequest(HttpMethod.Post, "/data/remote", request =>
+		var response = await api.Request(HttpMethod.Post, "/data/remotes", request =>
 		{
 			RemotePlaylist newRemote = new() { Link = opts.RemoteURL };
 			if (opts.RemoteName != null) newRemote.Name = opts.RemoteName;
@@ -118,7 +118,7 @@ public class Program
 	private static async Task<int> RunCreateAsync(CreateOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.TaskRequest(HttpMethod.Post, "/data/remote", request =>
+		var response = await api.Request(HttpMethod.Post, "/data/playlists", request =>
 		{
 			Playlist newPlaylist = new() { UserQuery = opts.UserQuery };
 			if (opts.PlaylistTitle != null) newPlaylist.Title = opts.PlaylistTitle;

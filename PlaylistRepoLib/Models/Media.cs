@@ -10,6 +10,7 @@ namespace PlaylistRepoLib.Models;
 [PrimaryUserQueryable(nameof(Title))]
 public partial class Media
 {
+	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 	[Key] public int Id { get; set; }
 
 	[ForeignKey(nameof(Source))] public int? RemoteId { get; set; }
