@@ -21,6 +21,10 @@ public static class UserQueryExtensions
 	public static string ConstructRequest(string baseURL, string userFilter, string? orderBy, bool descending, int pageSize, int currentPage)
 	{
 		var builder = new StringBuilder(baseURL);
+
+		if (!baseURL.EndsWith('/')) 
+			builder.Append('/');
+
 		builder.Append("?query=");
 		builder.Append(Uri.EscapeDataString(userFilter));
 

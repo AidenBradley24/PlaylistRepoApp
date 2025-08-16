@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <OutputPath>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutputPath>
+    <OutputPath>$(SolutionDir)out\api\</OutputPath>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
