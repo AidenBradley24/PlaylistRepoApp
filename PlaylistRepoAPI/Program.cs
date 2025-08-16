@@ -12,7 +12,7 @@ DirectoryInfo path = new(args[0]);
 // build api
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddCommandLine(args);
-string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:4271";
+string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7002";
 builder.WebHost.UseUrls(url);
 
 // Add services to the container.
@@ -52,5 +52,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseDefaultFiles();
+app.MapStaticAssets();
+app.MapFallbackToFile("/index.html");
 
 app.Run();
