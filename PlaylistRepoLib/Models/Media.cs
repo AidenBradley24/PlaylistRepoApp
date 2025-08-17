@@ -34,7 +34,6 @@ public partial class Media
 
 	[UserQueryable("artist")]
 	[NotMapped]
-	[JsonIgnore]
 	public string? PrimaryArtist => Artists?.FirstOrDefault();
 
 	public string[]? Artists { get; set; }
@@ -52,7 +51,7 @@ public partial class Media
 	public TimeSpan? MediaLength { get; set; }
 
 	[UserQueryable("order")]
-	public int? Order { get; set; } = null;
+	public int Order { get; set; } = 0;
 
 	public bool Locked { get; set; } = false;
 

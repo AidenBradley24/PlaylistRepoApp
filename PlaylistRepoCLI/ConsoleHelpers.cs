@@ -4,16 +4,22 @@ namespace PlaylistRepoCLI
 {
 	public static class ConsoleHelpers
 	{
+		static int linesWritten = 0;
+
 		public static void WriteProgress(TaskProgress? progress)
 		{
-			Console.WriteLine("{0,-50}", progress?.Status);
+			linesWritten = progress?.Status?.Count(c => c == '\n') ?? 0;
+			Console.WriteLine(progress?.Status);
+			linesWritten++;
 			if (progress?.Progress > 0)
 			{
 				Console.WriteLine("{0,-50}", new string('░', progress?.Progress / 2 ?? 0) + new string('▓', 50 - (progress?.Progress / 2 ?? 0)));
+				linesWritten++;
 			}
 			else
 			{
 				Console.WriteLine();
+				linesWritten++;
 			}
 		}
 
@@ -25,11 +31,11 @@ namespace PlaylistRepoCLI
 
 		public static void ClearProgress()
 		{
-			Console.SetCursorPosition(0, Console.CursorTop - 4);
-			for (int i = 0; i < 4; i++) Console.WriteLine(new string(' ', Console.WindowWidth));
-			Console.SetCursorPosition(0, Console.CursorTop - 4);
-			Console.WriteLine(new string(' ', Console.WindowWidth));
-			Console.WriteLine(new string(' ', Console.WindowWidth));
+			int top = Console.CursorTop - linesWritten;
+			Console.SetCursorPosition(0, top);
+			for (int i = 0; i < linesWritten; i++) Console.WriteLine(new string(' ', Console.WindowWidth));
+			Console.SetCursorPosition(0, top);
+			linesWritten = 0;
 		}
 	}
 }

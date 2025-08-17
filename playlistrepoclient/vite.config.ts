@@ -50,6 +50,14 @@ export default defineConfig({
             '^/data': {
                 target,
                 secure: false
+            },
+            '^/action': {
+                target,
+                secure: false
+            },
+            '^/task': {
+                target,
+                secure: false
             }
         },
         port: parseInt(env.DEV_SERVER_PORT || '59584'),

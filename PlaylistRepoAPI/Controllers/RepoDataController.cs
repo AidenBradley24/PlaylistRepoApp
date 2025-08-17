@@ -22,7 +22,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			try
 			{
-				return Ok(db.Medias.EvaluateUserQuery(query).Skip(pageSize * currentPage).Take(pageSize));
+				return Ok(new ApiGetResponse<Media>(db.Medias, query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{
@@ -57,7 +57,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			try
 			{
-				return Ok(db.RemotePlaylists.EvaluateUserQuery(query).Skip(pageSize * currentPage).Take(pageSize));
+				return Ok(new ApiGetResponse<RemotePlaylist>(db.RemotePlaylists, query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{
@@ -92,7 +92,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			try
 			{
-				return Ok(db.Playlists.EvaluateUserQuery(query).Skip(pageSize * currentPage).Take(pageSize));
+				return Ok(new ApiGetResponse<Playlist>(db.Playlists, query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{

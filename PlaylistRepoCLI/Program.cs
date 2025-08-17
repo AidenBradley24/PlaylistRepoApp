@@ -147,7 +147,7 @@ public class Program
 		[Option("pagesize", Default = 50, Required = false)]
 		public int PageSize { get; set; }
 
-		[Option("pagenum", Default = 0, Required = false)]
+		[Option("pagenum", Default = 1, Required = false)]
 		public int PageNumber { get; set; }
 	}
 
@@ -172,20 +172,50 @@ public class Program
 		if (opts.ListMedia)
 		{
 			var response = await api.Request(HttpMethod.Get, $"/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
-			result.AppendLine("\nMEDIA:");
-			result.AppendJoin("\n", response.Content.ReadFromJsonAsAsyncEnumerable<Media>().ToBlockingEnumerable());
+			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<Media>>();
+			if (formattedResponse == null)
+			{
+				result.AppendLine("Error reading data.");
+			}
+			else
+			{
+				result.AppendLine();
+				result.Append(formattedResponse.Total);
+				result.AppendLine(" MEDIA:");
+				result.AppendJoin<Media>("\n", formattedResponse.Data ?? []);
+			}
 		}
 		else if (opts.ListRemotePlaylists)
 		{
 			var response = await api.Request(HttpMethod.Get, $"/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
-			result.AppendLine("\nREMOTE PLAYLISTS:");
-			result.AppendJoin("\n", response.Content.ReadFromJsonAsAsyncEnumerable<RemotePlaylist>().ToBlockingEnumerable());
+			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<RemotePlaylist>>();
+			if (formattedResponse == null)
+			{
+				result.AppendLine("Error reading data.");
+			}
+			else
+			{
+				result.AppendLine();
+				result.Append(formattedResponse.Total);
+				result.AppendLine(" REMOTE PLAYLISTS:");
+				result.AppendJoin<RemotePlaylist>("\n", formattedResponse.Data ?? []);
+			}
 		}
 		else if (opts.ListPlaylists)
 		{
 			var response = await api.Request(HttpMethod.Get, $"/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
-			result.AppendLine("\nPLAYLISTS:");
-			result.AppendJoin("\n", response.Content.ReadFromJsonAsAsyncEnumerable<Playlist>().ToBlockingEnumerable());
+			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<Playlist>>();
+			if (formattedResponse == null)
+			{
+				result.AppendLine("Error reading data.");
+			}
+			else
+			{
+				result.AppendLine();
+				result.Append(formattedResponse.Total);
+				result.AppendLine(" PLAYLISTScls:");
+				result.AppendJoin<Playlist>("\n", formattedResponse.Data ?? []);
+			}
 		}
 
 		Console.WriteLine(result.ToString());
