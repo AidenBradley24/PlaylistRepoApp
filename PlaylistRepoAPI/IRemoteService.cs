@@ -18,12 +18,12 @@ namespace PlaylistRepoAPI
 		/// <summary>
 		/// Downloads and replaces <see cref="Media.File"/> from the requested <paramref name="remote"/> where the <see cref="Media.RemoteUID"/> is in <paramref name="mediaUIDs"/>.
 		/// </summary>
-		public Task Download(RemotePlaylist remote, IEnumerable<string> mediaUIDs, string? downloadFormat = null, IProgress<TaskProgress>? progress = null);
+		public Task Download(RemotePlaylist remote, IEnumerable<string> mediaUIDs, IProgress<TaskProgress>? progress = null);
 
 		/// <summary>
 		/// Fetch and download media from <paramref name="remote"/>.
 		/// <br/> Ignores media that is <see cref="Media.Locked"/>.
 		/// </summary>
-		public Task Sync(RemotePlaylist remote, string? downloadFormat = null, IProgress<TaskProgress>? progress = null);
+		public Task Sync(RemotePlaylist remote, IProgress<TaskProgress>? progress = null);
 	}
 }

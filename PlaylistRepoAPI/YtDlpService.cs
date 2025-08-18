@@ -79,6 +79,7 @@ namespace PlaylistRepoAPI
 					newMedias.Add(media);
 				}
 
+				media.Type = remote.MediaType == Media.MediaType.undefined ? Media.MediaType.video : remote.MediaType;
 				media.Title = title;
 				media.Description = description;
 				media.Source = remote;
@@ -98,13 +99,14 @@ namespace PlaylistRepoAPI
 					string.Join('\n', newMedias.Select(m => $"ADDED: {m.Title}"))));
 		}
 
-		public async Task Download(RemotePlaylist remote, IEnumerable<string> mediaUIDs, string? downloadFormat = null, IProgress<TaskProgress>? progress = null)
+		public async Task Download(RemotePlaylist remote, IEnumerable<string> mediaUIDs, IProgress<TaskProgress>? progress = null)
 		{
 			using var process = GetProcessTemplate();
 			var downloadDir = Directory.CreateTempSubdirectory();
 			string idFilter = "--match-filter " + string.Join('&', mediaUIDs.Select(s => $"id={s}"));
-			string extension = downloadFormat != null ? "--format " + downloadFormat : "";
-			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" --yes-playlist {idFilter} {extension}";
+			// TODO determine format
+			string format = "";// "--format " + Media.GetPreferedExtension()
+			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" --yes-playlist {idFilter} {format}";
 			process.StartInfo.RedirectStandardOutput = true;
 			
 			process.OutputDataReceived += (sender, args) =>
@@ -133,7 +135,7 @@ namespace PlaylistRepoAPI
 				string uid = GetURLTag(file.Name);
 				Media? media = await dbContext.Medias.FirstOrDefaultAsync(m => m.Source == remote && m.RemoteUID == uid);
 				if (media == null) continue;
-				FileInfo newFile = new(Path.Combine(repoService.RootPath.FullName, media.GenerateFileName(extension)));
+				FileInfo newFile = new(Path.Combine(repoService.RootPath.FullName, media.GenerateFileName(format)));
 				File.Copy(file.FullName, newFile.FullName, true);
 				mediaBundles.Add((newFile, media));
 			}
@@ -141,17 +143,19 @@ namespace PlaylistRepoAPI
 			await dbContext.IngestExisting([.. mediaBundles], progress);
 		}
 
-		public async Task Sync(RemotePlaylist remote, string? downloadFormat = null, IProgress<TaskProgress>? progress = null)
+		public async Task Sync(RemotePlaylist remote, IProgress<TaskProgress>? progress = null)
 		{
 			using var process = GetProcessTemplate();
 			var downloadDir = Directory.CreateTempSubdirectory();
-			string extension = downloadFormat != null ? "--format " + downloadFormat : "";
+
+			// TODO determine format
+			string format = ""; // downloadFormat != null ? "--format " + downloadFormat : "";
 
 			// Filter out existing media files
 			string filter = "--match-filter \"" + string.Join('&', dbContext.Medias.Where(m => m.RemoteId == remote.Id && m.FilePath != null)
 				.Select(s => $"id!={s}")) + "\"";
 
-			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" -f bestaudio --write-description --write-playlist-metafiles --yes-playlist {extension} {filter}";
+			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" --write-description --write-playlist-metafiles --yes-playlist {format} {filter}";
 			process.StartInfo.RedirectStandardOutput = true;
 
 			process.OutputDataReceived += (sender, args) =>

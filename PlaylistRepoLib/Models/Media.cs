@@ -29,6 +29,9 @@ public partial class Media
 	public string? FilePath { get; set; }
 	public byte[]? Hash { get; set; }
 
+	[UserQueryable("type")]
+	public MediaType Type { get; set; }
+
 	[UserQueryable("title")]
 	public string Title { get; set; } = "unnamed media";
 
@@ -136,5 +139,21 @@ public partial class Media
 		sb.Append('.');
 		sb.Append(extension);
 		return sb.ToString();
+	}
+
+	public enum MediaType
+	{
+		undefined, audio, video, image
+	}
+
+	public static string GetPreferedExtension(MediaType type)
+	{
+		return type switch
+		{
+			MediaType.audio => "mp3",
+			MediaType.video => "mp4",
+			MediaType.image => "jpg",
+			_ => "undefined"
+		};
 	}
 }

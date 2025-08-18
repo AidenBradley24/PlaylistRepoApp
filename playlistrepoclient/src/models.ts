@@ -7,12 +7,13 @@ export interface Response<T> {
 
 export interface Media {
     id: number,
+    type: any,
     title: string,
     primaryArtist: string | undefined,
     artists: string[] | undefined,
     album: string | undefined,
     description: string | undefined,
     rating: number,
-    mediaLength: TimeLike,
+    mediaLength: TimeLike | undefined,
     order: number
 }

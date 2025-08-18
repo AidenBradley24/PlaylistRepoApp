@@ -24,6 +24,10 @@ builder.Services.AddSingleton<IPlayRepoService, PlayRepoService>(serviceProvider
 {
 	return new PlayRepoService(path.FullName);
 });
+
+builder.Services.AddScoped<IConversionService, ConversionService>();
+
+builder.Services.AddSingleton<IRemoteService, RemoteService>();
 builder.Services.AddScoped<YtDlpService>();
 
 builder.Services.AddControllers();

@@ -50,5 +50,19 @@ namespace PlaylistRepoLib
 				Status = message
 			};
 		}
+
+		public static TaskProgress FromComposite(int remainingTasks, params IEnumerable<TaskProgress> ongoingOrCompletedTasks)
+		{
+			TaskProgress? lastTask = null;
+			int totalTasks = remainingTasks;
+			int totalProgess = 0;
+			foreach (var task in ongoingOrCompletedTasks)
+			{
+				totalTasks++;
+				lastTask = task;
+				totalProgess += task.Progress;
+			}
+			return FromNumbers(totalProgess, totalTasks * 100, lastTask?.Status ?? "Running");
+		}
 	}
 }

@@ -38,7 +38,7 @@ namespace PlaylistRepoAPI.Controllers
 			Guid id;
 			try
 			{
-				id = taskService.StartTask<YtDlpService>((progress, dl) => dl.Fetch(remote, progress));
+				id = taskService.StartTask<IRemoteService>((progress, dl) => dl.Fetch(remote, progress));
 			}
 			catch (Exception ex)
 			{
@@ -49,14 +49,14 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpPost("download")]
-		public IActionResult Download([FromHeader] int remoteId, [FromHeader] string downloadFileExtension, [FromBody] string[] mediaUIDs)
+		public IActionResult Download([FromHeader] int remoteId, [FromBody] string[] mediaUIDs)
 		{
 			RemotePlaylist? remote = db.RemotePlaylists.FirstOrDefault(r => r.Id == remoteId);
 			if (remote == null) return BadRequest("Remote does not exist.");
 			Guid id;
 			try
 			{
-				id = taskService.StartTask<YtDlpService>((progress, dl) => dl.Download(remote, mediaUIDs, downloadFileExtension, progress));
+				id = taskService.StartTask<IRemoteService>((progress, dl) => dl.Download(remote, mediaUIDs, progress));
 			}
 			catch (Exception ex)
 			{
@@ -67,14 +67,14 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpPost("sync")]
-		public IActionResult Sync([FromHeader] int remoteId, [FromHeader] string downloadFileExtension)
+		public IActionResult Sync([FromHeader] int remoteId)
 		{
 			RemotePlaylist? remote = db.RemotePlaylists.FirstOrDefault(r => r.Id == remoteId);
 			if (remote == null) return BadRequest("Remote does not exist.");
 			Guid id;
 			try
 			{
-				id = taskService.StartTask<YtDlpService>((progress, dl) => dl.Sync(remote, downloadFileExtension, progress));
+				id = taskService.StartTask<IRemoteService>((progress, dl) => dl.Sync(remote, progress));
 			}
 			catch (Exception ex)
 			{

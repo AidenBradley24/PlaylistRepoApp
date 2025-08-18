@@ -94,6 +94,7 @@ internal static class UserQueryTypeParsers
 
 		try
 		{
+			if (type.IsEnum) return Enum.Parse(type, literal);
 			return parser(literal);
 		}
 		catch (FormatException ex)

@@ -10,4 +10,12 @@ public class RemotePlaylist
 	public string Name { get; set; } = null!;
 	public string? Description { get; set; }
 	public string Link { get; set; } = null!;
+	public Media.MediaType MediaType { get; set; } = Media.MediaType.undefined;
+	public RemoteType Type { get; set; } = RemoteType.internet;
+
+	public enum RemoteType
+	{
+		internet,
+		ytdlp
+	}
 }
