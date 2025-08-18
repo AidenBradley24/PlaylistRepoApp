@@ -87,7 +87,7 @@ public partial class Media
 		{
 			sb.Append(" – ");
 			sb.Append(Album);
-			if (Order != null)
+			if (Order != 0)
 			{
 				sb.Append('[');
 				sb.Append(Order);
@@ -119,7 +119,7 @@ public partial class Media
 		{
 			sb.Append(" – ");
 			sb.Append(Album);
-			if (Order != null)
+			if (Order != 0)
 			{
 				sb.Append('[');
 				sb.Append(Order);

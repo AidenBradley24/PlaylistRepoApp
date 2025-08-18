@@ -1,49 +1,33 @@
-﻿import React, { useState } from "react";
+﻿import React from "react";
+import Tab from "react-bootstrap/Tab";
+import Tabs from "react-bootstrap/Tabs";
 import MediaView from "./View"; // your Media records table component
+import "bootstrap/dist/css/bootstrap.min.css"; // include bootstrap styles
 import "./app.css";
 
 const App: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<"media" | "tab2" | "tab3">("media");
-
     return (
         <div className="app-container">
-            {/* Header TODO use get info */}
-            <header className="app-header">
-                My App
-            </header>
+            {/* Header */}
+            <header className="app-header">My App</header>
 
-            {/* Tabs */}
-            <nav className="tab-bar">
-                <button
-                    className={`tab-button ${activeTab === "media" ? "active" : ""}`}
-                    onClick={() => setActiveTab("media")}
-                >
-                    Media
-                </button>
-                <button
-                    className={`tab-button ${activeTab === "tab2" ? "active" : ""}`}
-                    onClick={() => setActiveTab("tab2")}
-                >
-                    Tab 2
-                </button>
-                <button
-                    className={`tab-button ${activeTab === "tab3" ? "active" : ""}`}
-                    onClick={() => setActiveTab("tab3")}
-                >
-                    Tab 3
-                </button>
-            </nav>
-
-            {/* Tab Content */}
-            <main className="tab-content">
-                {activeTab === "media" && <MediaView />}
-                {activeTab === "tab2" && (
+            {/* Tabs from react-bootstrap */}
+            <Tabs
+                defaultActiveKey="media"
+                id="app-tabs"
+                className="mb-3"
+                fill
+            >
+                <Tab eventKey="media" title="Media">
+                    <MediaView />
+                </Tab>
+                <Tab eventKey="tab2" title="Tab 2">
                     <div className="placeholder">Placeholder content for Tab 2</div>
-                )}
-                {activeTab === "tab3" && (
+                </Tab>
+                <Tab eventKey="tab3" title="Tab 3">
                     <div className="placeholder">Placeholder content for Tab 3</div>
-                )}
-            </main>
+                </Tab>
+            </Tabs>
         </div>
     );
 };

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { Table, Button, Pagination } from "react-bootstrap";
 import type { Response, Media } from "./models";
-import "./records.css";
+import Modal from "react-bootstrap/Modal";
 
-const PageSize = 10;
+const PageSize = 20;
 
 async function fetchRecords(page: number) {
     return await fetch(`data/media?pageSize=${PageSize}&currentPage=${page}`);
@@ -13,6 +14,10 @@ const MediaView: React.FC = () => {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
 
+    // Modal state
+    const [selected, setSelected] = useState<Media | null>(null);
+    const [showModal, setShowModal] = useState(false);
+
     useEffect(() => {
         const loadData = async () => {
             const response = await fetchRecords(page);
@@ -22,7 +27,6 @@ const MediaView: React.FC = () => {
             }
 
             const result = (await response.json()) as Response<Media>;
-            console.log(result);
             setRecords(result.data);
             setTotal(result.total);
         };
@@ -31,50 +35,147 @@ const MediaView: React.FC = () => {
 
     const totalPages = Math.ceil(total / PageSize);
 
+    /** Generate list of page numbers with ellipsis */
+    const getPageNumbers = () => {
+        const pages: (number | string)[] = [];
+
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+            return pages;
+        }
+
+        pages.push(1);
+
+        let start = Math.max(2, page - 2);
+        let end = Math.min(totalPages - 1, page + 2);
+
+        if (start > 2) {
+            pages.push("...");
+        }
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+
+        if (end < totalPages - 1) {
+            pages.push("...");
+        }
+
+        pages.push(totalPages);
+
+        return pages;
+    };
+
+    /** Open modal for a selected record */
+    const handleRowClick = (record: Media) => {
+        setSelected(record);
+        setShowModal(true);
+    };
+
     return (
-        <div className="records-container">
-            <h3 className="records-title">Records</h3>
+        <div>
+            <h3>Records</h3>
 
             {/* Records table */}
-            <table className="records-table">
+            <Table striped bordered hover responsive>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Title</th>
-                        <th>Description</th>
+                        <th>Artist</th>
+                        <th>Album</th>
+                        <th>Rating</th>
+                        <th>Length</th>
                     </tr>
                 </thead>
                 <tbody>
                     {records.length === 0 ? (
-                        <tr key="no">
-                            <td colSpan={3} className="no-data">
+                        <tr>
+                            <td colSpan={6} className="text-center">
                                 No data
                             </td>
                         </tr>
                     ) : (
                         records.map((record) => (
-                            <tr key={record.id}>
-                                <td>{record.id ?? "—"}</td>
-                                <td>{record.title ?? "—"}</td>
-                                <td>{record.description ?? "—"}</td>
+                            <tr
+                                key={record.id}
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleRowClick(record)}
+                            >
+                                <td>{record.id ?? "-"}</td>
+                                <td>{record.title ?? "-"}</td>
+                                <td>{record.primaryArtist ?? "-"}</td>
+                                <td>{record.album ?? "-"}</td>
+                                <td>{record.rating ?? "-"}</td>
+                                <td>{record.mediaLength?.toLocaleString() ?? "-"}</td>
                             </tr>
                         ))
                     )}
                 </tbody>
-            </table>
+            </Table>
 
             {/* Pagination controls */}
-            <div className="pagination">
-                {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                        key={i}
-                        className={`page-button ${i + 1 === page ? "active" : ""}`}
-                        onClick={() => setPage(i + 1)}
-                    >
-                        {i + 1}
-                    </button>
-                ))}
-            </div>
+            <Pagination className="justify-content-center">
+                {/* Back button */}
+                <Pagination.Prev
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                />
+
+                {/* Page numbers */}
+                {getPageNumbers().map((p, idx) =>
+                    p === "..." ? (
+                        <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
+                    ) : (
+                        <Pagination.Item
+                            key={`page-${p}`}
+                            active={p === page}
+                            onClick={() => setPage(p as number)}
+                        >
+                            {p}
+                        </Pagination.Item>
+                    )
+                )}
+
+                {/* Next button */}
+                <Pagination.Next
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                />
+            </Pagination>
+
+            {/* Modal */}
+            <Modal
+                show={showModal}
+                onHide={() => setShowModal(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Media Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selected ? (
+                        <div>
+                            <p><strong>ID:</strong> {selected.id}</p>
+                            <p><strong>Title:</strong> {selected.title}</p>
+                            <p><strong>Artist:</strong> {selected.primaryArtist}</p>
+                            <p><strong>Album:</strong> {selected.album}</p>
+                            <p><strong>Rating:</strong> {selected.rating}</p>
+                            <p><strong>Length:</strong> {selected.mediaLength?.toLocaleString()}</p>
+                        </div>
+                    ) : (
+                        <p>No record selected.</p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };
