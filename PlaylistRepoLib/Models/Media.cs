@@ -30,7 +30,7 @@ public partial class Media
 	public byte[]? Hash { get; set; }
 
 	[UserQueryable("type")]
-	public MediaType Type { get; set; }
+	public string MimeType { get; set; } = "";
 
 	[UserQueryable("title")]
 	public string Title { get; set; } = "unnamed media";
@@ -86,6 +86,11 @@ public partial class Media
 		sb.Append('\t');
 		sb.Append(Title);
 
+		sb.Append('\t');
+		sb.Append('(');
+		sb.Append(MimeType);
+		sb.Append(')');
+
 		if (Album != null)
 		{
 			sb.Append(" – ");
@@ -139,21 +144,5 @@ public partial class Media
 		sb.Append('.');
 		sb.Append(extension);
 		return sb.ToString();
-	}
-
-	public enum MediaType
-	{
-		undefined, audio, video, image
-	}
-
-	public static string GetPreferedExtension(MediaType type)
-	{
-		return type switch
-		{
-			MediaType.audio => "mp3",
-			MediaType.video => "mp4",
-			MediaType.image => "jpg",
-			_ => "undefined"
-		};
 	}
 }

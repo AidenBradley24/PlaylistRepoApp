@@ -88,9 +88,11 @@ public class Program
 	[Verb("add", HelpText = "Add a new remote playlist to this repo.")]
 	class AddOptions : ApiOptions
 	{
-		[Value(0, MetaName = "url", HelpText = "URL of the specified remote playlist.", Required = true)] public string RemoteURL { get; set; } = null!;
-		[Value(1, MetaName = "name", HelpText = "Name of the remote playlist", Required = false)] public string? RemoteName { get; set; } = null;
-		[Value(2, MetaName = "description", HelpText = "Description of the remote playlist", Required = false)] public string? RemoteDescription { get; set; } = null;
+		[Value(0, MetaName = "type", HelpText = "internet or ytdlp", Required = true)] public string Type { get; set; } = null!;
+		[Value(1, MetaName = "url", HelpText = "URL of the specified remote playlist.", Required = true)] public string RemoteURL { get; set; } = null!;
+		[Option('m', "media-type", HelpText = "MIME type of the media in the playlist", Required = false, Default = null)]  public string? MediaType { get; set; } = null;
+		[Option('n', "name", HelpText = "Name of the remote playlist", Required = false)] public string? RemoteName { get; set; } = null;
+		[Option('d', "description", HelpText = "Description of the remote playlist", Required = false)] public string? RemoteDescription { get; set; } = null;
 	}
 
 	private static async Task<int> RunAddAsync(AddOptions opts)
@@ -98,7 +100,12 @@ public class Program
 		using var api = opts.CreateAPI();
 		var response = await api.Request(HttpMethod.Post, "/data/remotes", request =>
 		{
-			RemotePlaylist newRemote = new() { Link = opts.RemoteURL };
+			RemotePlaylist newRemote = new()
+			{
+				Type = Enum.Parse<RemotePlaylist.RemoteType>(opts.Type),
+				Link = opts.RemoteURL,
+				MediaMime = opts.MediaType
+			};
 			if (opts.RemoteName != null) newRemote.Name = opts.RemoteName;
 			if (opts.RemoteDescription != null) newRemote.Description = opts.RemoteDescription;
 			request.Content = JsonContent.Create(newRemote);

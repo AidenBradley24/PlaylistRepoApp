@@ -54,6 +54,8 @@ namespace PlaylistRepoAPI
 
 			progress?.Report(TaskProgress.FromIndeterminate("Updating database..."));
 
+			if (string.IsNullOrWhiteSpace(remote.MediaMime)) remote.MediaMime = "video/mp4";
+
 			int counter = 0;
 			foreach (FileInfo file in downloadDir.EnumerateFiles())
 			{
@@ -79,7 +81,7 @@ namespace PlaylistRepoAPI
 					newMedias.Add(media);
 				}
 
-				media.Type = remote.MediaType == Media.MediaType.undefined ? Media.MediaType.video : remote.MediaType;
+				media.MimeType = remote.MediaMime;
 				media.Title = title;
 				media.Description = description;
 				media.Source = remote;
@@ -99,13 +101,23 @@ namespace PlaylistRepoAPI
 					string.Join('\n', newMedias.Select(m => $"ADDED: {m.Title}"))));
 		}
 
+		private static string GetFormat(RemotePlaylist remote)
+		{
+			if (remote.MediaMime == null)
+				return $"-f \"bestvideo+bestaudio/best\" --merge-output-format mp4";
+			if (remote.MediaMime.StartsWith("video"))
+				return $"-f \"bestvideo+bestaudio/best\" --merge-output-format {MimeTypes.GetMimeTypeExtensions(remote.MediaMime).First()} ";
+			if (remote.MediaMime.StartsWith("audio")) 
+				return $"-x --audio-format {MimeTypes.GetMimeTypeExtensions(remote.MediaMime).First()} --output";
+			throw new Exception("Type not available " + remote.MediaMime);
+		}
+
 		public async Task Download(RemotePlaylist remote, IEnumerable<string> mediaUIDs, IProgress<TaskProgress>? progress = null)
 		{
 			using var process = GetProcessTemplate();
 			var downloadDir = Directory.CreateTempSubdirectory();
 			string idFilter = "--match-filter " + string.Join('&', mediaUIDs.Select(s => $"id={s}"));
-			// TODO determine format
-			string format = "";// "--format " + Media.GetPreferedExtension()
+			string format = GetFormat(remote);
 			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" --yes-playlist {idFilter} {format}";
 			process.StartInfo.RedirectStandardOutput = true;
 			
@@ -138,6 +150,7 @@ namespace PlaylistRepoAPI
 				FileInfo newFile = new(Path.Combine(repoService.RootPath.FullName, media.GenerateFileName(format)));
 				File.Copy(file.FullName, newFile.FullName, true);
 				mediaBundles.Add((newFile, media));
+				media.MimeType = MimeTypes.GetMimeType(newFile.Name);
 			}
 
 			await dbContext.IngestExisting([.. mediaBundles], progress);
@@ -147,9 +160,7 @@ namespace PlaylistRepoAPI
 		{
 			using var process = GetProcessTemplate();
 			var downloadDir = Directory.CreateTempSubdirectory();
-
-			// TODO determine format
-			string format = ""; // downloadFormat != null ? "--format " + downloadFormat : "";
+			string format = GetFormat(remote);
 
 			// Filter out existing media files
 			string filter = "--match-filter \"" + string.Join('&', dbContext.Medias.Where(m => m.RemoteId == remote.Id && m.FilePath != null)

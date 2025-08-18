@@ -1,4 +1,5 @@
 import type { TimeLike } from "node:fs";
+import type { MIMEType } from "node:util";
 
 export interface Response<T> {
     data: T[]
@@ -7,7 +8,7 @@ export interface Response<T> {
 
 export interface Media {
     id: number,
-    type: any,
+    mimeType: MIMEType,
     title: string,
     primaryArtist: string | undefined,
     artists: string[] | undefined,

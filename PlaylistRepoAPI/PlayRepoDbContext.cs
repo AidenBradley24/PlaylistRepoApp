@@ -52,8 +52,8 @@ public class PlayRepoDbContext : DbContext
 			if (matchCount == 1)
 			{
 				media = await matching.FirstAsync();
-				media.SyncFromMediaFile();
 				media.FilePath = playRepo.GetRelativePath(file);
+				media.SyncFromMediaFile();
 				updateCount++;
 			}
 			else if (matchCount > 1 || medias.ContainsKey(hash))
@@ -68,6 +68,7 @@ public class PlayRepoDbContext : DbContext
 					Hash = hash,
 					FilePath = playRepo.GetRelativePath(file),
 				};
+				media.SyncFromMediaFile();
 				medias.Add(hash, media);
 				addedCount++;
 			}

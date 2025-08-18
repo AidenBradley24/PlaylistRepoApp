@@ -1,4 +1,5 @@
-﻿using PlaylistRepoLib.Models;
+﻿using PlaylistRepoLib;
+using PlaylistRepoLib.Models;
 
 namespace PlaylistRepoAPI
 {
@@ -6,7 +7,7 @@ namespace PlaylistRepoAPI
 	{
 		public static void SyncToMediaFile(this Media media)
 		{
-			var tagFile = media.GetTagFile();
+			using var tagFile = media.GetTagFile();
 
 			tagFile.Tag.Title = media.Title;
 			tagFile.Tag.Album = media.Album ?? "";
@@ -18,8 +19,9 @@ namespace PlaylistRepoAPI
 			if (media.Locked)
 				return;
 
-			var tagFile = media.GetTagFile();
-			media.Title = tagFile.Tag.Title;
+			using var tagFile = media.GetTagFile();
+			media.MimeType = MimeTypes.GetMimeType(tagFile.Name);
+			if (tagFile.Tag.Title != null) media.Title = tagFile.Tag.Title;
 			media.Album = tagFile.Tag.Album;
 			media.Artists = tagFile.Tag.Performers;
 		}
