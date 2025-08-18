@@ -165,6 +165,50 @@ const MediaView: React.FC = () => {
                             <p><strong>Album:</strong> {selected.album}</p>
                             <p><strong>Rating:</strong> {selected.rating}</p>
                             <p><strong>Length:</strong> {selected.mediaLength?.toLocaleString()}</p>
+
+                            <div style={{ marginTop: "1rem" }}>
+                                <h5>Preview</h5>
+                                {selected.mimeType?.startsWith("image/") && (
+                                    <img
+                                        src={`data/media/${selected.id}`}
+                                        alt={selected.title ?? "media"}
+                                        style={{ maxWidth: "100%", borderRadius: "8px" }}
+                                    />
+                                )}
+
+                                {selected.mimeType?.startsWith("audio/") && (
+                                    <audio
+                                        controls
+                                        src={`data/media/${selected.id}`}
+                                        style={{ width: "100%" }}
+                                    />
+                                )}
+
+                                {selected.mimeType?.startsWith("video/") && (
+                                    <video
+                                        controls
+                                        src={`data/media/${selected.id}`}
+                                        style={{ width: "100%", borderRadius: "8px" }}
+                                    />
+                                )}
+
+                                {selected.mimeType?.startsWith("text/") && (
+                                    <iframe
+                                        src={`data/media/${selected.id}`}
+                                        title="text preview"
+                                        style={{
+                                            width: "100%",
+                                            height: "300px",
+                                            border: "1px solid #ccc",
+                                            borderRadius: "8px",
+                                        }}
+                                    />
+                                )}
+
+                                {!selected.mimeType && (
+                                    <p>No preview available</p>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <p>No record selected.</p>

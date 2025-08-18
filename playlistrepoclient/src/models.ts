@@ -8,7 +8,7 @@ export interface Response<T> {
 
 export interface Media {
     id: number,
-    mimeType: MIMEType,
+    mimeType: string,
     title: string,
     primaryArtist: string | undefined,
     artists: string[] | undefined,

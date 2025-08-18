@@ -122,14 +122,13 @@ namespace PlaylistRepoAPI.Controllers
 			return Ok();
 		}
 
-		[HttpGet("file")]
-		public IActionResult GetFile([FromQuery] int mediaId)
+		[HttpGet("media/{id}")]
+		public IActionResult GetFile([FromRoute] int id)
 		{
-			var media = db.Medias.Find(mediaId);
+			var media = db.Medias.Find(id);
 			if (media == null) return NotFound();
-			using var tagFile = media.GetTagFile();
 			var fs = media.File!.OpenRead();
-			return File(fs, tagFile.MimeType, true);
+			return File(fs, media.MimeType, true);
 		}
 	}
 }
