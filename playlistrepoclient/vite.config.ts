@@ -58,6 +58,10 @@ export default defineConfig({
             '^/task': {
                 target,
                 secure: false
+            },
+            '^play': {
+                target,
+                secure: false
             }
         },
         port: parseInt(env.DEV_SERVER_PORT || '59584'),

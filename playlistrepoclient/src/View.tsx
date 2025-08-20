@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Table, Button, Pagination } from "react-bootstrap";
 import type { Response, Media } from "./models";
 import Modal from "react-bootstrap/Modal";
 
 const PageSize = 20;
 
-async function fetchRecords(page: number) {
-    return await fetch(`data/media?pageSize=${PageSize}&currentPage=${page}`);
+async function fetchRecords(query: string, page: number) {
+    return await fetch(`data/media?query=${encodeURI(query)}&pageSize=${PageSize}&currentPage=${page}`);
+}
+
+function getUserQuery(filter: string, sortDirection: string, sortColumn: string) {
+    return `${filter} orderby${sortDirection == "desc" ? "descending" : ""} ${sortColumn}`
 }
 
 const MediaView: React.FC = () => {
@@ -14,13 +18,16 @@ const MediaView: React.FC = () => {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
 
-    // Modal state
     const [selected, setSelected] = useState<Media | null>(null);
     const [showModal, setShowModal] = useState(false);
 
+    const [sortColumn, setSortColumn] = useState<string>('id');
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const [filter, setFilter] = useState<string>('');
+
     useEffect(() => {
         const loadData = async () => {
-            const response = await fetchRecords(page);
+            const response = await fetchRecords(getUserQuery(filter, sortDirection, sortColumn), page);
 
             if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
@@ -31,7 +38,7 @@ const MediaView: React.FC = () => {
             setTotal(result.total);
         };
         loadData();
-    }, [page]);
+    }, [page, filter, sortDirection, sortColumn]);
 
     const totalPages = Math.ceil(total / PageSize);
 
@@ -74,6 +81,17 @@ const MediaView: React.FC = () => {
         setShowModal(true);
     };
 
+    const handleSort = (column: string) => {
+        if (sortColumn === column) {
+            // toggle direction
+            setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+        } else {
+            // new column
+            setSortColumn(column);
+            setSortDirection("asc");
+        }
+    };
+
     return (
         <div>
             <h3>Records</h3>
@@ -82,12 +100,24 @@ const MediaView: React.FC = () => {
             <Table striped bordered hover responsive>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Artist</th>
-                        <th>Album</th>
-                        <th>Rating</th>
-                        <th>Length</th>
+                        <th onClick={() => handleSort("id")} style={{ cursor: "pointer" }}>
+                            ID {sortColumn === "id" && (sortDirection === "asc" ? "▲" : "▼")}
+                        </th>
+                        <th onClick={() => handleSort("title")} style={{ cursor: "pointer" }}>
+                            Title {sortColumn === "title" && (sortDirection === "asc" ? "▲" : "▼")}
+                        </th>
+                        <th onClick={() => handleSort("artist")} style={{ cursor: "pointer" }}>
+                            Artist {sortColumn === "artist" && (sortDirection === "asc" ? "▲" : "▼")}
+                        </th>
+                        <th onClick={() => handleSort("album")} style={{ cursor: "pointer" }}>
+                            Album {sortColumn === "album" && (sortDirection === "asc" ? "▲" : "▼")}
+                        </th>
+                        <th onClick={() => handleSort("rating")} style={{ cursor: "pointer" }}>
+                            Rating {sortColumn === "rating" && (sortDirection === "asc" ? "▲" : "▼")}
+                        </th>
+                        <th onClick={() => handleSort("length")} style={{ cursor: "pointer" }}>
+                            Length {sortColumn === "length" && (sortDirection === "asc" ? "▲" : "▼")}
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -170,7 +200,7 @@ const MediaView: React.FC = () => {
                                 <h5>Preview</h5>
                                 {selected.mimeType?.startsWith("image/") && (
                                     <img
-                                        src={`data/media/${selected.id}`}
+                                        src={`play/media/${selected.id}`}
                                         alt={selected.title ?? "media"}
                                         style={{ maxWidth: "100%", borderRadius: "8px" }}
                                     />
@@ -179,7 +209,7 @@ const MediaView: React.FC = () => {
                                 {selected.mimeType?.startsWith("audio/") && (
                                     <audio
                                         controls
-                                        src={`data/media/${selected.id}`}
+                                        src={`play/media/${selected.id}`}
                                         style={{ width: "100%" }}
                                     />
                                 )}
@@ -187,14 +217,14 @@ const MediaView: React.FC = () => {
                                 {selected.mimeType?.startsWith("video/") && (
                                     <video
                                         controls
-                                        src={`data/media/${selected.id}`}
+                                        src={`play/media/${selected.id}`}
                                         style={{ width: "100%", borderRadius: "8px" }}
                                     />
                                 )}
 
                                 {selected.mimeType?.startsWith("text/") && (
                                     <iframe
-                                        src={`data/media/${selected.id}`}
+                                        src={`play/media/${selected.id}`}
                                         title="text preview"
                                         style={{
                                             width: "100%",

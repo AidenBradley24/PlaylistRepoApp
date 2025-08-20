@@ -121,14 +121,5 @@ namespace PlaylistRepoAPI.Controllers
 			db.SaveChanges();
 			return Ok();
 		}
-
-		[HttpGet("media/{id}")]
-		public IActionResult GetFile([FromRoute] int id)
-		{
-			var media = db.Medias.Find(id);
-			if (media == null) return NotFound();
-			var fs = media.File!.OpenRead();
-			return File(fs, media.MimeType, true);
-		}
 	}
 }

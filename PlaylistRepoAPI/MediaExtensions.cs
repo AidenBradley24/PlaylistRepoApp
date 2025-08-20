@@ -19,11 +19,19 @@ namespace PlaylistRepoAPI
 			if (media.Locked)
 				return;
 
-			using var tagFile = media.GetTagFile();
-			media.MimeType = MimeTypes.GetMimeType(tagFile.Name);
-			if (tagFile.Tag.Title != null) media.Title = tagFile.Tag.Title;
-			media.Album = tagFile.Tag.Album;
-			media.Artists = tagFile.Tag.Performers;
+			media.MimeType = MimeTypes.GetMimeType(media.File!.Name);
+
+			try
+			{
+				using var tagFile = media.GetTagFile();
+				if (tagFile.Tag.Title != null) media.Title = tagFile.Tag.Title;
+				media.Album = tagFile.Tag.Album;
+				media.Artists = tagFile.Tag.Performers;
+			}
+			catch
+			{
+				// do nothing
+			}		
 		}
 
 		/// <summary>

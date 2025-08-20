@@ -11,6 +11,7 @@ namespace PlaylistRepoLib.Models;
 public partial class Media
 {
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+	[UserQueryable("id")]
 	[Key] public int Id { get; set; }
 
 	[ForeignKey(nameof(Source))] public int? RemoteId { get; set; }
@@ -51,7 +52,7 @@ public partial class Media
 	public int Rating { get; set; }
 
 	[UserQueryable("length")]
-	public TimeSpan? MediaLength { get; set; }
+	public TimeSpan? Length { get; set; }
 
 	[UserQueryable("order")]
 	public int Order { get; set; } = 0;
@@ -59,7 +60,7 @@ public partial class Media
 	public bool Locked { get; set; } = false;
 
 	[NotMapped]
-	public string LengthString => MediaLength?.ToString(@"hh\:mm\:ss") ?? "?";
+	public string LengthString => Length?.ToString(@"hh\:mm\:ss") ?? "?";
 
 	[NotMapped]
 	public string TruncatedDescription
