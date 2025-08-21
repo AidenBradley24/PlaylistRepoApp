@@ -25,14 +25,15 @@ namespace PlaylistRepoAPI.Controllers
 			if (playlist == null) return NotFound();
 
 			var stream = new MemoryStream();
+			string apiURL = Request.IsHttps ? "https://" : "http://" + Request.Host.Value;
 			switch (Path.GetExtension(file))
 			{
 				case ".xspf":
-					await playlist.StreamXspfAsync(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = Request.Host.Value!, UseDirectory = false });
+					await playlist.StreamXspfAsync(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
 					stream.Position = 0;
 					return File(stream, "application/xspf+xml");
 				case ".m3u8":
-					await playlist.StreamM3U8Async(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = Request.Host.Value!, UseDirectory = false });
+					await playlist.StreamM3U8Async(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
 					stream.Position = 0;
 					return File(stream, "application/vnd.apple.mpegurl");
 				default: 

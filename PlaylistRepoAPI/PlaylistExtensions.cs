@@ -58,7 +58,7 @@ namespace PlaylistRepoAPI
 				else
 				{
 					ArgumentNullException.ThrowIfNullOrWhiteSpace(settings.ApiUrl, nameof(settings.ApiUrl));
-					location = $"https://{settings.ApiUrl}/play/media/{media.Id}";
+					location = $"{settings.ApiUrl}/play/media/{media.Id}";
 				}
 				await writer.WriteElementStringAsync(null, "location", null, location);
 

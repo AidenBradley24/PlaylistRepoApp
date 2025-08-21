@@ -92,6 +92,37 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 							descending = true;
 							break;
 						}
+						else if (!queryableProperties.ContainsKey(tokens.Current.Value))
+						{
+							// CONSIDER THIS ENTIRE QUERY A LITERAL (except anything following orderby)
+							// this allows simple searches on the default
+							ArgumentNullException.ThrowIfNull(defaultTarget);
+
+							StringBuilder bigToken = new();
+							do
+							{
+								bigToken.Append(tokens.Current.Value);
+							} while (tokens.MoveNext() && tokens.Current.Value != "orderby" && tokens.Current.Value != "orderbydescending");
+
+							var term = EvaluateComparison(defaultTarget, new Token(bigToken.ToString(), true), null);
+							var lambda = Expression.Lambda<Func<TModel, bool>>(term, model);
+							var exp = root.Where(lambda);
+
+							if (tokens.Current.Value == "orderby")
+							{
+								if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+								sortProperty = tokens.Current;
+								var orderLambda = CreateOrderByExpression(sortProperty);
+								return exp.OrderBy(orderLambda);
+							}
+							else if (tokens.Current.Value == "orderbydescending")
+							{
+								if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+								sortProperty = tokens.Current;
+								var orderLambda = CreateOrderByExpression(sortProperty);
+								return exp.OrderByDescending(orderLambda);
+							}
+						}
 					}
 					goto case Mode.ready;
 				case Mode.ready:
@@ -180,6 +211,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 	private PropertyInfo GetProperty(Token token)
 	{
+		if (token.Value == "orderby" || token.Value == "orderbydescending") throw new InvalidUserQueryException("Incomplete: include property to sort by");
 		bool exists = queryableProperties.TryGetValue(token.Value.ToLowerInvariant(), out var property);
 		if (!exists) throw new InvalidUserQueryException($"Property \"{token.Value}\" not in type {typeof(TModel).FullName}\n" +
 			$"Use {nameof(UserQueryableAttribute)} to specify properties as queryable.");
@@ -287,12 +319,8 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 					mode = LITERAL_MODE;
 				}
 
-				if (mode == DOUBLE_QUOTE_MODE && c == '\\' &&
-					(i < input.Length - 1 &&
-					(input[i + 1] == '\\' ||
-					input[i + 1] == '$' ||
-					input[i + 1] == '\"') ||
-					input[i + 1] == '\n'))
+				if ((mode == DOUBLE_QUOTE_MODE || mode == SINGLE_QUOTE_MODE) && c == '\\' &&
+					(i < input.Length - 1))
 				{
 					// preserve previous characters of segment
 					part = input[start..i];

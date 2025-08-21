@@ -1,7 +1,6 @@
 ﻿using PlaylistRepoLib;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 
@@ -9,6 +8,8 @@ namespace PlaylistRepoCLI
 {
 	internal class ApiHandeler : IDisposable
 	{
+		const int STD_PORT = 7002;
+
 		private readonly Process? apiProcess;
 		public string ApiUrl { get; }
 
@@ -32,22 +33,13 @@ namespace PlaylistRepoCLI
 		/// <param name="apiUrl">The URL to host the API through. Leave null to automatically pick.</param>
 		public ApiHandeler(DirectoryInfo repoDir, string? apiUrl = null)
 		{
-			ApiUrl = apiUrl ??= $"http://localhost:{GetFreePort()}";
+			ApiUrl = apiUrl ??= $"http://localhost:{STD_PORT}";
 			FileInfo process = new(Environment.ProcessPath!);
 			ProcessStartInfo processStart = new(Path.Combine(process.DirectoryName!, "PlaylistRepoAPI.exe"), $"\"{repoDir.FullName}\" --ApiBaseUrl={apiUrl}")
 			{
 				RedirectStandardOutput = true,
 			};
 			apiProcess = Process.Start(processStart)!;
-		}
-
-		public static int GetFreePort()
-		{
-			TcpListener l = new(IPAddress.Loopback, 0);
-			l.Start();
-			int port = ((IPEndPoint)l.LocalEndpoint).Port;
-			l.Stop();
-			return port;
 		}
 
 		/// <summary>

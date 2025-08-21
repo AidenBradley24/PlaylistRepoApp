@@ -14,6 +14,7 @@ public class Program
 		Type[] optionTypes = [.. typeof(Program).GetNestedTypes(BindingFlags.NonPublic).Where(t => t.GetCustomAttribute<VerbAttribute>() != null)];
 		return await Parser.Default.ParseArguments(args, optionTypes)
 			.MapResult(
+				(HostOptions opts) => RunHostAsync(opts),
 				(InitOptions opts) => RunInitAsync(opts),
 				(IngestOptions opts) => RunIngestAsync(opts),
 				(AddOptions opts) => RunAddAsync(opts),
@@ -34,6 +35,30 @@ public class Program
 				new ApiHandeler(new DirectoryInfo(Environment.CurrentDirectory)) :
 				new ApiHandeler(ApiUrl);
 		}
+	}
+
+	[Verb("host", aliases: ["start", "serve"], HelpText = "Start the server")]
+	class HostOptions
+	{
+		[Option('p', "path", Required = false)]
+		public string? PathToHost { get; set; }
+	}
+
+	private static Task<int> RunHostAsync(HostOptions opts)
+	{
+		var dir = new DirectoryInfo(opts.PathToHost ?? Environment.CurrentDirectory);
+		using var api = new ApiHandeler(dir);
+		Console.WriteLine($"Started hosting playlist repository at '{dir.FullName}'");
+		Console.WriteLine(api.ApiUrl);
+		bool exit = false;
+		Console.CancelKeyPress += (_, _) => exit = true;
+		while (!exit)
+		{
+			Console.Write(">> ");
+			Console.ReadLine();
+		}
+		Console.WriteLine("Host Terminated");
+		return Task.FromResult(0);
 	}
 
 	[Verb("init", HelpText = "Initialize a new playlist repository.")]

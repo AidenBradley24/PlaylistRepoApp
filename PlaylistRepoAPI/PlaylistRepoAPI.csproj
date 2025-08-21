@@ -25,4 +25,20 @@
     <ProjectReference Include="..\PlaylistRepoLib\PlaylistRepoLib.csproj" />
   </ItemGroup>
 
+  <!-- Run React build before publishing -->
+  <Target Name="PublishRunWebpack" BeforeTargets="PrepareForPublish">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\playlistrepoclient"
+          Command="npm install" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\playlistrepoclient"
+          Command="npm run build" />
+
+    <!-- Copy React build output to wwwroot -->
+    <ItemGroup>
+      <DistFiles Include="$(MSBuildProjectDirectory)\..\playlistrepoclient\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DistFiles)"
+          DestinationFolder="$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

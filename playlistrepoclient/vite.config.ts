@@ -59,7 +59,7 @@ export default defineConfig({
                 target,
                 secure: false
             },
-            '^play': {
+            '^/play': {
                 target,
                 secure: false
             }

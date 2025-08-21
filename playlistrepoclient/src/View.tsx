@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
-import { Table, Button, Pagination } from "react-bootstrap";
+import { Table, Form, Button, Pagination, Spinner } from "react-bootstrap";
 import type { Response, Media } from "./models";
 import Modal from "react-bootstrap/Modal";
 
@@ -25,17 +25,31 @@ const MediaView: React.FC = () => {
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
     const [filter, setFilter] = useState<string>('');
 
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
     useEffect(() => {
         const loadData = async () => {
+            setLoading(true);
+            setError(null);
+
             const response = await fetchRecords(getUserQuery(filter, sortDirection, sortColumn), page);
 
             if (!response.ok) {
-                throw new Error(`Response status: ${response.status}`);
+                const text = await response.text();
+                setError(text);
+                if (response.status === 400) {
+                    setError(text);
+                } else {
+                    setError("An unexpected error occured.");
+                }
+                return;
             }
 
             const result = (await response.json()) as Response<Media>;
             setRecords(result.data);
             setTotal(result.total);
+            setLoading(false);
         };
         loadData();
     }, [page, filter, sortDirection, sortColumn]);
@@ -95,6 +109,22 @@ const MediaView: React.FC = () => {
     return (
         <div>
             <h3>Records</h3>
+
+            <Form.Group className="mb-3" controlId="filterInput">
+                <Form.Label>Filter</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Type to filter media..."
+                    value={filter}
+                    isInvalid={!!error}
+                    onChange={(e) => setFilter(e.target.value)}
+                />
+                <Form.Control.Feedback type="invalid">
+                    {error}
+                </Form.Control.Feedback>
+            </Form.Group>
+
+            {loading && <Spinner animation="border" size="sm" className="mb-2" />}
 
             {/* Records table */}
             <Table striped bordered hover responsive>
