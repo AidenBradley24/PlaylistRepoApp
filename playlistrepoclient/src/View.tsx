@@ -5,15 +5,11 @@ import Modal from "react-bootstrap/Modal";
 
 const PageSize = 20;
 
-async function fetchRecords(query: string, page: number) {
-    return await fetch(`data/media?query=${encodeURI(query)}&pageSize=${PageSize}&currentPage=${page}`);
+export interface MediaViewProps {
+    path: string;
 }
 
-function getUserQuery(filter: string, sortDirection: string, sortColumn: string) {
-    return `${filter} orderby${sortDirection == "desc" ? "descending" : ""} ${sortColumn}`
-}
-
-const MediaView: React.FC = () => {
+const MediaView: React.FC<MediaViewProps> = ({ path }) => {
     const [records, setRecords] = useState<Media[]>([]);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -27,6 +23,14 @@ const MediaView: React.FC = () => {
 
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+
+    async function fetchRecords(query: string, page: number) {
+        return await fetch(`${path}?query=${encodeURI(query)}&pageSize=${PageSize}&currentPage=${page}`);
+    }
+
+    function getUserQuery(filter: string, sortDirection: string, sortColumn: string) {
+        return `${filter} orderby${sortDirection == "desc" ? "descending" : ""} ${sortColumn}`
+    }
 
     useEffect(() => {
         const loadData = async () => {
@@ -108,8 +112,6 @@ const MediaView: React.FC = () => {
 
     return (
         <div>
-            <h3>Records</h3>
-
             <Form.Group className="mb-3" controlId="filterInput">
                 <Form.Label>Filter</Form.Label>
                 <Form.Control

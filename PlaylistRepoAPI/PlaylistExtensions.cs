@@ -42,7 +42,7 @@ namespace PlaylistRepoAPI
 			await writer.WriteStartElementAsync(null, "trackList", null);
 
 			var url = UrlEncoder.Default;
-			var query = playlist.AllEntries(library);
+			var query = playlist.AllEntries(library, true);
 			await query.LoadAsync();
 
 			foreach (var media in query)
@@ -81,7 +81,7 @@ namespace PlaylistRepoAPI
 			await writer.WriteLineAsync("#EXTM3U");
 
 			var url = UrlEncoder.Default;
-			var query = playlist.AllEntries(library);
+			var query = playlist.AllEntries(library, true);
 			await query.LoadAsync();
 
 			foreach (var media in query)

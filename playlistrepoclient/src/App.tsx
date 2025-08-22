@@ -1,7 +1,8 @@
 ﻿import React from "react";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
-import MediaView from "./View"; // your Media records table component
+import MediaTab from "./MediaTab";
+import PlaylistTab from "./PlaylistTab";
 import "bootstrap/dist/css/bootstrap.min.css"; // include bootstrap styles
 import "./app.css";
 
@@ -19,12 +20,12 @@ const App: React.FC = () => {
                 fill
             >
                 <Tab eventKey="media" title="Media">
-                    <MediaView />
+                    <MediaTab></MediaTab>
                 </Tab>
-                <Tab eventKey="tab2" title="Tab 2">
-                    <div className="placeholder">Placeholder content for Tab 2</div>
+                <Tab eventKey="playlists" title="Playlists">
+                    <PlaylistTab></PlaylistTab>
                 </Tab>
-                <Tab eventKey="tab3" title="Tab 3">
+                <Tab eventKey="remotes" title="Remotes">
                     <div className="placeholder">Placeholder content for Tab 3</div>
                 </Tab>
             </Tabs>

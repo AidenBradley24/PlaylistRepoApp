@@ -18,7 +18,7 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpGet("media")]
-		public IActionResult GetMedia([FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
+		public IActionResult GetMedias([FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
 		{
 			try
 			{
@@ -28,6 +28,14 @@ namespace PlaylistRepoAPI.Controllers
 			{
 				return BadRequest($"Invalid user query: {ex.Message}");
 			}
+		}
+
+		[HttpGet("media/{id}")]
+		public IActionResult GetMedia([FromRoute] int id = 0)
+		{
+			var result = db.Medias.Find(id);
+			if (result == null) return NotFound();
+			return Ok(result);
 		}
 
 		[HttpPost("media")]
@@ -53,7 +61,7 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpGet("remotes")]
-		public IActionResult GetRemote([FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
+		public IActionResult GetRemotes([FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
 		{
 			try
 			{
@@ -63,6 +71,14 @@ namespace PlaylistRepoAPI.Controllers
 			{
 				return BadRequest($"Invalid user query: {ex.Message}");
 			}
+		}
+
+		[HttpGet("remotes/{id}")]
+		public IActionResult GetRemote([FromRoute] int id = 0)
+		{
+			var result = db.RemotePlaylists.Find(id);
+			if (result == null) return NotFound();
+			return Ok(result);
 		}
 
 		[HttpPost("remotes")]
@@ -88,11 +104,35 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpGet("playlists")]
-		public IActionResult GetPlaylist([FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
+		public IActionResult GetPlaylists([FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
 		{
 			try
 			{
 				return Ok(new ApiGetResponse<Playlist>(db.Playlists, query, pageSize, currentPage));
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
+		}
+
+		[HttpGet("playlists/{id}")]
+		public IActionResult GetPlaylist([FromRoute] int id = 0)
+		{
+			var result = db.Playlists.Find(id);
+			if (result == null) return NotFound();
+			return Ok(result);
+		}
+
+		[HttpGet("playlists/{id}/media")]
+		public IActionResult GetPlaylistMedias([FromRoute] int id = 0, [FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
+		{
+			var playlist = db.Playlists.Find(id);
+			if (playlist == null) return NotFound();
+
+			try
+			{		
+				return Ok(new ApiGetResponse<Media>(playlist.AllEntries(db.Medias, false), query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{
