@@ -9,7 +9,7 @@ namespace PlaylistRepoAPI.Controllers
 	/// </summary>
 	[ApiController]
 	[Route("action")]
-	public class RepoActionsController(PlayRepoDbContext db, ITaskService taskService) : ControllerBase
+	public class ActionController(PlayRepoDbContext db, ITaskService taskService) : ControllerBase
 	{
 		[HttpPost("ingest")]
 		public IActionResult Ingest([FromBody] string fileSpec)

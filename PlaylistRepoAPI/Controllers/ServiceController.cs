@@ -4,8 +4,8 @@ using PlaylistRepoLib;
 namespace PlaylistRepoAPI.Controllers
 {
 	[ApiController]
-	[Route("[controller]")]
-	public class TaskController(ITaskService taskService) : ControllerBase
+	[Route("service")]
+	public class ServiceController(IPlayRepoService repoService, ITaskService taskService) : ControllerBase
 	{
 		[HttpGet("status/{id}")]
 		public ActionResult<TaskStatus> Status(Guid id)
@@ -16,6 +16,16 @@ namespace PlaylistRepoAPI.Controllers
 
 			return Ok(status);
 		}
+
+		[Route("init")]
+		public IActionResult Init()
+		{
+			bool success = repoService.Initialize();
+			if (success) return Ok();
+			return BadRequest();
+		}
+
+		// TODO add a sandboxed change directory
 
 		[HttpPost("test")]
 		public IActionResult Test([FromQuery] int milliseconds)

@@ -1,4 +1,5 @@
 using PlaylistRepoAPI;
+using PlaylistRepoAPI.Controllers;
 
 // collect repo
 if (args.Length == 0)
@@ -7,13 +8,13 @@ if (args.Length == 0)
 	Environment.Exit(1);
 }
 
-DirectoryInfo path = new(args[0]);
+	DirectoryInfo path = new(args[0]);
 
 // build api
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddCommandLine(args);
-string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7002";
-builder.WebHost.UseUrls(url);
+	string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7002";
+	builder.WebHost.UseUrls(url);
 
 // Add services to the container.
 builder.Logging.ClearProviders();
@@ -55,6 +56,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseMiddleware<RepoMiddleware>();
 app.MapControllers();
 
 app.UseDefaultFiles();

@@ -55,7 +55,7 @@ export default defineConfig({
                 target,
                 secure: false
             },
-            '^/task': {
+            '^/service': {
                 target,
                 secure: false
             },

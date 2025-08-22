@@ -9,7 +9,7 @@ namespace PlaylistRepoAPI.Controllers
 	/// </summary>
 	[ApiController]
 	[Route("data")]
-	public class RepoDataController(PlayRepoDbContext db) : ControllerBase
+	public class DataController(PlayRepoDbContext db) : ControllerBase
 	{
 		[HttpGet("info")]
 		public string GetInfo()
