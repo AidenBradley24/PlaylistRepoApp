@@ -107,7 +107,7 @@ namespace PlaylistRepoAPI
 				return $"-f \"bestvideo+bestaudio/best\" --merge-output-format mp4";
 			if (remote.MediaMime.StartsWith("video"))
 				return $"-f \"bestvideo+bestaudio/best\" --merge-output-format {MimeTypes.GetMimeTypeExtensions(remote.MediaMime).First()} ";
-			if (remote.MediaMime.StartsWith("audio")) 
+			if (remote.MediaMime.StartsWith("audio"))
 				return $"-x --audio-format {MimeTypes.GetMimeTypeExtensions(remote.MediaMime).First()} --output";
 			throw new Exception("Type not available " + remote.MediaMime);
 		}
@@ -120,7 +120,7 @@ namespace PlaylistRepoAPI
 			string format = GetFormat(remote);
 			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" --yes-playlist {idFilter} {format}";
 			process.StartInfo.RedirectStandardOutput = true;
-			
+
 			process.OutputDataReceived += (sender, args) =>
 			{
 				Console.WriteLine(args.Data);
@@ -142,7 +142,7 @@ namespace PlaylistRepoAPI
 			progress?.Report(TaskProgress.FromIndeterminate("Updating database..."));
 
 			List<(FileInfo, Media)> mediaBundles = [];
-			foreach(var file in downloadDir.EnumerateFiles())
+			foreach (var file in downloadDir.EnumerateFiles())
 			{
 				string uid = GetURLTag(file.Name);
 				Media? media = await dbContext.Medias.FirstOrDefaultAsync(m => m.Source == remote && m.RemoteUID == uid);
@@ -239,7 +239,7 @@ namespace PlaylistRepoAPI
 				{
 					// audio file
 					fileMap.Add(uid, file);
-				}				
+				}
 			}
 
 			await dbContext.Medias.AddRangeAsync(newMedias);

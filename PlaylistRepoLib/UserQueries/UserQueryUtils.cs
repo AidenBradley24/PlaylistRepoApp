@@ -22,7 +22,7 @@ public static class UserQueryExtensions
 	{
 		var builder = new StringBuilder(baseURL);
 
-		if (!baseURL.EndsWith('/')) 
+		if (!baseURL.EndsWith('/'))
 			builder.Append('/');
 
 		builder.Append("?query=");
@@ -66,14 +66,112 @@ public static class UserQueryExtensions
 		for (int i = 0; i < queryableAttrs.Length; i++)
 		{
 			var attr = queryableAttrs[i];
-			var prop = props.FirstOrDefault(p => p.GetCustomAttribute<UserQueryableAttribute>()?.QueryName == attr.QueryName) 
+			var prop = props.FirstOrDefault(p => p.GetCustomAttribute<UserQueryableAttribute>()?.QueryName == attr.QueryName)
 				?? throw new UserQueryableMisconfigurationException($"Property with QueryName '{attr.QueryName}' not found on type '{type.Name}'.");
 			var value = prop.GetValue(record);
 			result[i] = value?.ToString() ?? "";
 		}
 		return result;
 	}
+
+
+	/// <summary>
+	/// Split a string into segments based on single or double quotes. Otherwise split by spaces. Removes quotes.
+	/// </summary>
+	public static IEnumerator<Token> Tokenize(string? input)
+	{
+		if (string.IsNullOrEmpty(input)) yield break;
+
+		const int NON_LITERAL_MODE = 0;
+		const int SINGLE_QUOTE_MODE = 1;
+		const int DOUBLE_QUOTE_MODE = 2;
+		const int LITERAL_MODE = 3;
+
+		int mode = NON_LITERAL_MODE;
+
+		int start = 0;
+		StringBuilder currentSegment = new();
+		string part;
+
+		for (int i = 0; i < input.Length; i++)
+		{
+			char c = input[i];
+
+			if (mode == SINGLE_QUOTE_MODE || mode == DOUBLE_QUOTE_MODE)
+			{
+				if (mode == SINGLE_QUOTE_MODE && c == '\'' || mode == DOUBLE_QUOTE_MODE && c == '\"')
+				{
+					currentSegment.Append(input[start..i]);
+					start = i + 1;
+					mode = LITERAL_MODE;
+				}
+
+				if ((mode == DOUBLE_QUOTE_MODE || mode == SINGLE_QUOTE_MODE) && c == '\\' &&
+					(i < input.Length - 1))
+				{
+					// preserve previous characters of segment
+					part = input[start..i];
+					currentSegment.Append(part);
+					// keep next character
+					currentSegment.Append(input[++i]);
+					start = i + 1;
+				}
+			}
+			else
+			{
+				// normal mode
+				switch (c)
+				{
+					case '\'':
+						part = input[start..i];
+						if (!string.IsNullOrWhiteSpace(part))
+							currentSegment.Append(part);
+						start = i + 1;
+						mode = SINGLE_QUOTE_MODE;
+						break;
+					case '\"':
+						part = input[start..i];
+						if (!string.IsNullOrWhiteSpace(part))
+							currentSegment.Append(part); start = i + 1;
+						mode = DOUBLE_QUOTE_MODE;
+						break;
+					case ',':
+					case '&':
+					case ' ':
+						part = input[start..i];
+						if (currentSegment.Length != 0 || !string.IsNullOrWhiteSpace(part))
+						{
+							currentSegment.Append(part);
+							yield return new Token(currentSegment.ToString(), mode == LITERAL_MODE);
+							mode = NON_LITERAL_MODE;
+							currentSegment.Clear();
+						}
+						start = i + 1;
+						if (c == ',' || c == '&') yield return new Token(c.ToString(), false);
+						break;
+					case '\\':
+						// preserve previous characters of segment
+						part = input[start..i];
+						currentSegment.Append(part);
+						// keep next character
+						currentSegment.Append(input[++i]);
+						start = i + 1;
+						break;
+					default:
+						// words starting with a number are considered literal
+						if (i == start && char.IsNumber(c)) mode = LITERAL_MODE;
+						break;
+				}
+			}
+		}
+
+		part = input[start..];
+		currentSegment.Append(part);
+		yield return new Token(currentSegment.ToString(), mode != NON_LITERAL_MODE);
+	}
 }
+
+public record Token(string Value, bool IsLiteral);
 
 internal static class UserQueryTypeParsers
 {

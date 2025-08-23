@@ -3,20 +3,20 @@ using System.Diagnostics;
 
 namespace PlaylistRepoAPI
 {
-    public interface IConversionService
-    {
-        public Task Convert(IEnumerable<FileInfo> convertees, IEnumerable<FileInfo> targets, IProgress<TaskProgress> progress);
-    }
+	public interface IConversionService
+	{
+		public Task Convert(IEnumerable<FileInfo> convertees, IEnumerable<FileInfo> targets, IProgress<TaskProgress> progress);
+	}
 
-    public class ConversionService : IConversionService
-    {
-        private readonly int MAX_PROCESS_COUNT;
-        private readonly Queue<string> argumentQueue = [];
+	public class ConversionService : IConversionService
+	{
+		private readonly int MAX_PROCESS_COUNT;
+		private readonly Queue<string> argumentQueue = [];
 
-        public ConversionService()
-        {
-            MAX_PROCESS_COUNT = Math.Max(1, Environment.ProcessorCount / 2);
-        }
+		public ConversionService()
+		{
+			MAX_PROCESS_COUNT = Math.Max(1, Environment.ProcessorCount / 2);
+		}
 
 		public async Task Convert(IEnumerable<FileInfo> convertees, IEnumerable<FileInfo> targets, IProgress<TaskProgress> progress)
 		{

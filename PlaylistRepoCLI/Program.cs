@@ -122,7 +122,7 @@ public class Program
 	{
 		[Value(0, MetaName = "type", HelpText = "internet or ytdlp", Required = true)] public string Type { get; set; } = null!;
 		[Value(1, MetaName = "url", HelpText = "URL of the specified remote playlist.", Required = true)] public string RemoteURL { get; set; } = null!;
-		[Option('m', "media-type", HelpText = "MIME type of the media in the playlist", Required = false, Default = null)]  public string? MediaType { get; set; } = null;
+		[Option('m', "media-type", HelpText = "MIME type of the media in the playlist", Required = false, Default = null)] public string? MediaType { get; set; } = null;
 		[Option('n', "name", HelpText = "Name of the remote playlist", Required = false)] public string? RemoteName { get; set; } = null;
 		[Option('d', "description", HelpText = "Description of the remote playlist", Required = false)] public string? RemoteDescription { get; set; } = null;
 	}
@@ -237,10 +237,10 @@ public class Program
 		if (opts.ListMedia)
 			await list<Media>($"/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "MEDIA");
 
-		if (opts.ListRemotePlaylists)	
-			await list<RemotePlaylist>($"/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");	
+		if (opts.ListRemotePlaylists)
+			await list<RemotePlaylist>($"/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");
 
-		if (opts.ListPlaylists)	
+		if (opts.ListPlaylists)
 			await list<Playlist>($"/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
 
 		Console.WriteLine(result.ToString());

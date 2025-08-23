@@ -1,8 +1,6 @@
 ﻿using PlaylistRepoLib;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Http.Json;
-using System.Net.Sockets;
 
 namespace PlaylistRepoCLI
 {

@@ -131,7 +131,7 @@ namespace PlaylistRepoAPI.Controllers
 			if (playlist == null) return NotFound();
 
 			try
-			{		
+			{
 				return Ok(new ApiGetResponse<Media>(playlist.AllEntries(db.Medias, false), query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)

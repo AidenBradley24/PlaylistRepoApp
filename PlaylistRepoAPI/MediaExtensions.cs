@@ -31,7 +31,7 @@ namespace PlaylistRepoAPI
 			catch
 			{
 				// do nothing
-			}		
+			}
 		}
 
 		/// <summary>

@@ -36,7 +36,7 @@ namespace PlaylistRepoAPI.Controllers
 					await playlist.StreamM3U8Async(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
 					stream.Position = 0;
 					return File(stream, "application/vnd.apple.mpegurl");
-				default: 
+				default:
 					return BadRequest(Path.GetExtension(file) + " is not valid.");
 			}
 		}
