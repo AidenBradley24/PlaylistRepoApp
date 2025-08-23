@@ -9,11 +9,19 @@ export interface Media {
     id: number,
     mimeType: string,
     title: string,
-    primaryArtist: string | undefined,
+    primaryArtist: string,
     artists: string[] | undefined,
-    album: string | undefined,
-    description: string | undefined,
+    album: string,
+    description: string,
     rating: number,
-    mediaLength: TimeLike | undefined,
+    mediaLength: TimeLike,
     order: number
+}
+
+export interface Playlist {
+    id: number,
+    title: string,
+    description: string;
+    userQuery: string;
+    bakedEntries: number[];
 }

@@ -70,10 +70,17 @@ public class Program
 	private static async Task<int> RunInitAsync(InitOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Get, "/data/info");
-		Console.WriteLine(await response.Content.ReadAsStringAsync());
-		Console.WriteLine($"Created new playlist repository. Use ingest to add existing media files.");
-		return 0;
+		var response = await api.Request(HttpMethod.Post, "/service/init");
+		if (response.IsSuccessStatusCode)
+		{
+			Console.WriteLine($"Repo is now initialized.");
+			return 0;
+		}
+		else
+		{
+			Console.WriteLine("Unable to initialize. Either the repo is already initialized or there is a file system issue.");
+			return 1;
+		}
 	}
 
 	[Verb("ingest", HelpText = "Add new media files within the repo directory to the database.")]
@@ -201,10 +208,17 @@ public class Program
 			return 1;
 		}
 
-		if (opts.ListMedia)
+		async Task list<T>(string url, string label)
 		{
 			var response = await api.Request(HttpMethod.Get, $"/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
-			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<Media>>();
+			if (!response.IsSuccessStatusCode)
+			{
+				result.Append("Error fetching data: ");
+				result.AppendLine(await response.Content.ReadAsStringAsync());
+				return;
+			}
+
+			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<T>>();
 			if (formattedResponse == null)
 			{
 				result.AppendLine("Error reading data.");
@@ -213,42 +227,21 @@ public class Program
 			{
 				result.AppendLine();
 				result.Append(formattedResponse.Total);
-				result.AppendLine(" MEDIA:");
-				result.AppendJoin<Media>("\n", formattedResponse.Data ?? []);
+				result.Append(' ');
+				result.Append(label);
+				result.Append(':');
+				result.AppendJoin<T>("\n", formattedResponse.Data ?? []);
 			}
 		}
-		else if (opts.ListRemotePlaylists)
-		{
-			var response = await api.Request(HttpMethod.Get, $"/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
-			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<RemotePlaylist>>();
-			if (formattedResponse == null)
-			{
-				result.AppendLine("Error reading data.");
-			}
-			else
-			{
-				result.AppendLine();
-				result.Append(formattedResponse.Total);
-				result.AppendLine(" REMOTE PLAYLISTS:");
-				result.AppendJoin<RemotePlaylist>("\n", formattedResponse.Data ?? []);
-			}
-		}
-		else if (opts.ListPlaylists)
-		{
-			var response = await api.Request(HttpMethod.Get, $"/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
-			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<Playlist>>();
-			if (formattedResponse == null)
-			{
-				result.AppendLine("Error reading data.");
-			}
-			else
-			{
-				result.AppendLine();
-				result.Append(formattedResponse.Total);
-				result.AppendLine(" PLAYLISTScls:");
-				result.AppendJoin<Playlist>("\n", formattedResponse.Data ?? []);
-			}
-		}
+
+		if (opts.ListMedia)
+			await list<Media>($"/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "MEDIA");
+
+		if (opts.ListRemotePlaylists)	
+			await list<RemotePlaylist>($"/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");	
+
+		if (opts.ListPlaylists)	
+			await list<Playlist>($"/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
 
 		Console.WriteLine(result.ToString());
 		return 0;

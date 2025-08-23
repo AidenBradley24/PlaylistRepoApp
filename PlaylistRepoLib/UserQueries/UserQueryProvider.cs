@@ -122,6 +122,8 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 								var orderLambda = CreateOrderByExpression(sortProperty);
 								return exp.OrderByDescending(orderLambda);
 							}
+
+							return exp;
 						}
 					}
 					goto case Mode.ready;

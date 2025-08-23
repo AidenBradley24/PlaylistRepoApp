@@ -24,6 +24,7 @@ namespace PlaylistRepoCLI
 		public ApiHandeler(string apiUrl)
 		{
 			ApiUrl = apiUrl;
+			if (ApiUrl.EndsWith('/')) ApiUrl = ApiUrl[..^1];
 		}
 
 		/// <summary>
@@ -40,6 +41,7 @@ namespace PlaylistRepoCLI
 				RedirectStandardOutput = true,
 			};
 			apiProcess = Process.Start(processStart)!;
+			if (ApiUrl.EndsWith('/')) ApiUrl = ApiUrl[..^1];
 		}
 
 		/// <summary>
@@ -71,7 +73,7 @@ namespace PlaylistRepoCLI
 			{
 				ConsoleHelpers.RewriteProgress(taskProgress);
 				await Task.Delay(POLLING_RATE);
-				response = await http.GetAsync($"{ApiUrl}/Task/status/{guid}");
+				response = await http.GetAsync($"{ApiUrl}/service/status/{guid}");
 				if (!response.IsSuccessStatusCode)
 				{
 					Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
@@ -98,10 +100,6 @@ namespace PlaylistRepoCLI
 			mutateHttpRequest?.Invoke(httpRequest);
 
 			var response = await http.SendAsync(httpRequest);
-			if (!response.IsSuccessStatusCode)
-			{
-				Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
-			}
 			return response;
 		}
 

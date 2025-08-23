@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using PlaylistRepoAPI;
 using PlaylistRepoAPI.Controllers;
 
@@ -8,7 +9,7 @@ if (args.Length == 0)
 	Environment.Exit(1);
 }
 
-	DirectoryInfo path = new(args[0]);
+DirectoryInfo path = new(args[0]);
 
 // build api
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +43,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UseHttpsRedirection();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+	ForwardedHeaders = ForwardedHeaders.XForwardedProto
+});
 
 // Enable Swagger in development
 if (app.Environment.IsDevelopment() || true) // use `|| true` for always-on in local dev
@@ -51,10 +58,6 @@ if (app.Environment.IsDevelopment() || true) // use `|| true` for always-on in l
 }
 
 app.MapSwagger();
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.UseMiddleware<RepoMiddleware>();
 app.MapControllers();

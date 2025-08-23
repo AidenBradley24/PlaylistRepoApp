@@ -37,22 +37,34 @@ public partial class Media
 	public string Title { get; set; } = "unnamed media";
 
 	[UserQueryable("artist")]
-	[NotMapped]
-	public string? PrimaryArtist => Artists?.FirstOrDefault();
+	public string PrimaryArtist
+	{
+		get
+		{
+			return Artists?.FirstOrDefault() ?? "";
+		}
+
+		set
+		{
+			if (Artists == null || Artists.Length == 0)
+				Artists = new string[1];
+			Artists[0] = value;
+		}
+	}
 
 	public string[]? Artists { get; set; }
 
 	[UserQueryable("album")]
-	public string? Album { get; set; }
+	public string Album { get; set; } = "";
 
 	[UserQueryable("description")]
-	public string? Description { get; set; }
+	public string Description { get; set; } = "";
 
 	[UserQueryable("rating")]
-	public int Rating { get; set; }
+	public int Rating { get; set; } = 0;
 
 	[UserQueryable("length")]
-	public TimeSpan? Length { get; set; }
+	public TimeSpan Length { get; set; } = TimeSpan.Zero;
 
 	[UserQueryable("order")]
 	public int Order { get; set; } = 0;
@@ -60,9 +72,11 @@ public partial class Media
 	public bool Locked { get; set; } = false;
 
 	[NotMapped]
-	public string LengthString => Length?.ToString(@"hh\:mm\:ss") ?? "?";
+	[JsonIgnore]
+	public string LengthString => Length.ToString(@"hh\:mm\:ss") ?? "?";
 
 	[NotMapped]
+	[JsonIgnore]
 	public string TruncatedDescription
 	{
 		get

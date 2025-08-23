@@ -25,8 +25,8 @@ namespace PlaylistRepoAPI
 			{
 				using var tagFile = media.GetTagFile();
 				if (tagFile.Tag.Title != null) media.Title = tagFile.Tag.Title;
-				media.Album = tagFile.Tag.Album;
-				media.Artists = tagFile.Tag.Performers;
+				if (tagFile.Tag.Album != null) media.Album = tagFile.Tag.Album;
+				if (tagFile.Tag.Performers != null) media.Artists = tagFile.Tag.Performers;
 			}
 			catch
 			{
@@ -38,6 +38,7 @@ namespace PlaylistRepoAPI
 		/// Get the <see cref="TagLib.File"/> for this media instance.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"></exception>
+		/// <exception cref="TagLib.UnsupportedFormatException"></exception>
 		public static TagLib.File GetTagFile(this Media media)
 		{
 			if (media.FilePath == null)

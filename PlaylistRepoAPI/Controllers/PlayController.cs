@@ -25,7 +25,7 @@ namespace PlaylistRepoAPI.Controllers
 			if (playlist == null) return NotFound();
 
 			var stream = new MemoryStream();
-			string apiURL = Request.IsHttps ? "https://" : "http://" + Request.Host.Value;
+			string apiURL = (Request.IsHttps ? "https://" : "http://") + Request.Host.Value;
 			switch (Path.GetExtension(file))
 			{
 				case ".xspf":

@@ -1,20 +1,26 @@
-/* General app layout */
+/* Default light theme */
 .app-container {
     min-height: 100vh;
-    background-color: #f9fafb; /* light gray */
-    color: #1f2937; /* gray-900 */
-    font-family: sans-serif;
+    background-color: #f8f9fa; /* light background */
+    color: #212529; /* bootstrap body color */
 }
 
-/* Header */
-.app-header {
-    background-color: #2563eb; /* blue-600 */
-    color: white;
-    padding: 1rem;
-    font-size: 1.25rem;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Dark mode overrides */
+:root[data-bs-theme="dark"] .app-container {
+    background-color: #121212; /* dark background */
+    color: #e9ecef;
 }
+
+/* Optional: header styling */
+.app-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+:root[data-bs-theme="dark"] .app-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 
 /* Tab bar */
 .tab-bar {

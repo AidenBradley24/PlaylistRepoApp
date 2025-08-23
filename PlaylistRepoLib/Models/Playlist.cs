@@ -1,14 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PlaylistRepoLib.UserQueries;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PlaylistRepoLib.Models;
 
+[PrimaryUserQueryable(nameof(Title))]
 public class Playlist
 {
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+	[UserQueryable("id")]
 	[Key] public int Id { get; set; }
+
+	[UserQueryable("title")]
 	public string Title { get; set; } = null!;
-	public string? Description { get; set; }
+
+	[UserQueryable("description")]
+	public string Description { get; set; } = "";
 
 	/// <summary>
 	/// A query to dynamically add elements to the playlist

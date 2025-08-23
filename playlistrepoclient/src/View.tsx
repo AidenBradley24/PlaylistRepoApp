@@ -3,13 +3,16 @@ import { Table, Form, Button, Pagination, Spinner } from "react-bootstrap";
 import type { Response, Media } from "./models";
 import Modal from "react-bootstrap/Modal";
 
-const PageSize = 20;
+import { BsSortDown, BsSortUp } from "react-icons/bs";
+
+import "./records.css";
 
 export interface MediaViewProps {
     path: string;
+    pageSize?: number
 }
 
-const MediaView: React.FC<MediaViewProps> = ({ path }) => {
+const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
     const [records, setRecords] = useState<Media[]>([]);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -24,20 +27,13 @@ const MediaView: React.FC<MediaViewProps> = ({ path }) => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    async function fetchRecords(query: string, page: number) {
-        return await fetch(`${path}?query=${encodeURI(query)}&pageSize=${PageSize}&currentPage=${page}`);
-    }
-
-    function getUserQuery(filter: string, sortDirection: string, sortColumn: string) {
-        return `${filter} orderby${sortDirection == "desc" ? "descending" : ""} ${sortColumn}`
-    }
-
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             setError(null);
 
-            const response = await fetchRecords(getUserQuery(filter, sortDirection, sortColumn), page);
+            const query = `${filter} orderby${sortDirection == "desc" ? "descending" : ""} ${sortColumn}`;
+            const response = await fetch(`${path}?query=${encodeURI(query)}&pageSize=${pageSize}&currentPage=${page}`);
 
             if (!response.ok) {
                 const text = await response.text();
@@ -56,9 +52,9 @@ const MediaView: React.FC<MediaViewProps> = ({ path }) => {
             setLoading(false);
         };
         loadData();
-    }, [page, filter, sortDirection, sortColumn]);
+    }, [path, page, filter, sortDirection, sortColumn, pageSize]);
 
-    const totalPages = Math.ceil(total / PageSize);
+    const totalPages = Math.ceil(total / pageSize);
 
     /** Generate list of page numbers with ellipsis */
     const getPageNumbers = () => {
@@ -133,22 +129,22 @@ const MediaView: React.FC<MediaViewProps> = ({ path }) => {
                 <thead>
                     <tr>
                         <th onClick={() => handleSort("id")} style={{ cursor: "pointer" }}>
-                            ID {sortColumn === "id" && (sortDirection === "asc" ? "▲" : "▼")}
+                            ID {sortColumn === "id" && (sortDirection === "asc" ? <BsSortUp/> : <BsSortDown/>)}
                         </th>
                         <th onClick={() => handleSort("title")} style={{ cursor: "pointer" }}>
-                            Title {sortColumn === "title" && (sortDirection === "asc" ? "▲" : "▼")}
+                            Title {sortColumn === "title" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                         <th onClick={() => handleSort("artist")} style={{ cursor: "pointer" }}>
-                            Artist {sortColumn === "artist" && (sortDirection === "asc" ? "▲" : "▼")}
+                            Artist {sortColumn === "artist" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                         <th onClick={() => handleSort("album")} style={{ cursor: "pointer" }}>
-                            Album {sortColumn === "album" && (sortDirection === "asc" ? "▲" : "▼")}
+                            Album {sortColumn === "album" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                         <th onClick={() => handleSort("rating")} style={{ cursor: "pointer" }}>
-                            Rating {sortColumn === "rating" && (sortDirection === "asc" ? "▲" : "▼")}
+                            Rating {sortColumn === "rating" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                         <th onClick={() => handleSort("length")} style={{ cursor: "pointer" }}>
-                            Length {sortColumn === "length" && (sortDirection === "asc" ? "▲" : "▼")}
+                            Length {sortColumn === "length" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                     </tr>
                 </thead>
