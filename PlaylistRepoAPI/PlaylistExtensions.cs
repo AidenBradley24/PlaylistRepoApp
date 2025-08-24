@@ -66,7 +66,7 @@ namespace PlaylistRepoAPI
 				if (media.PrimaryArtist != null) await writer.WriteElementStringAsync(null, "creator", null, media.PrimaryArtist);
 				if (media.Album != null || settings.OverrideAlbum != null)
 					await writer.WriteElementStringAsync(null, "album", null, settings.OverrideAlbum ?? media.Album!);
-				if (media.Length > TimeSpan.Zero) await writer.WriteElementStringAsync(null, "duration", null, media.Length.Milliseconds.ToString());
+				if (media.LengthMilliseconds > 0) await writer.WriteElementStringAsync(null, "duration", null, media.LengthMilliseconds.ToString());
 
 				await writer.WriteEndElementAsync();
 			}
@@ -101,7 +101,7 @@ namespace PlaylistRepoAPI
 				string title = media.Title.Replace(",", "").Replace("-", "|").Trim();
 
 				await writer.WriteAsync("#EXTINF:");
-				await writer.WriteAsync((media.Length.Seconds).ToString());
+				await writer.WriteAsync((media.LengthMilliseconds / 1000).ToString());
 				await writer.WriteAsync(',');
 
 				if (media.PrimaryArtist != null)

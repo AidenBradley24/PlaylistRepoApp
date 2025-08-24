@@ -41,14 +41,13 @@ namespace PlaylistRepoAPI.Controllers
 		[HttpPost("media")]
 		public IActionResult AddOrUpdateMedia([FromBody] Media media)
 		{
-			Media? existing = db.Medias.FirstOrDefault(m => m.Id == media.Id);
-			if (existing == null)
+			if (!db.Medias.Any(m => m.Id == media.Id))
 				db.Add(media);
 			else
 				db.Update(media);
 
 			db.SaveChanges();
-			return Ok();
+			return Ok(media);
 		}
 
 		[HttpDelete("media")]
@@ -84,14 +83,13 @@ namespace PlaylistRepoAPI.Controllers
 		[HttpPost("remotes")]
 		public IActionResult AddOrUpdateRemote([FromBody] RemotePlaylist remotePlaylist)
 		{
-			RemotePlaylist? existing = db.RemotePlaylists.FirstOrDefault(m => m.Id == remotePlaylist.Id);
-			if (existing == null)
+			if (!db.RemotePlaylists.Any(m => m.Id == remotePlaylist.Id))
 				db.Add(remotePlaylist);
 			else
 				db.Update(remotePlaylist);
 
 			db.SaveChanges();
-			return Ok();
+			return Ok(remotePlaylist);
 		}
 
 		[HttpDelete("remotes")]
@@ -143,14 +141,13 @@ namespace PlaylistRepoAPI.Controllers
 		[HttpPost("playlists")]
 		public IActionResult AddOrUpdatePlaylist([FromBody] Playlist playlist)
 		{
-			Playlist? existing = db.Playlists.FirstOrDefault(m => m.Id == playlist.Id);
-			if (existing == null)
+			if (!db.Playlists.Any(m => m.Id == playlist.Id))
 				db.Add(playlist);
 			else
 				db.Update(playlist);
 
 			db.SaveChanges();
-			return Ok();
+			return Ok(playlist);
 		}
 
 		[HttpDelete("playlists")]

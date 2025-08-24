@@ -1,19 +1,41 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import type { Playlist } from "./models";
+import { useRefresh } from "./RefreshContext";
 
-interface CreatePlaylistModalProps {
+interface EditPlaylistModalProps {
+    title: string;
     show: boolean;
     onHide: () => void;
     onCreated: (playlist: Playlist) => void;
+    editingPlaylist: Playlist;
+    setEditingPlaylist: (playlist: Playlist) => void;
 }
 
-const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide, onCreated }) => {
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [userQuery, setUserQuery] = useState("");
+const EditPlaylistModal: React.FC<EditPlaylistModalProps> = ({ title, show, onHide, onCreated, editingPlaylist, setEditingPlaylist }) => {
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+
+    const { triggerRefresh } = useRefresh();
+
+    function setTitle(title: string) {
+        const clone = structuredClone(editingPlaylist);
+        clone.title = title;
+        setEditingPlaylist(clone);
+    }
+
+    function setDescription(description: string) {
+        const clone = structuredClone(editingPlaylist);
+        clone.description = description;
+        setEditingPlaylist(clone);
+    }
+
+    function setUserQuery(userQuery: string) {
+        const clone = structuredClone(editingPlaylist);
+        clone.userQuery = userQuery;
+        setEditingPlaylist(clone);
+    }
+
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -24,12 +46,7 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
             const response = await fetch("data/playlists", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title,
-                    description: description || undefined,
-                    userQuery,
-                    bakedEntries: [],
-                }),
+                body: JSON.stringify(editingPlaylist),
             });
 
             if (!response.ok) {
@@ -39,9 +56,7 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
 
             const playlist = (await response.json()) as Playlist;
             onCreated(playlist);
-            setTitle("");
-            setDescription("");
-            setUserQuery("");
+            triggerRefresh();
             onHide();
         } catch (err: any) {
             setError(err.message);
@@ -53,7 +68,7 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
     return (
         <Modal show={show} onHide={onHide}>
             <Modal.Header closeButton>
-                <Modal.Title>Create Playlist Menu</Modal.Title>
+                <Modal.Title>{title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {error && <Alert variant="danger">{error}</Alert>}
@@ -62,7 +77,7 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
                         <Form.Label>Title</Form.Label>
                         <Form.Control
                             type="text"
-                            value={title}
+                            value={editingPlaylist.title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
                         />
@@ -71,7 +86,7 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
                         <Form.Label>Description</Form.Label>
                         <Form.Control
                             type="text"
-                            value={description}
+                            value={editingPlaylist.description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
                     </Form.Group>
@@ -79,9 +94,8 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
                         <Form.Label>User Query</Form.Label>
                         <Form.Control
                             type="text"
-                            value={userQuery}
+                            value={editingPlaylist.userQuery}
                             onChange={(e) => setUserQuery(e.target.value)}
-                            required
                         />
                     </Form.Group>
                     <div className="d-flex justify-content-end">
@@ -89,7 +103,7 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
                             Cancel
                         </Button>
                         <Button type="submit" variant="primary" disabled={submitting}>
-                            {submitting ? "Creating..." : "Create"}
+                            {submitting ? "Submitting..." : "Submit"}
                         </Button>
                     </div>
                 </Form>
@@ -98,4 +112,4 @@ const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ show, onHide,
     );
 };
 
-export default CreatePlaylistModal;
+export default EditPlaylistModal;

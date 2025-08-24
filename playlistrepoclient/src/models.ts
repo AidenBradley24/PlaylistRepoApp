@@ -1,5 +1,3 @@
-import type { TimeLike } from "node:fs";
-
 export interface Response<T> {
     data: T[]
     total: number
@@ -14,7 +12,7 @@ export interface Media {
     album: string,
     description: string,
     rating: number,
-    mediaLength: TimeLike,
+    lengthMilliseconds: number,
     order: number
 }
 

@@ -64,16 +64,12 @@ public partial class Media
 	public int Rating { get; set; } = 0;
 
 	[UserQueryable("length")]
-	public TimeSpan Length { get; set; } = TimeSpan.Zero;
+	public long LengthMilliseconds { get; set; } = 0;
 
 	[UserQueryable("order")]
 	public int Order { get; set; } = 0;
 
 	public bool Locked { get; set; } = false;
-
-	[NotMapped]
-	[JsonIgnore]
-	public string LengthString => Length.ToString(@"hh\:mm\:ss") ?? "?";
 
 	[NotMapped]
 	[JsonIgnore]

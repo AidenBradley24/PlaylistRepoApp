@@ -2,6 +2,7 @@
 import { Table, Form, Button, Pagination, Spinner } from "react-bootstrap";
 import type { Response, Media } from "./models";
 import Modal from "react-bootstrap/Modal";
+import { useRefresh } from "./RefreshContext";
 
 import { BsSortDown, BsSortUp } from "react-icons/bs";
 
@@ -22,37 +23,68 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
 
     const [sortColumn, setSortColumn] = useState<string>('id');
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+    // Immediate filter (bound to input)
     const [filter, setFilter] = useState<string>('');
+    // Debounced filter (actually used for queries)
+    const [debouncedFilter, setDebouncedFilter] = useState<string>('');
 
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
+    const { refreshKey } = useRefresh(); // subscribe to refresh key
+
+    /** Debounce filter input */
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedFilter(filter);
+            setPage(1); // reset to first page on new filter
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [filter]);
+
+    /** Fetch records when query params change */
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             setError(null);
 
-            const query = `${filter} orderby${sortDirection == "desc" ? "descending" : ""} ${sortColumn}`;
-            const response = await fetch(`${path}?query=${encodeURI(query)}&pageSize=${pageSize}&currentPage=${page}`);
+            try {
+                const query = `${debouncedFilter} orderby${sortDirection === "desc" ? "descending" : ""} ${sortColumn}`;
+                const response = await fetch(
+                    `${path}?query=${encodeURIComponent(query)}&pageSize=${pageSize}&currentPage=${page}`
+                );
 
-            if (!response.ok) {
-                const text = await response.text();
-                setError(text);
-                if (response.status === 400) {
-                    setError(text);
-                } else {
-                    setError("An unexpected error occured.");
+                if (!response.ok) {
+                    const text = await response.text();
+                    if (response.status === 400) {
+                        setError(text);
+                    } else {
+                        setError("An unexpected error occurred.");
+                    }
+                    setRecords([]);
+                    setTotal(0);
+                    setLoading(false);
+                    return;
                 }
-                return;
-            }
 
-            const result = (await response.json()) as Response<Media>;
-            setRecords(result.data);
-            setTotal(result.total);
-            setLoading(false);
+                const result = (await response.json()) as Response<Media>;
+                setRecords(result.data);
+                setTotal(result.total);
+            } catch (err) {
+                setError("Failed to fetch data.");
+                setRecords([]);
+                setTotal(0);
+            } finally {
+                setLoading(false);
+            }
         };
+
         loadData();
-    }, [path, page, filter, sortDirection, sortColumn, pageSize]);
+    }, [path, page, debouncedFilter, sortDirection, sortColumn, pageSize, refreshKey]);
 
     const totalPages = Math.ceil(total / pageSize);
 
@@ -97,14 +129,21 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
 
     const handleSort = (column: string) => {
         if (sortColumn === column) {
-            // toggle direction
             setSortDirection(sortDirection === "asc" ? "desc" : "asc");
         } else {
-            // new column
             setSortColumn(column);
             setSortDirection("asc");
         }
     };
+
+    function formatMillisecondsToHHMMSS(milliseconds: number) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
 
     return (
         <div>
@@ -129,7 +168,7 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                 <thead>
                     <tr>
                         <th onClick={() => handleSort("id")} style={{ cursor: "pointer" }}>
-                            ID {sortColumn === "id" && (sortDirection === "asc" ? <BsSortUp/> : <BsSortDown/>)}
+                            ID {sortColumn === "id" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                         <th onClick={() => handleSort("title")} style={{ cursor: "pointer" }}>
                             Title {sortColumn === "title" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
@@ -146,12 +185,15 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                         <th onClick={() => handleSort("length")} style={{ cursor: "pointer" }}>
                             Length {sortColumn === "length" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
+                        <th onClick={() => handleSort("type")} style={{ cursor: "pointer" }}>
+                            Type {sortColumn === "type" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {records.length === 0 ? (
                         <tr>
-                            <td colSpan={6} className="text-center">
+                            <td colSpan={7} className="text-center">
                                 No data
                             </td>
                         </tr>
@@ -167,7 +209,8 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                                 <td>{record.primaryArtist ?? "-"}</td>
                                 <td>{record.album ?? "-"}</td>
                                 <td>{record.rating ?? "-"}</td>
-                                <td>{record.mediaLength?.toLocaleString() ?? "-"}</td>
+                                <td>{record.lengthMilliseconds ?? "-"}</td>
+                                <td>{record.mimeType ?? "-"}</td>
                             </tr>
                         ))
                     )}
@@ -176,13 +219,10 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
 
             {/* Pagination controls */}
             <Pagination className="justify-content-center">
-                {/* Back button */}
                 <Pagination.Prev
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                 />
-
-                {/* Page numbers */}
                 {getPageNumbers().map((p, idx) =>
                     p === "..." ? (
                         <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
@@ -196,8 +236,6 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                         </Pagination.Item>
                     )
                 )}
-
-                {/* Next button */}
                 <Pagination.Next
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
@@ -222,7 +260,8 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                             <p><strong>Artist:</strong> {selected.primaryArtist}</p>
                             <p><strong>Album:</strong> {selected.album}</p>
                             <p><strong>Rating:</strong> {selected.rating}</p>
-                            <p><strong>Length:</strong> {selected.mediaLength?.toLocaleString()}</p>
+                            <p><strong>Length:</strong> {formatMillisecondsToHHMMSS(selected.lengthMilliseconds)}</p>
+                            <p><strong>Type:</strong> {selected.mimeType}</p>
 
                             <div style={{ marginTop: "1rem" }}>
                                 <h5>Preview</h5>
@@ -233,39 +272,20 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                                         style={{ maxWidth: "100%", borderRadius: "8px" }}
                                     />
                                 )}
-
                                 {selected.mimeType?.startsWith("audio/") && (
-                                    <audio
-                                        controls
-                                        src={`play/media/${selected.id}`}
-                                        style={{ width: "100%" }}
-                                    />
+                                    <audio controls src={`play/media/${selected.id}`} style={{ width: "100%" }} />
                                 )}
-
                                 {selected.mimeType?.startsWith("video/") && (
-                                    <video
-                                        controls
-                                        src={`play/media/${selected.id}`}
-                                        style={{ width: "100%", borderRadius: "8px" }}
-                                    />
+                                    <video controls src={`play/media/${selected.id}`} style={{ width: "100%", borderRadius: "8px" }} />
                                 )}
-
                                 {selected.mimeType?.startsWith("text/") && (
                                     <iframe
                                         src={`play/media/${selected.id}`}
                                         title="text preview"
-                                        style={{
-                                            width: "100%",
-                                            height: "300px",
-                                            border: "1px solid #ccc",
-                                            borderRadius: "8px",
-                                        }}
+                                        style={{ width: "100%", height: "300px", border: "1px solid #ccc", borderRadius: "8px" }}
                                     />
                                 )}
-
-                                {!selected.mimeType && (
-                                    <p>No preview available</p>
-                                )}
+                                {!selected.mimeType && <p>No preview available</p>}
                             </div>
                         </div>
                     ) : (

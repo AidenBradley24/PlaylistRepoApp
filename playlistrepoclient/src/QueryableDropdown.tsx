@@ -1,18 +1,20 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Dropdown from 'react-bootstrap/Dropdown';
 import Form from 'react-bootstrap/Form';
+import { useRefresh } from "./RefreshContext";
 
 import type { Response } from "./models";
 
 export interface QueryableDropdownProps {
     menuLabel: string;
     getPath: string;
+    recommendedSelection: any | undefined;
     onSelection: (data: any | null) => void;
     getLabel: (entry: any) => string;
     onCreateNew: () => any;
 }
 
-const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPath, onSelection, getLabel, onCreateNew }) => {
+const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPath, onSelection, getLabel, onCreateNew, recommendedSelection }) => {
 
     const NOT_AVAILABLE = -2;
     const UNSELECTED = -1;
@@ -21,6 +23,8 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
     const [selectedIndex, setSelectedIndex] = useState<number>(NOT_AVAILABLE);
     const [query, setQuery] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+
+    const { refreshKey } = useRefresh(); // subscribe to refresh key
 
     const fetchRecords = useCallback(async (query: string) => {
         try {
@@ -40,7 +44,12 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             setError(null);
             if (result.data.length === 0) {
                 setSelectedIndex(UNSELECTED);
-            } else {
+            } else if (recommendedSelection !== undefined) {
+                let index = result.data.findIndex(element => element.id == recommendedSelection.id);
+                if (index === -1) index = 0;
+                setSelectedIndex(index);
+            }
+            else {
                 setSelectedIndex(0);
             }
         } catch (e) {
@@ -49,7 +58,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             setSelectedIndex(UNSELECTED);
             setError("An unexpected error occurred");
         }
-    }, [getPath]);
+    }, [getPath, refreshKey, recommendedSelection]);
 
     // Debounce query updates
     useEffect(() => {
