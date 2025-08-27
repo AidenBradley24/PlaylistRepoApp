@@ -12,7 +12,7 @@ public class Playlist
 	[Key] public int Id { get; set; }
 
 	[UserQueryable("title")]
-	public string Title { get; set; } = null!;
+	public string Title { get; set; } = "";
 
 	[UserQueryable("description")]
 	public string Description { get; set; } = "";

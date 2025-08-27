@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Dropdown from 'react-bootstrap/Dropdown';
 import Form from 'react-bootstrap/Form';
 import { useRefresh } from "./RefreshContext";
+import { BsPlus } from "react-icons/bs";
 
 import type { Response } from "./models";
 
@@ -139,7 +140,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
                     <Dropdown.Item key={i} eventKey={i} active={selectedIndex==i}>{getLabel(entry)}</Dropdown.Item>
                 ))}
                 <Dropdown.Divider />
-                <Dropdown.Item eventKey="create">+ Create New</Dropdown.Item>
+                <Dropdown.Item eventKey="create"><BsPlus />Create New</Dropdown.Item>
             </Dropdown.Menu>
         </Dropdown>
     );

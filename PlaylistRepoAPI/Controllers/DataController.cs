@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Mvc;
 using PlaylistRepoLib.Models;
+using PlaylistRepoLib.Models.DTOs;
 using PlaylistRepoLib.UserQueries;
 
 namespace PlaylistRepoAPI.Controllers
@@ -39,15 +41,22 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpPost("media")]
-		public IActionResult AddOrUpdateMedia([FromBody] Media media)
+		public IActionResult AddOrUpdateMedia([FromBody] MediaDTO dto)
 		{
-			if (!db.Medias.Any(m => m.Id == media.Id))
-				db.Add(media);
+			var record = db.Medias.Find(dto.Id);
+			if (record == null)
+			{
+				record = new Media();
+				dto.UpdateModel(record);
+				db.Add(record);
+			}
 			else
-				db.Update(media);
+			{
+				dto.UpdateModel(record);
+			}
 
 			db.SaveChanges();
-			return Ok(media);
+			return Ok(dto);
 		}
 
 		[HttpDelete("media")]
@@ -81,15 +90,22 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpPost("remotes")]
-		public IActionResult AddOrUpdateRemote([FromBody] RemotePlaylist remotePlaylist)
+		public IActionResult AddOrUpdateRemote([FromBody] RemotePlaylistDTO dto)
 		{
-			if (!db.RemotePlaylists.Any(m => m.Id == remotePlaylist.Id))
-				db.Add(remotePlaylist);
+			var record = db.RemotePlaylists.Find(dto.Id);
+			if (record == null)
+			{
+				record = new RemotePlaylist();
+				dto.UpdateModel(record);
+				db.Add(record);
+			}
 			else
-				db.Update(remotePlaylist);
+			{
+				dto.UpdateModel(record);
+			}
 
 			db.SaveChanges();
-			return Ok(remotePlaylist);
+			return Ok(dto);
 		}
 
 		[HttpDelete("remotes")]
@@ -139,15 +155,22 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpPost("playlists")]
-		public IActionResult AddOrUpdatePlaylist([FromBody] Playlist playlist)
+		public IActionResult AddOrUpdatePlaylist([FromBody] PlaylistDTO dto)
 		{
-			if (!db.Playlists.Any(m => m.Id == playlist.Id))
-				db.Add(playlist);
+			var record = db.Playlists.Find(dto.Id);
+			if (record == null)
+			{
+				record = new Playlist();
+				dto.UpdateModel(record);
+				db.Add(record);
+			}
 			else
-				db.Update(playlist);
+			{
+				dto.UpdateModel(record);
+			}
 
 			db.SaveChanges();
-			return Ok(playlist);
+			return Ok(dto);
 		}
 
 		[HttpDelete("playlists")]

@@ -13,7 +13,8 @@ export interface Media {
     description: string,
     rating: number,
     lengthMilliseconds: number,
-    order: number
+    order: number,
+    isOnFile: boolean
 }
 
 export interface Playlist {

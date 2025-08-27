@@ -11,6 +11,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			var media = db.Medias.Find(id);
 			if (media == null) return NotFound();
+			if (!media.IsOnFile) return NoContent();
 			var fs = media.File!.OpenRead();
 			return File(fs, media.MimeType, true);
 		}

@@ -2,19 +2,20 @@ import React, { useState } from "react";
 import MediaView from "./View";
 import QueryableDropdown from './QueryableDropdown';
 import EditPlaylistModal from './EditPlaylistModal';
-import type { Playlist } from "./models";
+import type {Playlist } from "./models";
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useRefresh } from "./RefreshContext";
+import { BsPlus } from "react-icons/bs";
+import { useEdits } from "./EditContext"
 
 const PlaylistTab: React.FC = () => {
     const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
     const [showModal, setShowModal] = useState(false);
 
-    const [editingPlaylist, setEditingPlaylist] = useState<Playlist>({} as Playlist);
-
     const [recDropSelection, setRecDropSelection] = useState<Playlist>();
 
     const { triggerRefresh } = useRefresh();
+    const { editingPlaylist, setEditingPlaylist } = useEdits(); 
 
     async function createNewPlaylist() {
         const playlist = {} as Playlist;
@@ -85,9 +86,9 @@ const PlaylistTab: React.FC = () => {
                             <Dropdown.Divider />
                             <Dropdown.Header>Export</Dropdown.Header>
                             <Dropdown.Item onClick={() => exportPlaylist('.xspf')} disabled={selectedPlaylist === null}>XSPF</Dropdown.Item>
-                            <Dropdown.Item onClick={() => exportPlaylist('.m3u8')} disabled={selectedPlaylist === null}>M3u8</Dropdown.Item>
+                            <Dropdown.Item onClick={() => exportPlaylist('.m3u8')} disabled={selectedPlaylist === null}>M3U8</Dropdown.Item>
                             <Dropdown.Divider />
-                            <Dropdown.Item onClick={() => createNewPlaylist()}>Create New</Dropdown.Item>
+                            <Dropdown.Item onClick={() => createNewPlaylist()}><BsPlus />Create New</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                 </div>
@@ -103,7 +104,7 @@ const PlaylistTab: React.FC = () => {
                     )}
                 </div>
                 <EditPlaylistModal
-                    title={editingPlaylist.id === selectedPlaylist?.id ? "Edit Playlist" : "Create Playlist"}
+                    title={editingPlaylist?.id === selectedPlaylist?.id ? "Edit Playlist" : "Create Playlist"}
                     show={showModal}
                     onHide={() => setShowModal(false)}
                     onCreated={(playlist) => {

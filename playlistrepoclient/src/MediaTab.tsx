@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import MediaView from "./View";
 
 const MediaTab: React.FC = () => {

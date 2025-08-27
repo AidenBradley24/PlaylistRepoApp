@@ -27,6 +27,9 @@ public partial class Media
 	[JsonIgnore]
 	[NotMapped] public FileInfo? File => FilePath != null ? new(FilePath) : null;
 
+	[NotMapped] public bool IsOnFile { get => File != null; }
+
+	[JsonIgnore]
 	public string? FilePath { get; set; }
 	public byte[]? Hash { get; set; }
 

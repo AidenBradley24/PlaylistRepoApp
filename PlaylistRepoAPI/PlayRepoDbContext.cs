@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PlaylistRepoLib;
 using PlaylistRepoLib.Models;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 
 namespace PlaylistRepoAPI;
 

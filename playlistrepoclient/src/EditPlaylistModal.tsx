@@ -8,34 +8,22 @@ interface EditPlaylistModalProps {
     show: boolean;
     onHide: () => void;
     onCreated: (playlist: Playlist) => void;
-    editingPlaylist: Playlist;
-    setEditingPlaylist: (playlist: Playlist) => void;
+    editingPlaylist: Playlist | null;
+    setEditingPlaylist: (playlist: Playlist | null) => void;
 }
 
 const EditPlaylistModal: React.FC<EditPlaylistModalProps> = ({ title, show, onHide, onCreated, editingPlaylist, setEditingPlaylist }) => {
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
-
     const { triggerRefresh } = useRefresh();
 
-    function setTitle(title: string) {
-        const clone = structuredClone(editingPlaylist);
-        clone.title = title;
+    if (!editingPlaylist) return;
+
+    function updateField<K extends keyof Playlist>(field: K, value: Playlist[K]) {
+        const clone = structuredClone(editingPlaylist)!;
+        clone[field] = value;
         setEditingPlaylist(clone);
     }
-
-    function setDescription(description: string) {
-        const clone = structuredClone(editingPlaylist);
-        clone.description = description;
-        setEditingPlaylist(clone);
-    }
-
-    function setUserQuery(userQuery: string) {
-        const clone = structuredClone(editingPlaylist);
-        clone.userQuery = userQuery;
-        setEditingPlaylist(clone);
-    }
-
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -78,7 +66,7 @@ const EditPlaylistModal: React.FC<EditPlaylistModalProps> = ({ title, show, onHi
                         <Form.Control
                             type="text"
                             value={editingPlaylist.title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            onChange={(e) => updateField("title", e.target.value)}
                             required
                         />
                     </Form.Group>
@@ -87,7 +75,7 @@ const EditPlaylistModal: React.FC<EditPlaylistModalProps> = ({ title, show, onHi
                         <Form.Control
                             type="text"
                             value={editingPlaylist.description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            onChange={(e) => updateField("description", e.target.value)}
                         />
                     </Form.Group>
                     <Form.Group className="mb-3">
@@ -95,7 +83,7 @@ const EditPlaylistModal: React.FC<EditPlaylistModalProps> = ({ title, show, onHi
                         <Form.Control
                             type="text"
                             value={editingPlaylist.userQuery}
-                            onChange={(e) => setUserQuery(e.target.value)}
+                            onChange={(e) => updateField("userQuery", e.target.value)}
                         />
                     </Form.Group>
                     <div className="d-flex justify-content-end">

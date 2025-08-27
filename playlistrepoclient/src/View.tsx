@@ -1,16 +1,16 @@
-﻿import React, { useEffect, useState } from "react";
-import { Table, Form, Button, Pagination, Spinner } from "react-bootstrap";
+﻿import React, { useEffect, useState, useRef } from "react";
+import { InputGroup, Table, Form, Button, Pagination, Spinner } from "react-bootstrap";
 import type { Response, Media } from "./models";
-import Modal from "react-bootstrap/Modal";
 import { useRefresh } from "./RefreshContext";
-
-import { BsSortDown, BsSortUp } from "react-icons/bs";
+import { useEdits } from "./EditContext";
+import MediaModal from "./MediaModal";
+import { BsSortDown, BsSortUp, BsXLg } from "react-icons/bs";
 
 import "./records.css";
 
 export interface MediaViewProps {
     path: string;
-    pageSize?: number
+    pageSize?: number;
 }
 
 const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
@@ -18,33 +18,61 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
 
-    const [selected, setSelected] = useState<Media | null>(null);
+    const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+
     const [showModal, setShowModal] = useState(false);
 
-    const [sortColumn, setSortColumn] = useState<string>('id');
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const [sortColumn, setSortColumn] = useState<string | null>();
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
 
-    // Immediate filter (bound to input)
-    const [filter, setFilter] = useState<string>('');
-    // Debounced filter (actually used for queries)
-    const [debouncedFilter, setDebouncedFilter] = useState<string>('');
+    const [query, setQuery] = useState<string>('');
+    const [debouncedQuery, setDebouncedQuery] = useState<string>('');
 
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    const { refreshKey } = useRefresh(); // subscribe to refresh key
+    const { refreshKey } = useRefresh();
+    const { editingMedia, setEditingMedia } = useEdits(); 
 
-    /** Debounce filter input */
     useEffect(() => {
         const handler = setTimeout(() => {
-            setDebouncedFilter(filter);
-            setPage(1); // reset to first page on new filter
+            setDebouncedQuery(query);
+            setPage(1);
         }, 500);
 
         return () => {
             clearTimeout(handler);
         };
-    }, [filter]);
+    }, [query]);
+
+    useEffect(() => {
+        // Look for patterns like "orderby title" or "orderbydescending rating"
+        const match = query.match(/\borderby(descending)?\s+(\w+)/i);
+        if (match) {
+            const [, desc, column] = match;
+            setSortColumn(column);
+            setSortDirection(desc ? "desc" : "asc");
+        } else {
+            // If no orderby in query, clear sorting
+            setSortColumn(null);
+            setSortDirection(null);
+        }
+    }, [query]);
+
+    useEffect(() => {
+        if (!sortColumn || !sortDirection) return;
+
+        // Remove any existing orderby clause from query
+        const withoutOrder = query.replace(/\borderby(descending)?\s+\w+/i, "").trim();
+
+        // Append the current sort
+        const newQuery = `${withoutOrder} orderby${sortDirection === "desc" ? "descending" : ""} ${sortColumn}`.trim();
+
+        if (newQuery !== query) {
+            setQuery(newQuery);
+        }
+    }, [sortColumn, sortDirection]);
+
 
     /** Fetch records when query params change */
     useEffect(() => {
@@ -53,9 +81,8 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
             setError(null);
 
             try {
-                const query = `${debouncedFilter} orderby${sortDirection === "desc" ? "descending" : ""} ${sortColumn}`;
                 const response = await fetch(
-                    `${path}?query=${encodeURIComponent(query)}&pageSize=${pageSize}&currentPage=${page}`
+                    `${path}?query=${encodeURIComponent(debouncedQuery)}&pageSize=${pageSize}&currentPage=${page}`
                 );
 
                 if (!response.ok) {
@@ -84,7 +111,7 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
         };
 
         loadData();
-    }, [path, page, debouncedFilter, sortDirection, sortColumn, pageSize, refreshKey]);
+    }, [path, page, debouncedQuery, sortDirection, sortColumn, pageSize, refreshKey]);
 
     const totalPages = Math.ceil(total / pageSize);
 
@@ -123,7 +150,7 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
 
     /** Open modal for a selected record */
     const handleRowClick = (record: Media) => {
-        setSelected(record);
+        setSelectedMedia(record);
         setShowModal(true);
     };
 
@@ -136,30 +163,40 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
         }
     };
 
-    function formatMillisecondsToHHMMSS(milliseconds: number) {
-        const totalSeconds = Math.floor(milliseconds / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
+    const handleReset = () => {
+        setQuery('');
+        // Focus the input again after clearing
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    };
 
     return (
         <div>
-            <Form.Group className="mb-3" controlId="filterInput">
-                <Form.Label>Filter</Form.Label>
+            <InputGroup className="mb-3">
+                {query && (
+                    <Button
+                        variant="outline-secondary"
+                        onClick={handleReset}
+                        className="d-flex align-items-center"
+                    >
+                        <BsXLg />
+                    </Button>
+                )}
                 <Form.Control
                     type="text"
                     placeholder="Type to filter media..."
-                    value={filter}
+                    value={query}
                     isInvalid={!!error}
-                    onChange={(e) => setFilter(e.target.value)}
+                    onChange={(e) => setQuery(e.target.value)}
+                    ref={inputRef}
                 />
                 <Form.Control.Feedback type="invalid">
                     {error}
                 </Form.Control.Feedback>
-            </Form.Group>
+            </InputGroup>
 
             {loading && <Spinner animation="border" size="sm" className="mb-2" />}
 
@@ -208,8 +245,8 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                                 <td>{record.title ?? "-"}</td>
                                 <td>{record.primaryArtist ?? "-"}</td>
                                 <td>{record.album ?? "-"}</td>
-                                <td>{record.rating ?? "-"}</td>
-                                <td>{record.lengthMilliseconds ?? "-"}</td>
+                                <td>{record.rating === 0 ? "-" : record.rating} / 10</td>
+                                <td>{record.lengthMilliseconds === 0 ? "-" : record.lengthMilliseconds}</td>
                                 <td>{record.mimeType ?? "-"}</td>
                             </tr>
                         ))
@@ -242,62 +279,15 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                 />
             </Pagination>
 
-            {/* Modal */}
-            <Modal
+            {/* View Modal */}
+            <MediaModal
                 show={showModal}
+                viewingMedia={selectedMedia}
                 onHide={() => setShowModal(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Media Details</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selected ? (
-                        <div>
-                            <p><strong>ID:</strong> {selected.id}</p>
-                            <p><strong>Title:</strong> {selected.title}</p>
-                            <p><strong>Artist:</strong> {selected.primaryArtist}</p>
-                            <p><strong>Album:</strong> {selected.album}</p>
-                            <p><strong>Rating:</strong> {selected.rating}</p>
-                            <p><strong>Length:</strong> {formatMillisecondsToHHMMSS(selected.lengthMilliseconds)}</p>
-                            <p><strong>Type:</strong> {selected.mimeType}</p>
-
-                            <div style={{ marginTop: "1rem" }}>
-                                <h5>Preview</h5>
-                                {selected.mimeType?.startsWith("image/") && (
-                                    <img
-                                        src={`play/media/${selected.id}`}
-                                        alt={selected.title ?? "media"}
-                                        style={{ maxWidth: "100%", borderRadius: "8px" }}
-                                    />
-                                )}
-                                {selected.mimeType?.startsWith("audio/") && (
-                                    <audio controls src={`play/media/${selected.id}`} style={{ width: "100%" }} />
-                                )}
-                                {selected.mimeType?.startsWith("video/") && (
-                                    <video controls src={`play/media/${selected.id}`} style={{ width: "100%", borderRadius: "8px" }} />
-                                )}
-                                {selected.mimeType?.startsWith("text/") && (
-                                    <iframe
-                                        src={`play/media/${selected.id}`}
-                                        title="text preview"
-                                        style={{ width: "100%", height: "300px", border: "1px solid #ccc", borderRadius: "8px" }}
-                                    />
-                                )}
-                                {!selected.mimeType && <p>No preview available</p>}
-                            </div>
-                        </div>
-                    ) : (
-                        <p>No record selected.</p>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                onSaved={() => { }}
+                editingMedia={editingMedia}
+                setEditingMedia={setEditingMedia}
+            />
         </div>
     );
 };

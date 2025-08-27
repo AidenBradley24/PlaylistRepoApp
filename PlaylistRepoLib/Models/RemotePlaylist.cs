@@ -13,12 +13,12 @@ public class RemotePlaylist
 	[Key] public int Id { get; set; }
 
 	[UserQueryable("name")]
-	public string Name { get; set; } = null!;
+	public string Name { get; set; } = "unnamed remote playlist";
 
 	[UserQueryable("description")]
 	public string Description { get; set; } = "";
 
-	public string Link { get; set; } = null!;
+	public string Link { get; set; } = "";
 	public string? MediaMime { get; set; }
 	public RemoteType Type { get; set; } = RemoteType.internet;
 
