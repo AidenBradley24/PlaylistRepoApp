@@ -43,7 +43,7 @@ namespace PlaylistRepoLib.Models.DTOs
 			foreach (var (dtoProp, modelProp) in SharedProperties())
 			{
 				if (!dtoProp.CanWrite) continue;
-				dtoProp.SetValue(this, modelProp.GetValue(this));
+				dtoProp.SetValue(this, modelProp.GetValue(model));
 			}
 		}
 

@@ -9,19 +9,15 @@ import type { Response } from "./models";
 export interface QueryableDropdownProps {
     menuLabel: string;
     getPath: string;
-    recommendedSelection: any | undefined;
-    onSelection: (data: any | null) => void;
+    selection: any | undefined;
+    setSelection: (data: any | null) => void;
     getLabel: (entry: any) => string;
     onCreateNew: () => any;
 }
 
-const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPath, onSelection, getLabel, onCreateNew, recommendedSelection }) => {
-
-    const NOT_AVAILABLE = -2;
-    const UNSELECTED = -1;
+const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPath, setSelection, getLabel, onCreateNew, selection }) => {
 
     const [entries, setEntries] = useState<any[]>([]);
-    const [selectedIndex, setSelectedIndex] = useState<number>(NOT_AVAILABLE);
     const [query, setQuery] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +31,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
                     const message = await response.text();
                     setError(message);
                     setEntries([]);
-                    setSelectedIndex(UNSELECTED);
+                    setSelection(null);
                     return;
                 }
                 throw new Error("fetch failed");
@@ -44,22 +40,25 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             setEntries(result.data);
             setError(null);
             if (result.data.length === 0) {
-                setSelectedIndex(UNSELECTED);
-            } else if (recommendedSelection !== undefined) {
-                let index = result.data.findIndex(element => element.id == recommendedSelection.id);
-                if (index === -1) index = 0;
-                setSelectedIndex(index);
+                setSelection(null);
+            }
+            else if (!selection) {
+                setSelection(result.data[0]);
             }
             else {
-                setSelectedIndex(0);
+                let index = result.data.findIndex(item => item.id === selection.id);
+                if (index === -1)
+                    setSelection(result.data[0]);
+                else
+                    setSelection(result.data[index]);
             }
         } catch (e) {
             console.error(e);
             setEntries([]);
-            setSelectedIndex(UNSELECTED);
+            setSelection(null);
             setError("An unexpected error occurred");
         }
-    }, [getPath, refreshKey, recommendedSelection]);
+    }, [getPath, refreshKey]);
 
     // Debounce query updates
     useEffect(() => {
@@ -69,18 +68,9 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
         return () => clearTimeout(handler);
     }, [query, fetchRecords]);
 
-    useEffect(() => {
-        if (selectedIndex >= 0 && entries[selectedIndex]) {
-            onSelection(entries[selectedIndex]);
-        } else {
-            onSelection(null);
-        }
-    }, [selectedIndex, entries, onSelection]);
-
     function getSelectedTitle(): string {
-        if (selectedIndex === NOT_AVAILABLE) return "Loading...";
-        if (selectedIndex === UNSELECTED) return "Select...";
-        return getLabel(entries[selectedIndex]);
+        if (selection === null) return "Select...";
+        return getLabel(selection);
     }
 
     function makeSelection(dropdownKey: string | null) {
@@ -91,7 +81,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
         }
         const index = Number.parseInt(dropdownKey, 10);
         if (!isNaN(index)) {
-            setSelectedIndex(index);
+            setSelection(entries[index]);
         }
     }
 
@@ -137,7 +127,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             <Dropdown.Menu as={CustomMenu}>
                 <Dropdown.ItemText key="label">{menuLabel}</Dropdown.ItemText>
                 {entries.map((entry, i) => (
-                    <Dropdown.Item key={i} eventKey={i} active={selectedIndex==i}>{getLabel(entry)}</Dropdown.Item>
+                    <Dropdown.Item key={i} eventKey={i} active={selection?.id===entry.id}>{getLabel(entry)}</Dropdown.Item>
                 ))}
                 <Dropdown.Divider />
                 <Dropdown.Item eventKey="create"><BsPlus />Create New</Dropdown.Item>

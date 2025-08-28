@@ -56,6 +56,7 @@ namespace PlaylistRepoAPI.Controllers
 			}
 
 			db.SaveChanges();
+			dto.SyncDTO(record);
 			return Ok(dto);
 		}
 
@@ -105,6 +106,7 @@ namespace PlaylistRepoAPI.Controllers
 			}
 
 			db.SaveChanges();
+			dto.SyncDTO(record);
 			return Ok(dto);
 		}
 
@@ -170,6 +172,7 @@ namespace PlaylistRepoAPI.Controllers
 			}
 
 			db.SaveChanges();
+			dto.SyncDTO(record);
 			return Ok(dto);
 		}
 

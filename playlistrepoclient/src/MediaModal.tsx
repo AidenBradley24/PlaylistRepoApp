@@ -25,6 +25,9 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
             const clone = structuredClone(viewingMedia);
             setEditingMedia(clone);
         }
+        else if (editingMedia) {
+
+        }
     }, [viewingMedia])
 
     function updateField<K extends keyof Media>(field: K, value: Media[K]) {
@@ -68,7 +71,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                 <Modal.Title>Media</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Tabs defaultActiveKey="view" id="media-tabs" className="mb-3">
+                <Tabs defaultActiveKey={viewingMedia ? 'view' : 'edit'} id="media-tabs" className="mb-3">
                     {/* View Tab */}
                     {viewingMedia &&
                         <Tab eventKey="view" title="Details">
@@ -120,13 +123,14 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                     {/* Edit Tab */}
                     {
                         editingMedia &&
-                        <Tab eventKey="edit" title="Edit">
+                        <Tab eventKey="edit" title={editingMedia.id === 0 ? 'Create' : 'Edit'}>
                             {error && <Alert variant="danger">{error}</Alert>}
-                            <Form onSubmit={handleSubmit}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>ID</Form.Label>
-                                    <Form.Control type="text" value={editingMedia.id} readOnly />
-                                </Form.Group>
+                                <Form onSubmit={handleSubmit}>
+                                    {editingMedia.id !== 0 && <Form.Group className="mb-3">
+                                        <Form.Label>ID</Form.Label>
+                                        <Form.Control type="text" value={editingMedia.id} readOnly />
+                                    </Form.Group>}
+                                
                                 <Form.Group className="mb-3">
                                     <Form.Label>Title</Form.Label>
                                     <Form.Control

@@ -3,36 +3,32 @@ import { InputGroup, Table, Form, Button, Pagination, Spinner } from "react-boot
 import type { Response, Media } from "./models";
 import { useRefresh } from "./RefreshContext";
 import { useEdits } from "./EditContext";
-import MediaModal from "./MediaModal";
 import { BsSortDown, BsSortUp, BsXLg } from "react-icons/bs";
 
 import "./records.css";
 
 export interface MediaViewProps {
+    query: string;
+    setQuery: (query: string) => void;
     path: string;
     pageSize?: number;
 }
 
-const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
+const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize = 20 }) => {
     const [records, setRecords] = useState<Media[]>([]);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
 
-    const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
-
-    const [showModal, setShowModal] = useState(false);
-
     const [sortColumn, setSortColumn] = useState<string | null>();
     const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
 
-    const [query, setQuery] = useState<string>('');
     const [debouncedQuery, setDebouncedQuery] = useState<string>('');
 
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     const { refreshKey } = useRefresh();
-    const { editingMedia, setEditingMedia } = useEdits(); 
+    const { setViewingMedia, setShowMediaModal } = useEdits(); 
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -150,8 +146,8 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
 
     /** Open modal for a selected record */
     const handleRowClick = (record: Media) => {
-        setSelectedMedia(record);
-        setShowModal(true);
+        setViewingMedia(record);
+        setShowMediaModal(true);
     };
 
     const handleSort = (column: string) => {
@@ -278,16 +274,6 @@ const MediaView: React.FC<MediaViewProps> = ({ path, pageSize = 20 }) => {
                     disabled={page === totalPages}
                 />
             </Pagination>
-
-            {/* View Modal */}
-            <MediaModal
-                show={showModal}
-                viewingMedia={selectedMedia}
-                onHide={() => setShowModal(false)}
-                onSaved={() => { }}
-                editingMedia={editingMedia}
-                setEditingMedia={setEditingMedia}
-            />
         </div>
     );
 };
