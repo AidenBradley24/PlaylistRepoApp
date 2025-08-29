@@ -28,7 +28,7 @@ builder.Services.AddSingleton<IPlayRepoService, PlayRepoService>(serviceProvider
 });
 
 builder.Services.AddScoped<IConversionService, ConversionService>();
-
+builder.Services.AddSingleton<IExportService, ExportService>();
 builder.Services.AddSingleton<IRemoteService, RemoteService>();
 builder.Services.AddScoped<YtDlpService>();
 
@@ -44,11 +44,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
-
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-	ForwardedHeaders = ForwardedHeaders.XForwardedProto
-});
 
 // Enable Swagger in development
 if (app.Environment.IsDevelopment() || true) // use `|| true` for always-on in local dev

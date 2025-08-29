@@ -4,7 +4,7 @@ using PlaylistRepoLib;
 namespace PlaylistRepoAPI.Controllers
 {
 	[ApiController]
-	[Route("service")]
+	[Route("api/[controller]")]
 	public class ServiceController(IPlayRepoService repoService, ITaskService taskService) : ControllerBase
 	{
 		[HttpGet("status/{id}")]
@@ -17,7 +17,7 @@ namespace PlaylistRepoAPI.Controllers
 			return Ok(status);
 		}
 
-		[Route("init")]
+		[HttpPost("init")]
 		public IActionResult Init()
 		{
 			bool success = repoService.Initialize();
@@ -31,7 +31,7 @@ namespace PlaylistRepoAPI.Controllers
 		public IActionResult Test([FromHeader] int milliseconds)
 		{
 			if (milliseconds < 0) throw new Exception("Test error");
-			var id = taskService.StartTask(async (progress) =>
+			var id = taskService.StartTask(async (progress, _) =>
 			{
 				int remaining = milliseconds;
 				while (remaining > 0)

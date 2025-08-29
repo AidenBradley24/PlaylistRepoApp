@@ -33,6 +33,29 @@ namespace PlaylistRepoAPI
 			}
 		}
 
+		private static string GetLocation(Media media, PlaylistStreamingSettings settings)
+		{
+			if (settings.UseDirectory)
+			{
+				if (settings.RootDirectory != null)
+				{
+					return $"file:///{UrlEncoder.Default.Encode(Path.GetRelativePath(settings.RootDirectory.FullName, media.FilePath!))}";
+				}
+				else if (settings.MediaPath != null)
+				{
+					return $"file:///{UrlEncoder.Default.Encode(Path.Combine(settings.MediaPath, media.File!.Name))}";
+				}
+				else
+				{
+					throw new Exception("Root Directory and Media Path can't both be null.");
+				}
+			}
+			else
+			{
+				return $"{settings.ApiUrl}/api/play/media/{media.Id}";
+			}
+		}
+
 		public static async Task StreamXspfAsync(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings)
 		{
 			XmlWriter writer = XmlWriter.Create(outputStream, new XmlWriterSettings() { Async = true });
@@ -41,7 +64,6 @@ namespace PlaylistRepoAPI
 			await writer.WriteAttributeStringAsync(null, "version", null, "1");
 			await writer.WriteStartElementAsync(null, "trackList", null);
 
-			var url = UrlEncoder.Default;
 			var query = playlist.AllEntries(library, true);
 			await query.LoadAsync();
 
@@ -49,17 +71,7 @@ namespace PlaylistRepoAPI
 			{
 				await writer.WriteStartElementAsync(null, "track", null);
 
-				string location;
-				if (settings.UseDirectory)
-				{
-					ArgumentNullException.ThrowIfNull(settings.RootDirectory, nameof(settings.RootDirectory));
-					location = $"file:///{url.Encode(Path.GetRelativePath(settings.RootDirectory.FullName, media.FilePath!))}";
-				}
-				else
-				{
-					ArgumentNullException.ThrowIfNullOrWhiteSpace(settings.ApiUrl, nameof(settings.ApiUrl));
-					location = $"{settings.ApiUrl}/api/play/media/{media.Id}";
-				}
+				string location = GetLocation(media, settings);
 				await writer.WriteElementStringAsync(null, "location", null, location);
 
 				await writer.WriteElementStringAsync(null, "title", null, media.Title);
@@ -80,24 +92,12 @@ namespace PlaylistRepoAPI
 			var writer = new StreamWriter(outputStream, Encoding.UTF8);
 			await writer.WriteLineAsync("#EXTM3U");
 
-			var url = UrlEncoder.Default;
 			var query = playlist.AllEntries(library, true);
 			await query.LoadAsync();
 
 			foreach (var media in query)
 			{
-				string location;
-				if (settings.UseDirectory)
-				{
-					ArgumentNullException.ThrowIfNull(settings.RootDirectory, nameof(settings.RootDirectory));
-					location = $"file:///{url.Encode(Path.GetRelativePath(settings.RootDirectory.FullName, media.FilePath!))}";
-				}
-				else
-				{
-					ArgumentNullException.ThrowIfNullOrWhiteSpace(settings.ApiUrl, nameof(settings.ApiUrl));
-					location = $"{settings.ApiUrl}/api/play/media/{media.Id}";
-				}
-
+				string location = GetLocation(media, settings);
 				string title = media.Title.Replace(",", "").Replace("-", "|").Trim();
 
 				await writer.WriteAsync("#EXTINF:");
@@ -126,9 +126,16 @@ namespace PlaylistRepoAPI
 		public bool UseDirectory { get; set; } = false;
 
 		/// <summary>
-		/// The root directory of media used when <see cref="UseDirectory"/> is true
+		/// The root directory of media used when <see cref="UseDirectory"/> is true <br/>
+		/// <see cref="RootDirectory"/> and <see cref="MediaPath"/> are mutually exclusive.
 		/// </summary>
 		public DirectoryInfo? RootDirectory { get; set; }
+
+		/// <summary>
+		/// The override file path used when <see cref="UseDirectory"/> is true <br/>
+		/// <see cref="RootDirectory"/> and <see cref="MediaPath"/> are mutually exclusive.
+		/// </summary>
+		public string? MediaPath { get; set; }
 
 		/// <summary>
 		/// The api url used when <see cref="UseDirectory"/> is false (no trailing '/')

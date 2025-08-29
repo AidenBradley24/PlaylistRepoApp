@@ -20,7 +20,7 @@ namespace PlaylistRepoAPI.Controllers
 			try
 			{
 				files = new FileSpec(fileSpec);
-				id = taskService.StartTask<PlayRepoDbContext>((progress, db) => db.IngestUntracked([.. files], progress));
+				id = taskService.StartTask<PlayRepoDbContext>((progress, _, db) => db.IngestUntracked([.. files], progress));
 			}
 			catch (Exception ex)
 			{
@@ -38,7 +38,7 @@ namespace PlaylistRepoAPI.Controllers
 			Guid id;
 			try
 			{
-				id = taskService.StartTask<IRemoteService>((progress, dl) => dl.Fetch(remote, progress));
+				id = taskService.StartTask<IRemoteService>((progress, _, dl) => dl.Fetch(remote, progress));
 			}
 			catch (Exception ex)
 			{
@@ -56,7 +56,7 @@ namespace PlaylistRepoAPI.Controllers
 			Guid id;
 			try
 			{
-				id = taskService.StartTask<IRemoteService>((progress, dl) => dl.Download(remote, mediaUIDs, progress));
+				id = taskService.StartTask<IRemoteService>((progress, _, dl) => dl.Download(remote, mediaUIDs, progress));
 			}
 			catch (Exception ex)
 			{
@@ -74,7 +74,7 @@ namespace PlaylistRepoAPI.Controllers
 			Guid id;
 			try
 			{
-				id = taskService.StartTask<IRemoteService>((progress, dl) => dl.Sync(remote, progress));
+				id = taskService.StartTask<IRemoteService>((progress, _, dl) => dl.Sync(remote, progress));
 			}
 			catch (Exception ex)
 			{

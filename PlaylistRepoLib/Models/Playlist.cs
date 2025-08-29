@@ -1,6 +1,7 @@
 ﻿using PlaylistRepoLib.UserQueries;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 
 namespace PlaylistRepoLib.Models;
 
@@ -26,4 +27,13 @@ public class Playlist
 	/// Entries definitively in the playlist
 	/// </summary>
 	public List<int> BakedEntries { get; set; } = [];
+
+	public string GenerateFileName(string extension)
+	{
+		StringBuilder sb = new(Title);
+		if (!extension.StartsWith('.'))
+			sb.Append('.');
+		sb.Append(extension);
+		return sb.ToString();
+	}
 }
