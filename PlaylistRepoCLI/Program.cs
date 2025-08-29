@@ -70,7 +70,7 @@ public class Program
 	private static async Task<int> RunInitAsync(InitOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Post, "/service/init");
+		var response = await api.Request(HttpMethod.Post, "/api/service/init");
 		if (response.IsSuccessStatusCode)
 		{
 			Console.WriteLine($"Repo is now initialized.");
@@ -109,7 +109,7 @@ public class Program
 	private static async Task<int> RunFetchAsync(FetchOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.TaskRequest(HttpMethod.Post, "/action/fetch", request =>
+		var response = await api.TaskRequest(HttpMethod.Post, "/api/action/fetch", request =>
 		{
 			request.Headers.Add("remoteId", opts.RemoteId);
 		});
@@ -130,7 +130,7 @@ public class Program
 	private static async Task<int> RunAddAsync(AddOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Post, "/data/remotes", request =>
+		var response = await api.Request(HttpMethod.Post, "/api/data/remotes", request =>
 		{
 			RemotePlaylist newRemote = new()
 			{
@@ -157,7 +157,7 @@ public class Program
 	private static async Task<int> RunCreateAsync(CreateOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Post, "/data/playlists", request =>
+		var response = await api.Request(HttpMethod.Post, "/api/data/playlists", request =>
 		{
 			Playlist newPlaylist = new() { UserQuery = opts.UserQuery };
 			if (opts.PlaylistTitle != null) newPlaylist.Title = opts.PlaylistTitle;
@@ -210,7 +210,7 @@ public class Program
 
 		async Task list<T>(string url, string label)
 		{
-			var response = await api.Request(HttpMethod.Get, $"/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
+			var response = await api.Request(HttpMethod.Get, $"/api/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
 			if (!response.IsSuccessStatusCode)
 			{
 				result.Append("Error fetching data: ");
@@ -235,13 +235,13 @@ public class Program
 		}
 
 		if (opts.ListMedia)
-			await list<Media>($"/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "MEDIA");
+			await list<Media>($"/api/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "MEDIA");
 
 		if (opts.ListRemotePlaylists)
-			await list<RemotePlaylist>($"/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");
+			await list<RemotePlaylist>($"/api/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");
 
 		if (opts.ListPlaylists)
-			await list<Playlist>($"/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
+			await list<Playlist>($"/api/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
 
 		Console.WriteLine(result.ToString());
 		return 0;

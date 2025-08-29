@@ -8,7 +8,7 @@ namespace PlaylistRepoAPI.Controllers
 	/// Controller for indirect operations
 	/// </summary>
 	[ApiController]
-	[Route("action")]
+	[Route("api/[controller]")]
 	public class ActionController(PlayRepoDbContext db, ITaskService taskService) : ControllerBase
 	{
 		[HttpPost("ingest")]

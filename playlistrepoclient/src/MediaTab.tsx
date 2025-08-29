@@ -33,7 +33,7 @@ const MediaTab: React.FC = () => {
     }
 
     function testTask() {
-        const task = fetch("service/test", { method: 'POST', headers: { milliseconds: '10000' } });
+        const task = fetch("api/service/test", { method: 'POST', headers: { milliseconds: '10000' } });
         invokeTask(task);
     }
 
@@ -57,7 +57,7 @@ const MediaTab: React.FC = () => {
             </div>
             <h3>Media</h3>
 
-            <MediaView path="data/media" pageSize={20} query={query} setQuery={setQuery} />
+            <MediaView path="api/data/media" pageSize={20} query={query} setQuery={setQuery} />
         </div>
     );
 };

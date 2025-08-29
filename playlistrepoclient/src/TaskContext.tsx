@@ -35,7 +35,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     async function updateTask(guid: string) {
-        const response = await fetch(`service/status/${guid}`);
+        const response = await fetch(`api/service/status/${guid}`);
         const progress = (await response.json()) as TaskProgress;
         setTasks((oldTasks) => {
             const index = oldTasks.findIndex((t) => t.guid === guid);

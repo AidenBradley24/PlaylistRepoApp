@@ -37,7 +37,7 @@ const PlaylistTab: React.FC = () => {
         const deletionPlaylist = viewingPlaylist;
         setViewingPlaylist(null);
 
-        const response = await fetch("data/playlists", {
+        const response = await fetch("api/data/playlists", {
             method: "DELETE",
             headers: { "id": `${deletionPlaylist.id}` }
         });
@@ -52,7 +52,7 @@ const PlaylistTab: React.FC = () => {
 
     async function exportPlaylist(extension: string) {
         if (viewingPlaylist === null) throw new Error();
-        const response = await fetch(`play/playlist/${viewingPlaylist.id}${extension}`);
+        const response = await fetch(`api/play/playlist/${viewingPlaylist.id}${extension}`);
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -68,7 +68,7 @@ const PlaylistTab: React.FC = () => {
 
     function copyLink() {
         if (viewingPlaylist === null) throw new Error();
-        return `${window.location.origin}/play/playlist/${viewingPlaylist.id}.xspf`
+        return `${window.location.origin}/api/play/playlist/${viewingPlaylist.id}.xspf`
     }
 
     return (
@@ -77,7 +77,7 @@ const PlaylistTab: React.FC = () => {
                 <div className="d-flex gap-4" style={{ flex: 1, height: '50px' }}>
                     <QueryableDropdown
                         getLabel={playlist => playlist.title}
-                        getPath="data/playlists"
+                        getPath="api/data/playlists"
                         menuLabel="Select Playlist"
                         onCreateNew={() => createNewPlaylist()}
                         selection={viewingPlaylist}
@@ -117,7 +117,7 @@ const PlaylistTab: React.FC = () => {
                 viewingPlaylist === null ? (
                     <div className="mt-3">Select a playlist.</div>
                 ) : (
-                        <MediaView path={`data/playlists/${viewingPlaylist.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                        <MediaView path={`api/data/playlists/${viewingPlaylist.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
                 )
             }
         </div>

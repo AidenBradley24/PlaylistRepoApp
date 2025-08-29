@@ -3,7 +3,7 @@
 namespace PlaylistRepoAPI.Controllers
 {
 	[ApiController]
-	[Route("play")]
+	[Route("api/[controller]")]
 	public class PlayController(PlayRepoDbContext db) : ControllerBase
 	{
 		[HttpGet("media/{id}")]

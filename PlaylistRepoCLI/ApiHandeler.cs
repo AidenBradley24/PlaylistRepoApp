@@ -71,7 +71,7 @@ namespace PlaylistRepoCLI
 			{
 				ConsoleHelpers.RewriteProgress(taskProgress);
 				await Task.Delay(POLLING_RATE);
-				response = await http.GetAsync($"{ApiUrl}/service/status/{guid}");
+				response = await http.GetAsync($"{ApiUrl}/api/service/status/{guid}");
 				if (!response.IsSuccessStatusCode)
 				{
 					Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");

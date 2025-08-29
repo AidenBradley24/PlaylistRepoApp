@@ -31,7 +31,7 @@ const EditPlaylistModal: React.FC<EditPlaylistModalProps> = ({ title, show, onHi
         setError(null);
 
         try {
-            const response = await fetch("data/playlists", {
+            const response = await fetch("api/data/playlists", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editingPlaylist),

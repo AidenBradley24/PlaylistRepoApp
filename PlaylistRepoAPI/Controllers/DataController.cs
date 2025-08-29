@@ -1,5 +1,4 @@
-﻿using Humanizer;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PlaylistRepoLib.Models;
 using PlaylistRepoLib.Models.DTOs;
 using PlaylistRepoLib.UserQueries;
@@ -10,7 +9,7 @@ namespace PlaylistRepoAPI.Controllers
 	/// Controller for direct data access
 	/// </summary>
 	[ApiController]
-	[Route("data")]
+	[Route("api/[controller]")]
 	public class DataController(PlayRepoDbContext db) : ControllerBase
 	{
 		[HttpGet("info")]

@@ -43,7 +43,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
         setError(null);
 
         try {
-            const response = await fetch("data/media", {
+            const response = await fetch("api/data/media", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editingMedia),
@@ -90,23 +90,23 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                         {
                                             viewingMedia.mimeType?.startsWith("image/") && (
                                                 <img
-                                                    src={`play/media/${viewingMedia.id}`}
+                                                    src={`api/play/media/${viewingMedia.id}`}
                                                     alt={viewingMedia.title ?? "media"}
                                                     style={{ maxWidth: "100%", borderRadius: "8px" }}
                                                 />
                                             )}
                                         {
                                             viewingMedia.mimeType?.startsWith("audio/") && (
-                                                <audio controls src={`play/media/${viewingMedia.id}`} style={{ width: "100%" }} />
+                                                <audio controls src={`api/play/media/${viewingMedia.id}`} style={{ width: "100%" }} />
                                             )}
                                         {
                                             viewingMedia.mimeType?.startsWith("video/") && (
-                                                <video controls src={`play/media/${viewingMedia.id}`} style={{ width: "100%", borderRadius: "8px" }} />
+                                                <video controls src={`api/play/media/${viewingMedia.id}`} style={{ width: "100%", borderRadius: "8px" }} />
                                             )}
                                         {
                                             viewingMedia.mimeType?.startsWith("text/") && (
                                                 <iframe
-                                                    src={`play/media/${viewingMedia.id}`}
+                                                    src={`api/play/media/${viewingMedia.id}`}
                                                     title="text preview"
                                                     style={{ width: "100%", height: "300px", border: "1px solid #ccc", borderRadius: "8px" }}
                                                 />

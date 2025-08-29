@@ -8,19 +8,19 @@ namespace PlaylistRepoLib.Models.DTOs
 		/// Get all properties with the same name on both the DTO and the model.
 		/// </summary>
 		public IEnumerable<(PropertyInfo dtoProp, PropertyInfo modelProp)> SharedProperties()
-		{ 
+		{
 			var dtoProps = GetType().GetProperties();
 			var modelProps = typeof(TModel).GetProperties();
 			foreach (var dtoProp in dtoProps)
 			{
-				foreach(var modelProp in modelProps)
+				foreach (var modelProp in modelProps)
 				{
 					if (dtoProp.Name == modelProp.Name)
 						yield return (dtoProp, modelProp);
 				}
 			}
 		}
-		
+
 		/// <summary>
 		/// Update the model to match the contents of this DTO
 		/// </summary>
