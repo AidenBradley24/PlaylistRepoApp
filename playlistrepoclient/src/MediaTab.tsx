@@ -4,11 +4,13 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { BsPlus } from "react-icons/bs";
 import { useEdits } from "./EditContext";
 import type { Playlist, Media } from "./models";
+import { useTasks } from "./TaskContext";
 
 const MediaTab: React.FC = () => {
 
     const [query, setQuery] = useState<string>('');
     const { setShowPlaylistModal, setEditingPlaylist, setShowMediaModal, setViewingMedia, setEditingMedia } = useEdits();
+    const { invokeTask } = useTasks()!;
 
     function createPlaylistFromQuery() {
         const playlist = {} as Playlist;
@@ -30,6 +32,11 @@ const MediaTab: React.FC = () => {
         setShowMediaModal(true);
     }
 
+    function testTask() {
+        const task = fetch("service/test", { method: 'POST', headers: { milliseconds: '10000' } });
+        invokeTask(task);
+    }
+
     return (
         <div>
             <div className="d-flex gap-4">
@@ -41,6 +48,7 @@ const MediaTab: React.FC = () => {
 
                         <Dropdown.Menu>
                             <Dropdown.Item onClick={() => createPlaylistFromQuery()}>Create Playlist from Query</Dropdown.Item>
+                            <Dropdown.Item onClick={() => testTask()}><BsPlus />Test</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={() => createNewMedia()}><BsPlus />Create New</Dropdown.Item>
                         </Dropdown.Menu>

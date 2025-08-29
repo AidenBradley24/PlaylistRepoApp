@@ -6,6 +6,8 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { useRefresh } from "./RefreshContext";
 import { BsPlus } from "react-icons/bs";
 import { useEdits } from "./EditContext"
+import { CopyToClipboardButton } from './CopyToClipboard'
+import { BsLink45Deg } from "react-icons/bs";
 
 const PlaylistTab: React.FC = () => {
 
@@ -64,10 +66,15 @@ const PlaylistTab: React.FC = () => {
         link.parentNode?.removeChild(link);
     }
 
+    function copyLink() {
+        if (viewingPlaylist === null) throw new Error();
+        return `${window.location.origin}/play/playlist/${viewingPlaylist.id}.xspf`
+    }
+
     return (
         <div>
             <div className="d-flex gap-4">
-                <div className="d-flex gap-4" style={{ flex: 1 }}>
+                <div className="d-flex gap-4" style={{ flex: 1, height: '50px' }}>
                     <QueryableDropdown
                         getLabel={playlist => playlist.title}
                         getPath="data/playlists"
@@ -92,6 +99,7 @@ const PlaylistTab: React.FC = () => {
                             <Dropdown.Item onClick={() => createNewPlaylist()}><BsPlus />Create New</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
+                    <CopyToClipboardButton getText={() => Promise.resolve(copyLink())}><BsLink45Deg /></CopyToClipboardButton>
                 </div>
 
                 <div style={{ flex: 1 }}>

@@ -27,7 +27,9 @@ namespace PlaylistRepoAPI.Controllers
 
 			var stream = new MemoryStream();
 			string apiURL = (Request.IsHttps ? "https://" : "http://") + Request.Host.Value;
-			switch (Path.GetExtension(file))
+			string extension = Path.GetExtension(file);
+			if (string.IsNullOrWhiteSpace(extension)) return BadRequest($"Include an extension after the file name. i.e. '{file}.xspf'");
+			switch (extension)
 			{
 				case ".xspf":
 					await playlist.StreamXspfAsync(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
@@ -38,7 +40,7 @@ namespace PlaylistRepoAPI.Controllers
 					stream.Position = 0;
 					return File(stream, "application/vnd.apple.mpegurl");
 				default:
-					return BadRequest(Path.GetExtension(file) + " is not valid.");
+					return BadRequest($"Extension: '{extension}' is not valid.");
 			}
 		}
 	}

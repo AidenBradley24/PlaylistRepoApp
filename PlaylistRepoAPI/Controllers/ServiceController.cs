@@ -28,8 +28,9 @@ namespace PlaylistRepoAPI.Controllers
 		// TODO add a sandboxed change directory
 
 		[HttpPost("test")]
-		public IActionResult Test([FromQuery] int milliseconds)
+		public IActionResult Test([FromHeader] int milliseconds)
 		{
+			if (milliseconds < 0) throw new Exception("Test error");
 			var id = taskService.StartTask(async (progress) =>
 			{
 				int remaining = milliseconds;

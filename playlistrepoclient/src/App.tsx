@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { RefreshProvider } from "./RefreshContext";
 import { EditProvider } from "./EditContext"
+import { TaskProvider } from "./TaskContext"
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import Button from "react-bootstrap/Button";
@@ -34,37 +35,39 @@ const App: React.FC = () => {
 
     return (
         <RefreshProvider>
-            <EditProvider>
-                <div className="app-container">
-                    {/* Header */}
-                    <header className="app-header d-flex justify-content-between align-items-center">
-                        <span>My App</span>
-                        <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            onClick={toggleDarkMode}
-                            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                            className="d-flex align-items-center"
-                        >
-                            {darkMode ? <BsSunFill className="me-1" /> : <BsMoonFill className="me-1" />}
-                            {darkMode ? "Light" : "Dark"}
-                        </Button>
-                    </header>
+            <TaskProvider>
+                <EditProvider>
+                    <div className="app-container">
+                        {/* Header */}
+                        <header className="app-header d-flex justify-content-between align-items-center">
+                            <span>My App</span>
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={toggleDarkMode}
+                                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                                className="d-flex align-items-center"
+                            >
+                                {darkMode ? <BsSunFill className="me-1" /> : <BsMoonFill className="me-1" />}
+                                {darkMode ? "Light" : "Dark"}
+                            </Button>
+                        </header>
 
-                    {/* Tabs */}
-                    <Tabs defaultActiveKey="media" id="app-tabs" className="mb-3" fill>
-                        <Tab eventKey="media" title="Media">
-                            <MediaTab />
-                        </Tab>
-                        <Tab eventKey="playlists" title="Playlists">
-                            <PlaylistTab />
-                        </Tab>
-                        <Tab eventKey="remotes" title="Remotes">
-                            <div className="placeholder">Placeholder content for Tab 3</div>
-                        </Tab>
-                    </Tabs>
-                </div>
-            </EditProvider>
+                        {/* Tabs */}
+                        <Tabs defaultActiveKey="media" id="app-tabs" className="mb-3" fill>
+                            <Tab eventKey="media" title="Media">
+                                <MediaTab />
+                            </Tab>
+                            <Tab eventKey="playlists" title="Playlists">
+                                <PlaylistTab />
+                            </Tab>
+                            <Tab eventKey="remotes" title="Remotes">
+                                <div className="placeholder">Placeholder content for Tab 3</div>
+                            </Tab>
+                        </Tabs>
+                    </div>
+                </EditProvider>
+            </TaskProvider>
         </RefreshProvider>
     );
 };
