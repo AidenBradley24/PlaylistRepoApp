@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
-import type { Playlist } from "./models";
-import { useRefresh } from "./RefreshContext";
+import type { Playlist } from "../models";
+import { useRefresh } from "../components/RefreshContext";
 
 interface EditPlaylistModalProps {
     title: string;

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
-import type { Media, Playlist } from "./models";
-import EditPlaylistModal from './EditPlaylistModal';
-import MediaModal from './MediaModal';
+import type { Media, Playlist } from "../models";
+import EditPlaylistModal from '../pages/EditPlaylistModal';
+import MediaModal from '../pages/MediaModal';
 
 const EditContext = createContext<{
     showMediaModal: boolean;

@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState, useRef } from "react";
 import { InputGroup, Table, Form, Button, Pagination, Spinner } from "react-bootstrap";
-import type { Response, Media } from "./models";
+import type { Response, Media } from "../models";
 import { useRefresh } from "./RefreshContext";
 import { useEdits } from "./EditContext";
 import { BsSortDown, BsSortUp, BsXLg } from "react-icons/bs";

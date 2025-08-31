@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Tabs, Tab, Form, Alert } from "react-bootstrap";
-import type { Media } from "./models";
-import { useRefresh } from "./RefreshContext";
-import { formatMillisecondsToHHMMSS } from "./utils";
+import type { Media } from "../models";
+import { useRefresh } from "../components/RefreshContext";
+import { formatMillisecondsToHHMMSS } from "../utils";
 
 interface MediaModalProps {
     viewingMedia: Media | null;

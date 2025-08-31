@@ -1,13 +1,13 @@
 ﻿import React, { useState, useEffect } from "react";
-import { RefreshProvider } from "./RefreshContext";
-import { EditProvider } from "./EditContext"
-import { TaskProvider } from "./TaskContext"
+import { RefreshProvider } from "./components/RefreshContext";
+import { EditProvider } from "./components/EditContext"
+import { TaskProvider } from "./components/TaskContext"
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import Button from "react-bootstrap/Button";
 import { BsMoonFill, BsSunFill } from "react-icons/bs"; // Optional: icons for better UX
-import MediaTab from "./MediaTab";
-import PlaylistTab from "./PlaylistTab";
+import MediaTab from "./pages/MediaTab";
+import PlaylistTab from "./pages/PlaylistTab";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./app.css";
 

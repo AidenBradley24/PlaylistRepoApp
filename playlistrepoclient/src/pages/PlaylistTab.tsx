@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import MediaView from "./View";
-import QueryableDropdown from './QueryableDropdown';
-import type {Playlist } from "./models";
+import MediaView from "../components/MediaView";
+import QueryableDropdown from '../components/QueryableDropdown';
+import type {Playlist } from "../models";
 import Dropdown from 'react-bootstrap/Dropdown';
-import { useRefresh } from "./RefreshContext";
+import { useRefresh } from "../components/RefreshContext";
 import { BsPlus } from "react-icons/bs";
-import { useEdits } from "./EditContext"
-import { CopyToClipboardButton } from './CopyToClipboard'
+import { useEdits } from "../components/EditContext"
+import { CopyToClipboardButton } from '../components/CopyToClipboard'
 import { BsLink45Deg } from "react-icons/bs";
-import { useTasks } from "./TaskContext";
-import { download } from "./utils";
+import { useTasks } from "../components/TaskContext";
+import { download } from "../utils";
 
 const PlaylistTab: React.FC = () => {
 

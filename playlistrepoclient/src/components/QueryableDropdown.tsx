@@ -4,7 +4,7 @@ import Form from 'react-bootstrap/Form';
 import { useRefresh } from "./RefreshContext";
 import { BsPlus } from "react-icons/bs";
 
-import type { Response } from "./models";
+import type { Response } from "../models";
 
 export interface QueryableDropdownProps {
     menuLabel: string;

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import MediaView from "./View";
+import MediaView from "../components/MediaView";
 import Dropdown from 'react-bootstrap/Dropdown';
 import { BsPlus } from "react-icons/bs";
-import { useEdits } from "./EditContext";
-import type { Playlist, Media } from "./models";
-import { useTasks } from "./TaskContext";
+import { useEdits } from "../components/EditContext";
+import type { Playlist, Media } from "../models";
+import { useTasks } from "../components/TaskContext";
 
 const MediaTab: React.FC = () => {
 
