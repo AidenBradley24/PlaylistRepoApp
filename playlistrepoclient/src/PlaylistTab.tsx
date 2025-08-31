@@ -8,11 +8,14 @@ import { BsPlus } from "react-icons/bs";
 import { useEdits } from "./EditContext"
 import { CopyToClipboardButton } from './CopyToClipboard'
 import { BsLink45Deg } from "react-icons/bs";
+import { useTasks } from "./TaskContext";
+import { download } from "./utils";
 
 const PlaylistTab: React.FC = () => {
 
     const { triggerRefresh } = useRefresh();
     const { setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylist } = useEdits(); 
+    const { invokeTask } = useTasks()!;
 
     const [query, setQuery] = useState<string>('');
 
@@ -52,18 +55,15 @@ const PlaylistTab: React.FC = () => {
 
     async function exportPlaylist(extension: string) {
         if (viewingPlaylist === null) throw new Error();
-        const response = await fetch(`api/play/playlist/${viewingPlaylist.id}${extension}`);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute(
-            'download',
-            `${viewingPlaylist.title}${extension}`,
-        );
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
+        await download(`api/play/playlist/${viewingPlaylist.id}${extension}`, `${viewingPlaylist.title}${extension}`);
+    }
+
+    async function exportZip() {
+        if (viewingPlaylist === null) throw new Error();
+        const task = fetch(`api/export/playlist/${viewingPlaylist.id}.zip`);
+        invokeTask('exporting zip', task, (record) => {
+            download(`api/export/result/${record.guid}`);
+        });
     }
 
     function copyLink() {
@@ -95,6 +95,7 @@ const PlaylistTab: React.FC = () => {
                             <Dropdown.Header>Export</Dropdown.Header>
                             <Dropdown.Item onClick={() => exportPlaylist('.xspf')} disabled={viewingPlaylist === null}>XSPF</Dropdown.Item>
                             <Dropdown.Item onClick={() => exportPlaylist('.m3u8')} disabled={viewingPlaylist === null}>M3U8</Dropdown.Item>
+                            <Dropdown.Item onClick={() => exportZip()} disabled={viewingPlaylist === null}>ZIP</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={() => createNewPlaylist()}><BsPlus />Create New</Dropdown.Item>
                         </Dropdown.Menu>

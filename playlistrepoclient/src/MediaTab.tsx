@@ -34,7 +34,7 @@ const MediaTab: React.FC = () => {
 
     function testTask() {
         const task = fetch("api/service/test", { method: 'POST', headers: { milliseconds: '10000' } });
-        invokeTask(task);
+        invokeTask('running test', task);
     }
 
     return (

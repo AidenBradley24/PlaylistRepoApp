@@ -7,8 +7,11 @@ import { BsCheckCircle, BsXCircle } from "react-icons/bs";
 const TaskContext = createContext<TaskProviderType | undefined>(undefined);
 
 type Task = {
+    name: string;
     guid: string;
     progress: TaskProgress | null;
+    isComplete: boolean;
+    callback?: (taskRecord: Task) => void; 
 };
 
 type TaskProgress = {
@@ -17,7 +20,7 @@ type TaskProgress = {
 };
 
 type TaskProviderType = {
-    invokeTask: (taskFunc: Promise<Response>) => Promise<void>;
+    invokeTask: (name: string, taskFunc: Promise<Response>, callback?: (taskRecord: Task) => void) => Promise<void>;
     updateTask: (guid: string) => Promise<void>;
     removeTask: (guid: string) => void;
 };
@@ -27,10 +30,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const tasksRef = useRef<Task[]>([]);
     tasksRef.current = tasks; // always keep ref in sync
 
-    async function invokeTask(taskFunc: Promise<Response>) {
+    async function invokeTask(name: string, taskFunc: Promise<Response>, callback?: (taskRecord: Task) => void) {
         const response = await taskFunc;
         const guid = await response.json() as string;
-        const task = { guid: guid, progress: null } as Task;
+        const task = { name, guid, progress: null, isComplete: false, callback: callback } as Task;
         setTasks((prev) => [...prev, task]);
     }
 
@@ -40,8 +43,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTasks((oldTasks) => {
             const index = oldTasks.findIndex((t) => t.guid === guid);
             if (index === -1) return oldTasks;
+            if (oldTasks[index].isComplete) return oldTasks;
             const newTasks = [...oldTasks];
-            newTasks[index] = { ...newTasks[index], progress };
+            const isComplete = progress.progress === 100;
+            newTasks[index] = { ...newTasks[index], progress, isComplete };
+            if (isComplete && newTasks[index].callback) newTasks[index].callback(newTasks[index]);
             return newTasks;
         });
     }
@@ -65,7 +71,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             <ToastContainer position="bottom-end">
                 {tasks.map((task) => (
                     <Toast key={task.guid} onClose={() => removeTask(task.guid)}>
-                        <Toast.Header>Task: {task.guid}</Toast.Header>
+                        <Toast.Header>{task.name}</Toast.Header>
                         <Toast.Body>
                             <div className="d-flex align-items-center gap-2">
                                 {task.progress?.progress === 100 && (

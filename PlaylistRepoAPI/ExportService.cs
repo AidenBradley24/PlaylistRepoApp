@@ -28,10 +28,12 @@ namespace PlaylistRepoAPI
 			if (!records.TryAdd(guid, new ExportRecord(guid, playlist.GenerateFileName("zip"), null)))
 				throw new Exception("An error has occured when creating the export record.");
 
+			int totalMediaCount = playlist.AllEntries(db.Medias, true).Count();
 			using (var fs = file.OpenWrite())
 			{
 				using var zip = new ZipArchive(fs, ZipArchiveMode.Create);
 				const string rootMediaPath = "media";
+				int counter = 0;
 				foreach (var entry in playlist.AllEntries(db.Medias, true))
 				{
 					FileInfo mediaFile = entry.File ?? throw new Exception("File doesn't exist");
@@ -40,6 +42,7 @@ namespace PlaylistRepoAPI
 					using var zipStream = zipEntry.Open();
 					using var mediaStream = mediaFile.OpenRead();
 					await mediaStream.CopyToAsync(zipStream);
+					progress.Report(TaskProgress.FromNumbers(counter++, totalMediaCount, $"Compressing Media: {counter} / {totalMediaCount}"));
 				}
 				var playlistFileZipEntry = zip.CreateEntry("playlist.xspf");
 				using var playlistZipStream = playlistFileZipEntry.Open();

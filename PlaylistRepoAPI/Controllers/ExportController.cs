@@ -15,7 +15,7 @@ namespace PlaylistRepoAPI.Controllers
 			return File(record.File.OpenRead(), MimeTypes.GetMimeType(record.ExportName), record.ExportName);
 		}
 
-		[HttpPost("playlist/{file}")]
+		[HttpGet("playlist/{file}")]
 		public IActionResult StartExport([FromRoute] string file)
 		{
 			if (!int.TryParse(Path.GetFileNameWithoutExtension(file), out int playlistId))
