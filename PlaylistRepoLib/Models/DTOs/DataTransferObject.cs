@@ -2,7 +2,7 @@
 
 namespace PlaylistRepoLib.Models.DTOs
 {
-	public abstract class DataTransferObject<TModel> where TModel : class
+	public abstract class DataTransferObject<TModel> where TModel : class, new()
 	{
 		/// <summary>
 		/// Get all properties with the same name on both the DTO and the model.
@@ -15,7 +15,7 @@ namespace PlaylistRepoLib.Models.DTOs
 			{
 				foreach (var modelProp in modelProps)
 				{
-					if (dtoProp.Name == modelProp.Name)
+					if (dtoProp.Name == modelProp.Name && modelProp.PropertyType == dtoProp.PropertyType)
 						yield return (dtoProp, modelProp);
 				}
 			}

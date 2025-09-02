@@ -24,3 +24,11 @@ export interface Playlist {
     userQuery: string;
     bakedEntries: number[];
 }
+
+export interface RemotePlaylist {
+    id: number,
+    name: string,
+    description: string;
+    link: string;
+    type: string | "internet" | "ytdlp";
+}

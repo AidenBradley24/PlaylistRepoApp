@@ -23,7 +23,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			try
 			{
-				return Ok(new ApiGetResponse<Media>(db.Medias, query, pageSize, currentPage));
+				return Ok(new ApiGetResponse<Media, MediaDTO>(db.Medias, query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{
@@ -36,7 +36,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			var result = db.Medias.Find(id);
 			if (result == null) return NotFound();
-			return Ok(result);
+			return Ok(new MediaDTO(result));
 		}
 
 		[HttpPost("media")]
@@ -73,7 +73,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			try
 			{
-				return Ok(new ApiGetResponse<RemotePlaylist>(db.RemotePlaylists, query, pageSize, currentPage));
+				return Ok(new ApiGetResponse<RemotePlaylist, RemotePlaylistDTO>(db.RemotePlaylists, query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{
@@ -86,7 +86,23 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			var result = db.RemotePlaylists.Find(id);
 			if (result == null) return NotFound();
-			return Ok(result);
+			return Ok(new RemotePlaylistDTO(result));
+		}
+
+		[HttpGet("remotes/{id}/media")]
+		public IActionResult GetRemoteMedias([FromRoute] int id = 0, [FromQuery] string query = "", [FromQuery] int pageSize = 10, [FromQuery] int currentPage = 0)
+		{
+			var playlist = db.RemotePlaylists.Find(id);
+			if (playlist == null) return NotFound();
+
+			try
+			{
+				return Ok(new ApiGetResponse<Media, MediaDTO>(playlist.AllEntries(db.Medias, false), query, pageSize, currentPage));
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
 		}
 
 		[HttpPost("remotes")]
@@ -123,7 +139,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			try
 			{
-				return Ok(new ApiGetResponse<Playlist>(db.Playlists, query, pageSize, currentPage));
+				return Ok(new ApiGetResponse<Playlist, PlaylistDTO>(db.Playlists, query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{
@@ -136,7 +152,7 @@ namespace PlaylistRepoAPI.Controllers
 		{
 			var result = db.Playlists.Find(id);
 			if (result == null) return NotFound();
-			return Ok(result);
+			return Ok(new PlaylistDTO(result));
 		}
 
 		[HttpGet("playlists/{id}/media")]
@@ -147,7 +163,7 @@ namespace PlaylistRepoAPI.Controllers
 
 			try
 			{
-				return Ok(new ApiGetResponse<Media>(playlist.AllEntries(db.Medias, false), query, pageSize, currentPage));
+				return Ok(new ApiGetResponse<Media, MediaDTO>(playlist.AllEntries(db.Medias, false), query, pageSize, currentPage));
 			}
 			catch (InvalidUserQueryException ex)
 			{

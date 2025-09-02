@@ -14,5 +14,12 @@
 		public long LengthMilliseconds { get; set; } = 0;
 		public int Order { get; set; } = 0;
 		public bool Locked { get; set; } = false;
+
+		public MediaDTO() { }
+
+		public MediaDTO(Media model) : this()
+		{
+			SyncDTO(model);
+		}
 	}
 }

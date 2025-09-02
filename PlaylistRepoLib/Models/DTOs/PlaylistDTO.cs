@@ -7,5 +7,12 @@
 		public string Description { get; set; } = "";
 		public string UserQuery { get; set; } = "";
 		public List<int> BakedEntries { get; set; } = [];
+
+		public PlaylistDTO() { }
+
+		public PlaylistDTO(Playlist model) : this()
+		{
+			SyncDTO(model);
+		}
 	}
 }

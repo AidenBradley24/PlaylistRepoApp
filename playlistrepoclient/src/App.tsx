@@ -8,6 +8,7 @@ import Button from "react-bootstrap/Button";
 import { BsMoonFill, BsSunFill } from "react-icons/bs"; // Optional: icons for better UX
 import MediaTab from "./pages/MediaTab";
 import PlaylistTab from "./pages/PlaylistTab";
+import RemoteTab from "./pages/RemoteTab";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./app.css";
 
@@ -62,7 +63,7 @@ const App: React.FC = () => {
                                 <PlaylistTab />
                             </Tab>
                             <Tab eventKey="remotes" title="Remotes">
-                                <div className="placeholder">Placeholder content for Tab 3</div>
+                                <RemoteTab />
                             </Tab>
                         </Tabs>
                     </div>

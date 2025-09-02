@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState } from "react";
-import type { Media, Playlist } from "../models";
+import type { Media, Playlist, RemotePlaylist } from "../models";
 import EditPlaylistModal from '../pages/EditPlaylistModal';
 import MediaModal from '../pages/MediaModal';
+import EditRemoteModal from '../pages/EditRemoteModal';
 
-const EditContext = createContext<{
+const EditContext = createContext<EditContextType | undefined>(undefined);
+
+interface EditContextType {
     showMediaModal: boolean;
     setShowMediaModal: (value: boolean) => void;
     viewingMedia: Media | null;
@@ -17,20 +20,14 @@ const EditContext = createContext<{
     setViewingPlaylist: (value: Playlist | null) => void;
     editingPlaylist: Playlist | null;
     setEditingPlaylist: (value: Playlist | null) => void;
-}>({
-    showMediaModal: false,
-    showPlaylistModal: false,
-    viewingMedia: null,
-    editingMedia: null,
-    viewingPlaylist: null,
-    editingPlaylist: null,
-    setShowMediaModal: () => { },
-    setShowPlaylistModal: () => { },
-    setViewingMedia: () => { },
-    setEditingMedia: () => { },
-    setViewingPlaylist: () => { },
-    setEditingPlaylist: () => { }
-});
+
+    showRemoteModal: boolean;
+    setShowRemoteModal: (value: boolean) => void;
+    viewingRemote: RemotePlaylist | null;
+    setViewingRemote: (value: RemotePlaylist | null) => void;
+    editingRemote: RemotePlaylist | null;
+    setEditingRemote: (value: RemotePlaylist | null) => void;
+}
 
 export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
@@ -41,6 +38,10 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [showPlaylistModal, setShowPlaylistModal] = useState<boolean>(false);
     const [viewingPlaylist, setViewingPlaylist] = useState<Playlist | null>(null);
     const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
+
+    const [showRemoteModal, setShowRemoteModal] = useState<boolean>(false);
+    const [viewingRemote, setViewingRemote] = useState<RemotePlaylist | null>(null);
+    const [editingRemote, setEditingRemote] = useState<RemotePlaylist | null>(null);
 
     return (
         <EditContext.Provider value={{
@@ -55,7 +56,13 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
             viewingPlaylist,
             setViewingPlaylist,
             editingPlaylist,
-            setEditingPlaylist
+            setEditingPlaylist,
+            showRemoteModal,
+            setShowRemoteModal,
+            viewingRemote,
+            setViewingRemote,
+            editingRemote,
+            setEditingRemote
         }}>
             {children}
             <MediaModal
@@ -77,8 +84,19 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 editingPlaylist={editingPlaylist}
                 setEditingPlaylist={setEditingPlaylist}
             />
+            <EditRemoteModal
+                title={!editingRemote || editingRemote.id === 0 ? "Add Remote Reference" : "Edit Remote Reference"}
+                show={showRemoteModal}
+                onHide={() => setShowRemoteModal(false)}
+                onCreated={(playlist) => {
+                    setShowRemoteModal(false);
+                    setViewingRemote(playlist);
+                }}
+                editingPlaylist={editingRemote}
+                setEditingPlaylist={setEditingRemote}
+            />
         </EditContext.Provider>
     );
 };
 
-export const useEdits = () => useContext(EditContext);
+export const useEdits = () => useContext(EditContext)!;
