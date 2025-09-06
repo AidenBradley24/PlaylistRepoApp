@@ -14,5 +14,17 @@
 		{
 			SyncDTO(model);
 		}
+
+		public PlaylistDTO Clone(int? id = null)
+		{
+			return new PlaylistDTO()
+			{
+				Id = id ?? Id,
+				Title = Title,
+				Description = Description,
+				UserQuery = UserQuery,
+				BakedEntries = [.. BakedEntries]
+			};
+		}
 	}
 }

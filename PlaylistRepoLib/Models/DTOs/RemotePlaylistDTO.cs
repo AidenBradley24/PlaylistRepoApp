@@ -25,5 +25,17 @@
 		{
 			SyncDTO(model);
 		}
+
+		public RemotePlaylistDTO Clone(int? id = null)
+		{
+			return new RemotePlaylistDTO()
+			{
+				Id = id ?? Id,
+				Name = Name,
+				Description = Description,
+				Link = Link,
+				Type = Type,
+			};
+		}
 	}
 }

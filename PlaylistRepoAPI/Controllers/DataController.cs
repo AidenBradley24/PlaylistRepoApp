@@ -60,10 +60,12 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpDelete("media")]
-		public IActionResult DeleteMedia([FromHeader] int id)
+		public IActionResult DeleteMedia([FromHeader] int id, [FromHeader] bool alsoDeleteFile = false)
 		{
-			var media = new Media { Id = id };
-			db.Medias.Remove(media);
+			var record = db.Medias.Find(id);
+			if (record == null) return NotFound();
+			if (alsoDeleteFile) record.File?.Delete();
+			db.Medias.Remove(record);
 			db.SaveChanges();
 			return Ok();
 		}
@@ -126,10 +128,21 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpDelete("remotes")]
-		public IActionResult DeleteRemote([FromHeader] int id)
+		public IActionResult DeleteRemote([FromHeader] int id, [FromHeader] bool alsoDeleteMedia = false, [FromHeader] bool alsoDeleteMediaFiles = false)
 		{
-			var remote = new RemotePlaylist { Id = id };
-			db.RemotePlaylists.Remove(remote);
+			var record = db.RemotePlaylists.Find(id);
+			if (record == null) return NotFound();
+			foreach (var media in record.AllEntries(db.Medias))
+			{
+				if (alsoDeleteMedia)
+				{
+					if (alsoDeleteMediaFiles) media.File?.Delete();
+					db.Remove(media);
+					continue;
+				}
+				media.RemoteId = null;
+			}
+			db.RemotePlaylists.Remove(record);
 			db.SaveChanges();
 			return Ok();
 		}
@@ -194,8 +207,9 @@ namespace PlaylistRepoAPI.Controllers
 		[HttpDelete("playlists")]
 		public IActionResult DeletePlaylist([FromHeader] int id)
 		{
-			var playlist = new Playlist { Id = id };
-			db.Playlists.Remove(playlist);
+			var record = db.Playlists.Find(id);
+			if (record == null) return NotFound();
+			db.Playlists.Remove(record);
 			db.SaveChanges();
 			return Ok();
 		}

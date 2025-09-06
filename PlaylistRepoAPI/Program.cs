@@ -31,6 +31,9 @@ builder.Services.AddSingleton<IExportService, ExportService>();
 builder.Services.AddSingleton<IRemoteService, RemoteService>();
 builder.Services.AddScoped<YtDlpService>();
 
+builder.Services.AddScoped<IMetadataEnricher, MediaHeuristicMetadataEnricher>();
+builder.Services.AddScoped<MetadataEnrichmentService>();
+
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

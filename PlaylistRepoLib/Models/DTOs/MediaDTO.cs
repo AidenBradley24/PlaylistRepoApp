@@ -21,5 +21,24 @@
 		{
 			SyncDTO(model);
 		}
+
+		public MediaDTO Clone(int? id = null)
+		{
+			return new MediaDTO()
+			{
+				Id = id ?? Id,
+				IsOnFile = IsOnFile,
+				MimeType = MimeType,
+				Title = Title,
+				PrimaryArtist = PrimaryArtist,
+				Artists = Artists == null ? [] : [.. Artists],
+				Album = Album,
+				Description = Description,
+				Rating = Rating,
+				LengthMilliseconds = LengthMilliseconds,
+				Order = Order,
+				Locked = Locked,
+			};
+		}
 	}
 }
