@@ -6,10 +6,8 @@ import { formatMillisecondsToHHMMSS } from "../utils";
 
 interface MediaModalProps {
     viewingMedia: Media | null;
-
     editingMedia: Media | null;
     setEditingMedia: (media: Media) => void;
-
     show: boolean;
     onHide: () => void;
     onSaved: (media: Media) => void;
@@ -19,6 +17,20 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const { triggerRefresh } = useRefresh();
+
+    const [editingMediaArtists, setEditingMediaArtists] = useState<string>("");
+
+    useEffect(() => {
+        setEditingMediaArtists("");
+    }, [editingMedia?.id])
+
+    useEffect(() => {
+        if (!editingMedia) return;
+        if (!editingMedia.artists || editingMediaArtists === "") {
+            setEditingMediaArtists(editingMedia.artists!.join(","));
+            return;
+        }
+    }, [editingMedia?.artists, editingMediaArtists])
 
     useEffect(() => {
         if (viewingMedia) {
@@ -34,6 +46,34 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
         if (!editingMedia) return;
         const clone = structuredClone(editingMedia);
         clone[field] = value;
+        setEditingMedia(clone);
+    }
+
+    function editArtists(artists: string) {
+        if (!editingMedia) return;
+        setEditingMediaArtists(artists);
+        const arr = artists.split(",").map(a => a.trim());
+        const clone = structuredClone(editingMedia);
+        clone.artists = arr;
+        if (arr.length > 0) {
+            clone.primaryArtist = arr[0];
+        } else {
+            clone.primaryArtist = "";
+        }
+        setEditingMedia(clone);
+    }
+
+    function editArtist(artist: string) {
+        if (!editingMedia) return;
+        const clone = structuredClone(editingMedia);
+        artist = artist.replace(',', '');
+        clone.primaryArtist = artist;
+        if (!clone.artists || clone.artists.length === 0) {
+            clone.artists = [artist];
+        } else {
+            clone.artists[0] = artist;
+        }
+        setEditingMediaArtists(clone.artists?.join(","));
         setEditingMedia(clone);
     }
 
@@ -78,7 +118,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                             <div>
                                 <p><strong>ID:</strong> {viewingMedia.id}</p>
                                 <p><strong>Title:</strong> {viewingMedia.title}</p>
-                                <p><strong>Artist:</strong> {viewingMedia.primaryArtist}</p>
+                                <p><strong>Artists:</strong> {viewingMedia?.artists?.join(", ")}</p>
                                 <p><strong>Album:</strong> {viewingMedia.album}</p>
                                 <p><strong>Rating:</strong> {viewingMedia.rating}</p>
                                 <p><strong>Length:</strong> {formatMillisecondsToHHMMSS(viewingMedia.lengthMilliseconds)}</p>
@@ -144,8 +184,16 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                     <Form.Label>Primary Artist</Form.Label>
                                     <Form.Control
                                         type="text"
-                                        value={editingMedia.primaryArtist}
-                                        onChange={(e) => updateField("primaryArtist", e.target.value)}
+                                            value={editingMedia.primaryArtist}
+                                            onChange={(e) => editArtist(e.target.value)}
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>All Artists</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={editingMediaArtists}
+                                            onChange={(e) => editArtists(e.target.value)}
                                     />
                                 </Form.Group>
                                 <Form.Group className="mb-3">
@@ -170,7 +218,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                     <Form.Control
                                         type="number"
                                         min={0}
-                                        max={5}
+                                        max={10}
                                         value={editingMedia.rating}
                                         onChange={(e) => updateField("rating", parseInt(e.target.value))}
                                     />
