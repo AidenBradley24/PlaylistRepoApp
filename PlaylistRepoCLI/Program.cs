@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using PlaylistRepoLib.Models;
+using PlaylistRepoLib.Models.DTOs;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
@@ -208,7 +209,7 @@ public class Program
 			return 1;
 		}
 
-		async Task list<T>(string url, string label)
+		async Task list<TModel, TDTO>(string url, string label) where TModel : class, new() where TDTO : DataTransferObject<TModel>, new()
 		{
 			var response = await api.Request(HttpMethod.Get, $"/api/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}");
 			if (!response.IsSuccessStatusCode)
@@ -218,7 +219,7 @@ public class Program
 				return;
 			}
 
-			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<T>>();
+			var formattedResponse = await response.Content.ReadFromJsonAsync<ApiGetResponse<TModel, TDTO>>();
 			if (formattedResponse == null)
 			{
 				result.AppendLine("Error reading data.");
@@ -230,18 +231,18 @@ public class Program
 				result.Append(' ');
 				result.Append(label);
 				result.Append(':');
-				result.AppendJoin<T>("\n", formattedResponse.Data ?? []);
+				result.AppendJoin<TDTO>("\n", formattedResponse.Data ?? []);
 			}
 		}
 
 		if (opts.ListMedia)
-			await list<Media>($"/api/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "MEDIA");
+			await list<Media, MediaDTO>($"/api/data/media?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "MEDIA");
 
 		if (opts.ListRemotePlaylists)
-			await list<RemotePlaylist>($"/api/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");
+			await list<RemotePlaylist, RemotePlaylistDTO>($"/api/data/remotes?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "REMOTE PLAYLISTS");
 
 		if (opts.ListPlaylists)
-			await list<Playlist>($"/api/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
+			await list<Playlist, PlaylistDTO>($"/api/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
 
 		Console.WriteLine(result.ToString());
 		return 0;

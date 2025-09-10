@@ -59,6 +59,45 @@ namespace PlaylistRepoAPI.Controllers
 			return Ok(dto);
 		}
 
+		[HttpPatch("media")]
+		public IActionResult PatchMedia([FromBody] MediaDTO.PatchElement patch)
+		{
+			var record = db.Medias.Find(patch.Id);
+			if (record == null) return NotFound();
+			var dto = new MediaDTO(record);
+			if (!dto.Patch(patch)) return BadRequest();
+			dto.UpdateModel(record);
+			db.SaveChanges();
+			dto.SyncDTO(record);
+			return Ok(dto);
+		}
+
+		[HttpPatch("playlists")]
+		public IActionResult PatchPlaylist([FromBody] PlaylistDTO.PatchElement patch)
+		{
+			var record = db.Playlists.Find(patch.Id);
+			if (record == null) return NotFound();
+			var dto = new PlaylistDTO(record);
+			if (!dto.Patch(patch)) return BadRequest();
+			dto.UpdateModel(record);
+			db.SaveChanges();
+			dto.SyncDTO(record);
+			return Ok(dto);
+		}
+
+		[HttpPatch("remotes")]
+		public IActionResult PatchRemote([FromBody] RemotePlaylistDTO.PatchElement patch)
+		{
+			var record = db.RemotePlaylists.Find(patch.Id);
+			if (record == null) return NotFound();
+			var dto = new RemotePlaylistDTO(record);
+			if (!dto.Patch(patch)) return BadRequest();
+			dto.UpdateModel(record);
+			db.SaveChanges();
+			dto.SyncDTO(record);
+			return Ok(dto);
+		}
+
 		[HttpDelete("media")]
 		public IActionResult DeleteMedia([FromHeader] int id, [FromHeader] bool alsoDeleteFile = false)
 		{

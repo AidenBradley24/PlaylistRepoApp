@@ -232,7 +232,7 @@ public sealed class PrimaryUserQueryableAttribute(string propertyName) : Attribu
 }
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class UserQueryableAttribute(string queryName) : Attribute
+public sealed class UserQueryableAttribute(string queryName) : Attribute
 {
 	public string QueryName { get; } = queryName;
 	public int Order { get; set; } = 0;

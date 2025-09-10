@@ -59,5 +59,43 @@ namespace PlaylistRepoLib.Models.DTOs
 		/// Used to update properties manually. Note that properties with the same name are updated automatically afterwards.
 		/// </summary>
 		public virtual void OnSyncDTO(TModel model) { }
+
+		/// <summary>
+		/// Used to patch a property in a DTO
+		/// </summary>
+		public class PatchElement
+		{
+			public int Id { get; set; }
+			/// <summary>
+			/// Case insensitive property name
+			/// </summary>
+			public string PropertyName { get; set; } = "";
+
+			/// <summary>
+			/// Property value automatically parsed
+			/// </summary>
+			public string PropertyValue { get; set; } = "";
+		}
+
+		/// <summary>
+		/// Patch a property in a DTO
+		/// </summary>
+		/// <returns>True if successful</returns>
+		public bool Patch(PatchElement element)
+		{
+			var prop = SharedProperties().FirstOrDefault(prop => prop.dtoProp.Name.Equals(element.PropertyName, StringComparison.OrdinalIgnoreCase)).dtoProp;
+			if (prop == null) return false;
+			object? value;
+			try
+			{
+				value = Convert.ChangeType(element.PropertyValue, prop.PropertyType);
+			}
+			catch
+			{
+				return false;
+			}
+			prop.SetValue(this, value);
+			return true;
+		}
 	}
 }
