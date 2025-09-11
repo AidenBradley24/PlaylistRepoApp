@@ -66,21 +66,114 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 	{
 		IEnumerator<Token> tokens = Tokenize(queryText).GetEnumerator();
 
-		Mode mode = Mode.inital;
-		Stack<Expression> terms = [];
-		Expression? currentTerm = null;
-
-		Token? sortProperty = null;
-		bool descending = false;
-
-		while (tokens.MoveNext())
+		try
 		{
-			switch (mode)
+			Mode mode = Mode.inital;
+			Stack<Expression> terms = [];
+			Expression? currentTerm = null;
+
+			Token? sortProperty = null;
+			bool descending = false;
+
+			while (tokens.MoveNext())
 			{
-				case Mode.inital:
-					if (!tokens.Current.IsLiteral)
-					{
-						if (tokens.Current.Value == "orderby")
+				switch (mode)
+				{
+					case Mode.inital:
+						if (!tokens.Current.IsLiteral)
+						{
+							if (tokens.Current.Value == "orderby")
+							{
+								if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+								sortProperty = tokens.Current;
+								descending = false;
+								break;
+							}
+							else if (tokens.Current.Value == "orderbydescending")
+							{
+								if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+								sortProperty = tokens.Current;
+								descending = true;
+								break;
+							}
+							else if (!queryableProperties.ContainsKey(tokens.Current.Value))
+							{
+								// CONSIDER THIS ENTIRE QUERY A LITERAL (except anything following orderby)
+								// this allows simple searches on the default
+								ArgumentNullException.ThrowIfNull(defaultTarget);
+
+								int orderbyIndex = queryText.IndexOf("orderby", StringComparison.OrdinalIgnoreCase);
+								string bigToken;
+								IEnumerator<Token>? extraTokens = null;
+								if (orderbyIndex != -1)
+								{
+									bigToken = queryText[..orderbyIndex].Trim();
+									extraTokens = Tokenize(queryText[orderbyIndex..]).GetEnumerator();
+								}
+								else
+								{
+									bigToken = queryText;
+								}
+
+								var term = EvaluateComparison(defaultTarget, new Token(bigToken.ToString(), true), null);
+								var lambda = Expression.Lambda<Func<TModel, bool>>(term, model);
+								var exp = root.Where(lambda);
+
+								if (extraTokens != null)
+								{
+									if (tokens.Current.Value == "orderby")
+									{
+										if (!extraTokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+										sortProperty = tokens.Current;
+										var orderLambda = CreateOrderByExpression(sortProperty);
+										return exp.OrderBy(orderLambda);
+									}
+									else if (tokens.Current.Value == "orderbydescending")
+									{
+										if (!extraTokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+										sortProperty = tokens.Current;
+										var orderLambda = CreateOrderByExpression(sortProperty);
+										return exp.OrderByDescending(orderLambda);
+									}
+								}
+
+								return exp;
+							}
+						}
+						goto case Mode.ready;
+					case Mode.ready:
+						Expression newTerm;
+						if (tokens.Current.IsLiteral)
+						{
+							ArgumentNullException.ThrowIfNull(defaultTarget);
+							newTerm = EvaluateComparison(defaultTarget, tokens.Current, null);
+						}
+						else
+						{
+							Token target = tokens.Current;
+							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include operator: {queryText} ...");
+							Token op = tokens.Current;
+							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property or literal to compare to: {queryText} ...");
+							newTerm = EvaluateComparison(target, tokens.Current, op);
+						}
+						// if current term exists logical AND with existing
+						currentTerm = currentTerm == null ? newTerm : Expression.AndAlso(currentTerm, newTerm);
+						mode = Mode.finish;
+						break;
+					case Mode.finish:
+						if (tokens.Current.IsLiteral)
+							throw new InvalidUserQueryException($"Literal must be seperated with a comma or &: {tokens.Current.Value}");
+						if (tokens.Current.Value == ",")
+						{
+							if (currentTerm != null) terms.Push(currentTerm);
+							currentTerm = null;
+							mode = Mode.ready;
+						}
+						else if (tokens.Current.Value == "&")
+						{
+							mode = Mode.ready;
+						}
+						else if (tokens.Current.Value == "orderby")
 						{
 							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
 							sortProperty = tokens.Current;
@@ -94,132 +187,46 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 							descending = true;
 							break;
 						}
-						else if (!queryableProperties.ContainsKey(tokens.Current.Value))
+						else
 						{
-							// CONSIDER THIS ENTIRE QUERY A LITERAL (except anything following orderby)
-							// this allows simple searches on the default
-							ArgumentNullException.ThrowIfNull(defaultTarget);
-
-							int orderbyIndex = queryText.IndexOf("orderby", StringComparison.OrdinalIgnoreCase);
-							string bigToken;
-							IEnumerator<Token>? extraTokens = null;
-							if (orderbyIndex != -1)
-							{
-								bigToken = queryText[..orderbyIndex].Trim();
-								extraTokens = Tokenize(queryText[orderbyIndex..]).GetEnumerator();
-							}
-							else
-							{
-								bigToken = queryText;
-							}
-
-							var term = EvaluateComparison(defaultTarget, new Token(bigToken.ToString(), true), null);
-							var lambda = Expression.Lambda<Func<TModel, bool>>(term, model);
-							var exp = root.Where(lambda);
-
-							if (extraTokens != null)
-							{
-								if (tokens.Current.Value == "orderby")
-								{
-									if (!extraTokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
-									sortProperty = tokens.Current;
-									var orderLambda = CreateOrderByExpression(sortProperty);
-									return exp.OrderBy(orderLambda);
-								}
-								else if (tokens.Current.Value == "orderbydescending")
-								{
-									if (!extraTokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
-									sortProperty = tokens.Current;
-									var orderLambda = CreateOrderByExpression(sortProperty);
-									return exp.OrderByDescending(orderLambda);
-								}
-							}
-
-							return exp;
+							throw new InvalidUserQueryException($"Invalid operator: {tokens.Current.Value}");
 						}
-					}
-					goto case Mode.ready;
-				case Mode.ready:
-					Expression newTerm;
-					if (tokens.Current.IsLiteral)
-					{
-						ArgumentNullException.ThrowIfNull(defaultTarget);
-						newTerm = EvaluateComparison(defaultTarget, tokens.Current, null);
-					}
-					else
-					{
-						Token target = tokens.Current;
-						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include operator: {queryText} ...");
-						Token op = tokens.Current;
-						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property or literal to compare to: {queryText} ...");
-						newTerm = EvaluateComparison(target, tokens.Current, op);
-					}
-					// if current term exists logical AND with existing
-					currentTerm = currentTerm == null ? newTerm : Expression.AndAlso(currentTerm, newTerm);
-					mode = Mode.finish;
-					break;
-				case Mode.finish:
-					if (tokens.Current.IsLiteral)
-						throw new InvalidUserQueryException($"Literal must be seperated with a comma or &: {tokens.Current.Value}");
-					if (tokens.Current.Value == ",")
-					{
-						if (currentTerm != null) terms.Push(currentTerm);
-						currentTerm = null;
-						mode = Mode.ready;
-					}
-					else if (tokens.Current.Value == "&")
-					{
-						mode = Mode.ready;
-					}
-					else if (tokens.Current.Value == "orderby")
-					{
-						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
-						sortProperty = tokens.Current;
-						descending = false;
 						break;
-					}
-					else if (tokens.Current.Value == "orderbydescending")
-					{
-						if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
-						sortProperty = tokens.Current;
-						descending = true;
-						break;
-					}
-					else
-					{
-						throw new InvalidUserQueryException($"Invalid operator: {tokens.Current.Value}");
-					}
-					break;
+				}
 			}
-		}
 
-		if (currentTerm != null)
-			terms.Push(currentTerm);
+			if (currentTerm != null)
+				terms.Push(currentTerm);
 
-		// Logical OR together terms
-		IQueryable<TModel> returnValue;
-		if (terms.TryPop(out currentTerm))
-		{
-			while (terms.TryPop(out var ex))
+			// Logical OR together terms
+			IQueryable<TModel> returnValue;
+			if (terms.TryPop(out currentTerm))
 			{
-				currentTerm = Expression.OrElse(currentTerm, ex);
+				while (terms.TryPop(out var ex))
+				{
+					currentTerm = Expression.OrElse(currentTerm, ex);
+				}
+				var lambda = Expression.Lambda<Func<TModel, bool>>(currentTerm, model);
+				returnValue = root.Where(lambda);
 			}
-			var lambda = Expression.Lambda<Func<TModel, bool>>(currentTerm, model);
-			returnValue = root.Where(lambda);
-		}
-		else
-		{
-			returnValue = root;
-		}
+			else
+			{
+				returnValue = root;
+			}
 
-		if (sortProperty != null)
-		{
-			var lambda = CreateOrderByExpression(sortProperty);
-			return descending ? returnValue.OrderByDescending(lambda) : returnValue.OrderBy(lambda);
+			if (sortProperty != null)
+			{
+				var lambda = CreateOrderByExpression(sortProperty);
+				return descending ? returnValue.OrderByDescending(lambda) : returnValue.OrderBy(lambda);
+			}
+			else
+			{
+				return returnValue;
+			}
 		}
-		else
+		catch (ArgumentException ex)
 		{
-			return returnValue;
+			throw new InvalidUserQueryException(ex.Message, ex);
 		}
 	}
 
