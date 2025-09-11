@@ -55,6 +55,36 @@ namespace Tests
 		}
 
 		[Theory]
+		[InlineData("intvalue=1", new[] { "Item1" })]
+		[InlineData("intvalue!=5", new[] { "Item1", "Item3" })]
+		[InlineData("intvalue<5", new[] { "Item1" })]
+		[InlineData("intvalue<=5", new[] { "Item1", "Item2" })]
+		[InlineData("intvalue>1", new[] { "Item2", "Item3" })]
+		[InlineData("intvalue>=10", new[] { "Item3" })]
+		[InlineData("floatvalue=0.0", new[] { "Item1" })]
+		[InlineData("floatvalue>0.0", new[] { "Item2", "Item3" })]
+		[InlineData("floatvalue<10.0", new[] { "Item1", "Item2" })]
+		[InlineData("doublevalue=5.0", new[] { "Item2" })]
+		[InlineData("doublevalue>=10.0", new[] { "Item3" })]
+		[InlineData("doublevalue<=0.0", new[] { "Item1" })]
+		[InlineData("timespanvalue='00:00:30'", new[] { "Item2" })]
+		[InlineData("timespanvalue>'00:00:00'", new[] { "Item2", "Item3" })]
+		[InlineData("timespanvalue<'00:02:00'", new[] { "Item1", "Item2" })]
+		[InlineData("name='Item1'", new[] { "Item1" })]
+		[InlineData("name!='Item1'", new[] { "Item2", "Item3" })]
+		[InlineData("name^'Item'", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("name!^'Item3'", new[] { "Item1", "Item2" })]
+		[InlineData("name*'em2'", new[] { "Item2" })]
+		[InlineData("name!*'3'", new[] { "Item1", "Item2" })]
+		public void Operator_Adjacent_Tests(string query, string[] expectedNames)
+		{
+			var provider = GetProvider();
+			var result = provider.EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		[Theory]
 		[InlineData("intvalue = 1 & name = 'Item1'", new[] { "Item1" })]
 		[InlineData("intvalue > 1 & intvalue < 10", new[] { "Item2" })]
 		[InlineData("name * 'Item' & intvalue >= 5", new[] { "Item2", "Item3" })]
@@ -119,6 +149,21 @@ namespace Tests
 			var provider = GetProvider();
 			var ex = Assert.Throws<InvalidUserQueryException>(() => provider.EvaluateUserQuery(query).ToList());
 			output.WriteLine(ex.Message);
+		}
+
+		[Theory]
+		[InlineData("1", new[] { "Item1" })]
+		[InlineData("Item", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("a", new string[0] )]
+		[InlineData("", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("Item orderby name", new[] { "Item1", "Item2", "Item3" })]
+		[InlineData("Item orderbydescending name", new[] { "Item3", "Item2", "Item1" })]
+		public void Literal_Queries(string query, string[] expectedNames)
+		{
+			var provider = GetProvider();
+			var result = provider.EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
 		}
 	}
 }

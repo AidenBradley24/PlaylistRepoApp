@@ -64,7 +64,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 	public IQueryable<TModel> EvaluateUserQuery(string queryText)
 	{
-		IEnumerator<Token> tokens = Tokenize(queryText);
+		IEnumerator<Token> tokens = Tokenize(queryText).GetEnumerator();
 
 		Mode mode = Mode.inital;
 		Stack<Expression> terms = [];
@@ -100,29 +100,39 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 							// this allows simple searches on the default
 							ArgumentNullException.ThrowIfNull(defaultTarget);
 
-							StringBuilder bigToken = new();
-							do
+							int orderbyIndex = queryText.IndexOf("orderby", StringComparison.OrdinalIgnoreCase);
+							string bigToken;
+							IEnumerator<Token>? extraTokens = null;
+							if (orderbyIndex != -1)
 							{
-								bigToken.Append(tokens.Current.Value);
-							} while (tokens.MoveNext() && tokens.Current.Value != "orderby" && tokens.Current.Value != "orderbydescending");
+								bigToken = queryText[..orderbyIndex].Trim();
+								extraTokens = Tokenize(queryText[orderbyIndex..]).GetEnumerator();
+							}
+							else
+							{
+								bigToken = queryText;
+							}
 
 							var term = EvaluateComparison(defaultTarget, new Token(bigToken.ToString(), true), null);
 							var lambda = Expression.Lambda<Func<TModel, bool>>(term, model);
 							var exp = root.Where(lambda);
 
-							if (tokens.Current.Value == "orderby")
+							if (extraTokens != null)
 							{
-								if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
-								sortProperty = tokens.Current;
-								var orderLambda = CreateOrderByExpression(sortProperty);
-								return exp.OrderBy(orderLambda);
-							}
-							else if (tokens.Current.Value == "orderbydescending")
-							{
-								if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
-								sortProperty = tokens.Current;
-								var orderLambda = CreateOrderByExpression(sortProperty);
-								return exp.OrderByDescending(orderLambda);
+								if (tokens.Current.Value == "orderby")
+								{
+									if (!extraTokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+									sortProperty = tokens.Current;
+									var orderLambda = CreateOrderByExpression(sortProperty);
+									return exp.OrderBy(orderLambda);
+								}
+								else if (tokens.Current.Value == "orderbydescending")
+								{
+									if (!extraTokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property to sort by: {queryText} ...");
+									sortProperty = tokens.Current;
+									var orderLambda = CreateOrderByExpression(sortProperty);
+									return exp.OrderByDescending(orderLambda);
+								}
 							}
 
 							return exp;

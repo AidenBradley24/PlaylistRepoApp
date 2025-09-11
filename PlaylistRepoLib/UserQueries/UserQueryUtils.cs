@@ -1,4 +1,5 @@
-﻿using System.Collections.Frozen;
+﻿using System;
+using System.Collections.Frozen;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -74,100 +75,179 @@ public static class UserQueryExtensions
 		return result;
 	}
 
-
 	/// <summary>
-	/// Split a string into segments based on single or double quotes. Otherwise split by spaces. Removes quotes.
+	/// Synthesize tokens from a given <paramref name="input"/> span of characters.
+	/// <para>The following are rules of synthesis:</para>
+	/// <list type="bullet">
+	/// <item>Tokens are seperated by whitespace.</item>
+	/// <item>Literal phrases can be created within single or double quotes.</item>
+	/// <item>Within literal phrases, certain escape characters are available <code>\' \" \n \t \\</code></item>
+	/// <item>Tokens beginning with a number are automatically considered literal and can only contain digits and exactly one or zero decimal points.</item>
+	/// <item>Single or double quotes must be closed.</item>
+	/// <item>Non-literal tokens beginning with a letter are terminated by symbols.</item>
+	/// <item>Non-literal tokens beginning with a symbol are terminated by letters and digits.</item>
+	/// </list>
 	/// </summary>
-	public static IEnumerator<Token> Tokenize(string? input)
+	/// <param name="input"></param>
+	/// <returns>A lazy collection of tokens.</returns>
+	/// <exception cref="ArgumentException">When input is invalid</exception>
+	public static IEnumerable<Token> Tokenize(string? input)
 	{
 		if (string.IsNullOrEmpty(input)) yield break;
 
-		const int NON_LITERAL_MODE = 0;
-		const int SINGLE_QUOTE_MODE = 1;
-		const int DOUBLE_QUOTE_MODE = 2;
-		const int LITERAL_MODE = 3;
-
-		int mode = NON_LITERAL_MODE;
-
+		StringBuilder chunk = new();
+		var mode = TokenFlags.StartMode;
 		int start = 0;
-		StringBuilder currentSegment = new();
-		string part;
 
+		bool CheckNullToken()
+		{
+			return chunk.Length == 0;
+		}
+
+		Token MakeToken()
+		{
+			string value = chunk.ToString();
+			bool isLiteral = mode.HasFlag(TokenFlags.Literal);
+			chunk.Clear();
+			mode = TokenFlags.StartMode;
+			return new Token(value, isLiteral);
+		}
+		
 		for (int i = 0; i < input.Length; i++)
 		{
 			char c = input[i];
-
-			if (mode == SINGLE_QUOTE_MODE || mode == DOUBLE_QUOTE_MODE)
+			if (mode == TokenFlags.StartMode)
 			{
-				if (mode == SINGLE_QUOTE_MODE && c == '\'' || mode == DOUBLE_QUOTE_MODE && c == '\"')
-				{
-					currentSegment.Append(input[start..i]);
-					start = i + 1;
-					mode = LITERAL_MODE;
-				}
-
-				if ((mode == DOUBLE_QUOTE_MODE || mode == SINGLE_QUOTE_MODE) && c == '\\' &&
-					(i < input.Length - 1))
-				{
-					// preserve previous characters of segment
-					part = input[start..i];
-					currentSegment.Append(part);
-					// keep next character
-					currentSegment.Append(input[++i]);
-					start = i + 1;
-				}
-			}
-			else
-			{
-				// normal mode
 				switch (c)
 				{
-					case '\'':
-						part = input[start..i];
-						if (!string.IsNullOrWhiteSpace(part))
-							currentSegment.Append(part);
-						start = i + 1;
-						mode = SINGLE_QUOTE_MODE;
-						break;
 					case '\"':
-						part = input[start..i];
-						if (!string.IsNullOrWhiteSpace(part))
-							currentSegment.Append(part); start = i + 1;
-						mode = DOUBLE_QUOTE_MODE;
-						break;
-					case ',':
-					case '&':
-					case ' ':
-						part = input[start..i];
-						if (currentSegment.Length != 0 || !string.IsNullOrWhiteSpace(part))
-						{
-							currentSegment.Append(part);
-							yield return new Token(currentSegment.ToString(), mode == LITERAL_MODE);
-							mode = NON_LITERAL_MODE;
-							currentSegment.Clear();
-						}
+						mode = TokenFlags.DoubleQuoteMode;
 						start = i + 1;
-						if (c == ',' || c == '&') yield return new Token(c.ToString(), false);
-						break;
-					case '\\':
-						// preserve previous characters of segment
-						part = input[start..i];
-						currentSegment.Append(part);
-						// keep next character
-						currentSegment.Append(input[++i]);
+						continue;
+					case '\'':
+						mode = TokenFlags.SingleQuoteMode;
 						start = i + 1;
-						break;
+						continue;
 					default:
-						// words starting with a number are considered literal
-						if (i == start && char.IsNumber(c)) mode = LITERAL_MODE;
-						break;
+						if (char.IsLetter(c))
+						{
+							mode = TokenFlags.LetterMode;
+						}
+						else if (char.IsDigit(c))
+						{
+							mode = TokenFlags.NumberMode;
+						}
+						else if (char.IsSymbol(c) || char.IsPunctuation(c))
+						{
+							mode = TokenFlags.SymbolMode;
+						}
+						else if (char.IsWhiteSpace(c))
+						{
+							start = i + 1;
+						}
+						continue;
 				}
+			}
+
+			if (mode.HasFlag(TokenFlags.Quoted))
+			{
+				// INSIDE QUOTES
+				if (c == '\\')
+				{
+					// escape chars
+					if (i == input.Length - 1) throw new ArgumentException("Incomplete escape character.", nameof(input));
+					char p1 = input[i + 1];
+					char resultChar = p1 switch
+					{
+						'n' => '\n',
+						't' => '\t',
+						'\'' => '\'',
+						'\"' => '\"',
+						'\\' => '\\',
+						_ => throw new ArgumentException("Invalid escape character: \\" + p1, nameof(input))
+					};
+					chunk.Append(input[start..i]);
+					chunk.Append(resultChar);
+					start = ++i + 1;
+					continue;
+				}
+
+				if (mode == TokenFlags.SingleQuoteMode && c == '\'' || mode == TokenFlags.DoubleQuoteMode && c == '\"')
+				{
+					chunk.Append(input.AsSpan()[start..i]);
+					start = i + 1;
+					yield return MakeToken();
+					continue;
+				}
+
+				continue;
+			}
+
+			if (char.IsWhiteSpace(c))
+			{
+				chunk.Append(input[start..i]);
+				start = i + 1;
+				if (CheckNullToken()) continue;
+				yield return MakeToken();
+				continue;
+			}
+
+			if (mode.HasFlag(TokenFlags.NumberMode))
+			{
+				if (char.IsLetter(c)) throw new ArgumentException("Numbers cannot contain a letter.", nameof(input));
+				if (c == '.')
+				{
+					if (mode == TokenFlags.DecimalMode)
+						throw new ArgumentException("Numbers cannot contain more than one decimal point.");
+					mode = TokenFlags.DecimalMode;
+				}
+				else if (char.IsSymbol(c) || char.IsPunctuation(c))
+				{
+					chunk.Append(input.AsSpan()[start..i]);
+					start = i--;
+					yield return MakeToken();
+				}
+				continue;
+			}
+
+			if ((mode == TokenFlags.LetterMode || mode.HasFlag(TokenFlags.NumberMode)) && (char.IsSymbol(c) || char.IsPunctuation(c)))
+			{
+				chunk.Append(input.AsSpan()[start..i]);
+				start = i--;
+				yield return MakeToken();
+				continue;
+			}
+
+			if (mode == TokenFlags.SymbolMode && (!(char.IsSymbol(c) || char.IsPunctuation(c)) || c == '\'' || c == '\"'))
+			{
+				chunk.Append(input.AsSpan()[start..i]);
+				start = i--;
+				yield return MakeToken();
+				continue;
 			}
 		}
 
-		part = input[start..];
-		currentSegment.Append(part);
-		yield return new Token(currentSegment.ToString(), mode != NON_LITERAL_MODE);
+		if (mode.HasFlag(TokenFlags.Quoted)) throw new ArgumentException("Quotes must be terminated.", nameof(input));
+		chunk.Append(input[start..]);
+		if (CheckNullToken()) yield break;
+		yield return MakeToken();
+	}
+
+	[Flags]
+	private enum TokenFlags
+	{
+		NonLiteral = 0,
+		Literal = 1,
+		NonQuoted = 2,
+		Quoted = 4,
+
+		StartMode = NonLiteral | 8,
+		NumberMode = NonQuoted | Literal | 8,
+		DecimalMode = NumberMode | 16,
+		LetterMode = NonQuoted | NonLiteral | 8,
+		SymbolMode = NonQuoted | NonLiteral | 8 | 16,
+		SingleQuoteMode = Quoted | Literal,
+		DoubleQuoteMode = Quoted | Literal | 8,
 	}
 }
 
