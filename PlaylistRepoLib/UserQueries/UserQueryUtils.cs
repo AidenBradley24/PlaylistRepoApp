@@ -96,8 +96,9 @@ public static class UserQueryExtensions
 		if (string.IsNullOrEmpty(input)) yield break;
 
 		StringBuilder chunk = new();
-		var mode = TokenFlags.StartMode;
-		int start = 0;
+		var mode = TokenizerFlags.StartMode;
+		int start = 0; // starting index of chunk
+		bool tight = false; // true if no prior space
 
 		bool CheckNullToken()
 		{
@@ -107,39 +108,42 @@ public static class UserQueryExtensions
 		Token MakeToken()
 		{
 			string value = chunk.ToString();
-			bool isLiteral = mode.HasFlag(TokenFlags.Literal);
+			bool isLiteral = mode.HasFlag(TokenizerFlags.Literal);
 			chunk.Clear();
-			mode = TokenFlags.StartMode;
+			mode = TokenizerFlags.StartMode;
 			return new Token(value, isLiteral);
 		}
 		
 		for (int i = 0; i < input.Length; i++)
 		{
 			char c = input[i];
-			if (mode == TokenFlags.StartMode)
+			if (mode == TokenizerFlags.StartMode)
 			{
 				switch (c)
 				{
 					case '\"':
-						mode = TokenFlags.DoubleQuoteMode;
+						mode = TokenizerFlags.DoubleQuoteMode;
 						start = i + 1;
 						continue;
 					case '\'':
-						mode = TokenFlags.SingleQuoteMode;
+						mode = TokenizerFlags.SingleQuoteMode;
 						start = i + 1;
+						continue;
+					case '-':
+						mode = TokenizerFlags.StartedHyphenMode;
 						continue;
 					default:
 						if (char.IsLetter(c))
 						{
-							mode = TokenFlags.LetterMode;
+							mode = TokenizerFlags.LetterMode;
 						}
 						else if (char.IsDigit(c))
 						{
-							mode = TokenFlags.NumberMode;
+							mode = TokenizerFlags.NumberMode;
 						}
 						else if (char.IsSymbol(c) || char.IsPunctuation(c))
 						{
-							mode = TokenFlags.SymbolMode;
+							mode = TokenizerFlags.SymbolMode;
 						}
 						else if (char.IsWhiteSpace(c))
 						{
@@ -149,7 +153,7 @@ public static class UserQueryExtensions
 				}
 			}
 
-			if (mode.HasFlag(TokenFlags.Quoted))
+			if (mode.HasFlag(TokenizerFlags.Quoted))
 			{
 				// INSIDE QUOTES
 				if (c == '\\')
@@ -172,11 +176,12 @@ public static class UserQueryExtensions
 					continue;
 				}
 
-				if (mode == TokenFlags.SingleQuoteMode && c == '\'' || mode == TokenFlags.DoubleQuoteMode && c == '\"')
+				if (mode == TokenizerFlags.SingleQuoteMode && c == '\'' || mode == TokenizerFlags.DoubleQuoteMode && c == '\"')
 				{
 					chunk.Append(input.AsSpan()[start..i]);
 					start = i + 1;
 					yield return MakeToken();
+					tight = true;
 					continue;
 				}
 
@@ -189,52 +194,83 @@ public static class UserQueryExtensions
 				start = i + 1;
 				if (CheckNullToken()) continue;
 				yield return MakeToken();
+				tight = false;
 				continue;
 			}
 
-			if (mode.HasFlag(TokenFlags.NumberMode))
+			if (mode == TokenizerFlags.StartedHyphenMode)
+			{
+				mode = char.IsDigit(c) && !tight ? TokenizerFlags.NumberMode : TokenizerFlags.SymbolMode;		
+			}
+
+			if (mode == TokenizerFlags.MidSymbolHyphenMode)
+			{
+				if (char.IsDigit(c))
+				{
+					i--;
+					chunk.Append(input.AsSpan()[start..i]);
+					start = i;
+					yield return MakeToken();
+					tight = true;
+					continue;
+				}
+
+				mode = TokenizerFlags.SymbolMode;
+			}
+
+			if (mode == TokenizerFlags.SymbolMode && c == '-')
+			{
+				mode = TokenizerFlags.MidSymbolHyphenMode;
+				tight = true;
+				continue;
+			}
+
+			if (mode.HasFlag(TokenizerFlags.NumberMode))
 			{
 				if (char.IsLetter(c)) throw new ArgumentException("Numbers cannot contain a letter.", nameof(input));
 				if (c == '.')
 				{
-					if (mode == TokenFlags.DecimalMode)
+					if (mode == TokenizerFlags.DecimalMode)
 						throw new ArgumentException("Numbers cannot contain more than one decimal point.");
-					mode = TokenFlags.DecimalMode;
+					mode = TokenizerFlags.DecimalMode;
 				}
 				else if (char.IsSymbol(c) || char.IsPunctuation(c))
 				{
 					chunk.Append(input.AsSpan()[start..i]);
 					start = i--;
 					yield return MakeToken();
+					tight = true;
 				}
 				continue;
 			}
 
-			if ((mode == TokenFlags.LetterMode || mode.HasFlag(TokenFlags.NumberMode)) && (char.IsSymbol(c) || char.IsPunctuation(c)))
+			if ((mode == TokenizerFlags.LetterMode || mode.HasFlag(TokenizerFlags.NumberMode)) && (char.IsSymbol(c) || char.IsPunctuation(c)))
 			{
 				chunk.Append(input.AsSpan()[start..i]);
 				start = i--;
 				yield return MakeToken();
+				tight = true;
 				continue;
 			}
 
-			if (mode == TokenFlags.SymbolMode && (!(char.IsSymbol(c) || char.IsPunctuation(c)) || c == '\'' || c == '\"'))
+			if (mode == TokenizerFlags.SymbolMode && (!(char.IsSymbol(c) || char.IsPunctuation(c)) || c == '\'' || c == '\"'))
 			{
 				chunk.Append(input.AsSpan()[start..i]);
 				start = i--;
 				yield return MakeToken();
+				tight = true;
 				continue;
 			}
 		}
 
-		if (mode.HasFlag(TokenFlags.Quoted)) throw new ArgumentException("Quotes must be terminated.", nameof(input));
-		chunk.Append(input[start..]);
+		if (mode.HasFlag(TokenizerFlags.Quoted)) throw new ArgumentException("Quotes must be terminated.", nameof(input));
+		chunk.Append(input.AsSpan()[start..]);
 		if (CheckNullToken()) yield break;
 		yield return MakeToken();
 	}
 
 	[Flags]
-	private enum TokenFlags
+	private enum TokenizerFlags
 	{
 		NonLiteral = 0,
 		Literal = 1,
@@ -246,6 +282,8 @@ public static class UserQueryExtensions
 		DecimalMode = NumberMode | 16,
 		LetterMode = NonQuoted | NonLiteral | 8,
 		SymbolMode = NonQuoted | NonLiteral | 8 | 16,
+		StartedHyphenMode = NonQuoted | NonLiteral | 16,
+		MidSymbolHyphenMode = SymbolMode | 32,
 		SingleQuoteMode = Quoted | Literal,
 		DoubleQuoteMode = Quoted | Literal | 8,
 	}

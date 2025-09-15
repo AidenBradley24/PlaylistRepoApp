@@ -46,6 +46,8 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 				if (!p.CanRead) throw new UserQueryableMisconfigurationException($"Type {typeof(TModel).FullName} {p.Name} is not readable.");
 				return new KeyValuePair<string, PropertyInfo>(p.GetCustomAttributes<UserQueryableAttribute>(true).First().QueryName, p);
 			}));
+		if (queryableProperties.ContainsKey("orderby") || queryableProperties.ContainsKey("orderbydescending"))
+			throw new UserQueryableMisconfigurationException("'orderby' and 'orderbydescending' are reserved words. They cannot be used as property names.");
 		string? defaultPropName = typeof(TModel).GetCustomAttribute<PrimaryUserQueryableAttribute>()?.PropertyName;
 		var defaultProperty = defaultPropName != null ? typeof(TModel).GetProperty(defaultPropName) : null;
 		if (defaultProperty == null && defaultPropName != null)
@@ -64,14 +66,15 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 	public IQueryable<TModel> EvaluateUserQuery(string queryText)
 	{
-		IEnumerator<Token> tokens = Tokenize(queryText).GetEnumerator();
+		IWideEnumerator<Token> tokens = Tokenize(queryText).GetWideEnumerator(1, 2);
 
 		try
 		{
-			Mode mode = Mode.inital;
+			EvaluationMode mode = EvaluationMode.InitialMode;
 			Stack<Expression> terms = [];
 			Expression? currentTerm = null;
 
+			Token? reference = null;
 			Token? sortProperty = null;
 			bool descending = false;
 
@@ -79,7 +82,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 			{
 				switch (mode)
 				{
-					case Mode.inital:
+					case EvaluationMode.InitialMode:
 						if (!tokens.Current.IsLiteral)
 						{
 							if (tokens.Current.Value == "orderby")
@@ -140,38 +143,64 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 								return exp;
 							}
 						}
-						goto case Mode.ready;
-					case Mode.ready:
+						mode = EvaluationMode.ReadyMode;
+						goto case EvaluationMode.ReadyMode;
+					case EvaluationMode.ReadyMode:
+						// start of a phrase
 						Expression newTerm;
-						if (tokens.Current.IsLiteral)
+						if (reference != null && tokens.Foresight.Count >= 2 && tokens.Foresight[0].Value == "-")
 						{
-							ArgumentNullException.ThrowIfNull(defaultTarget);
-							newTerm = EvaluateComparison(defaultTarget, tokens.Current, null);
+							newTerm = Expression.AndAlso(
+								EvaluateComparison(reference, tokens.Current, new Token(">=", false)), 
+								EvaluateComparison(reference, tokens.Foresight[1], new Token("<=", false))
+								);
+							tokens.MoveBy(2);
+						}
+						else if (reference != null && operators.Contains(tokens.Current.Value))
+						{
+							Token op = tokens.Current;
+							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property or literal to compare to: {queryText} ...");
+							newTerm = EvaluateComparison(reference, tokens.Current, op);
+						}
+						else if (tokens.Current.IsLiteral)
+						{
+							Token target = reference ?? defaultTarget ?? throw new InvalidUserQueryException("A default target is not specified.");
+							newTerm = EvaluateComparison(target, tokens.Current, null);
 						}
 						else
 						{
 							Token target = tokens.Current;
 							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include operator: {queryText} ...");
 							Token op = tokens.Current;
+
+							if (op.Value == ":")
+							{
+								// refering to a term
+								reference = target;
+								break;
+							}
+
+							// term operator term
 							if (!tokens.MoveNext()) throw new InvalidUserQueryException($"Incomplete: include property or literal to compare to: {queryText} ...");
 							newTerm = EvaluateComparison(target, tokens.Current, op);
 						}
 						// if current term exists logical AND with existing
 						currentTerm = currentTerm == null ? newTerm : Expression.AndAlso(currentTerm, newTerm);
-						mode = Mode.finish;
+						mode = EvaluationMode.FinishMode;
 						break;
-					case Mode.finish:
+					case EvaluationMode.FinishMode:
+						// end of a phrase and options to continue or exit
 						if (tokens.Current.IsLiteral)
 							throw new InvalidUserQueryException($"Literal must be seperated with a comma or &: {tokens.Current.Value}");
 						if (tokens.Current.Value == ",")
 						{
 							if (currentTerm != null) terms.Push(currentTerm);
 							currentTerm = null;
-							mode = Mode.ready;
+							mode = EvaluationMode.ReadyMode;
 						}
 						else if (tokens.Current.Value == "&")
 						{
-							mode = Mode.ready;
+							mode = EvaluationMode.ReadyMode;
 						}
 						else if (tokens.Current.Value == "orderby")
 						{
@@ -241,12 +270,14 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 
 	private Expression EvaluateComparison(Token target, Token compared, Token? op)
 	{
-		op ??= new Token("*", true);
-
 		PropertyInfo targetProp = GetProperty(target);
-		Expression left = Expression.Property(model, targetProp);
+		bool supportsString = UserQueryOperatorCapabilities.SupportsStringMatch(targetProp.PropertyType);
+		bool supportsComparision = UserQueryOperatorCapabilities.SupportsComparison(targetProp.PropertyType);
+		op ??= new Token(supportsString ? "*" : "=", false);
 
+		Expression left = Expression.Property(model, targetProp);
 		Expression right;
+
 		if (compared.IsLiteral)
 		{
 			object? parsed = UserQueryTypeParsers.Parse(targetProp.PropertyType, compared.Value);
@@ -257,10 +288,6 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 			PropertyInfo comparedProp = GetProperty(compared);
 			right = Expression.Property(model, comparedProp);
 		}
-
-		// Normalize for string-insensitive comparison where applicable
-		bool supportsString = UserQueryOperatorCapabilities.SupportsStringMatch(targetProp.PropertyType);
-		bool supportsComparision = UserQueryOperatorCapabilities.SupportsComparison(targetProp.PropertyType);
 
 		Expression body = op.Value switch
 		{
@@ -308,10 +335,10 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 		return Expression.Call(leftToLower, method, rightToLower);
 	}
 
-	enum Mode
+	enum EvaluationMode
 	{
-		ready = 0,
-		finish = 1,
-		inital = 2,
+		ReadyMode,
+		FinishMode,
+		InitialMode
 	}
 }

@@ -57,5 +57,23 @@ namespace Tests
 			Assert.Equal(expectedValues, tokens.Select(t => t.Value));
 			Assert.Equal(expectedLiterals, tokens.Select(t => t.IsLiteral));
 		}
+
+		[Theory]
+		[InlineData("a < -1", new[] { "a", "<", "-1" }, new[] { false, false, true })]
+		[InlineData("a<-1", new[] { "a", "<", "-1" }, new[] { false, false, true })]
+		[InlineData("a1 : 1 - 5", new[] { "a1", ":", "1", "-", "5" }, new[] { false, false, true, false, true })]
+		[InlineData("a1: 1-5", new[] { "a1", ":", "1", "-", "5"}, new[] { false, false, true, false, true })]
+		[InlineData("a1 : 1 - -5", new[] { "a1", ":", "1", "-", "-5" }, new[] { false, false, true, false, true })]
+		[InlineData("a1: 1--5", new[] { "a1", ":", "1", "-", "-5" }, new[] { false, false, true, false, true })]
+		[InlineData("a1: -1-5", new[] { "a1", ":", "-1", "-", "5" }, new[] { false, false, true, false, true })]
+		[InlineData("a>=-1", new[] { "a", ">=", "-1" }, new[] { false, false, true })]
+		[InlineData("a---1", new[] { "a", "--", "-1" }, new[] { false, false, true })]
+		[InlineData("a-1", new[] { "a", "-", "1" }, new[] { false, false, true })]
+		public void Tokenize_HandlesNegativeNumbers(string input, string[] expectedValues, bool[] expectedLiterals)
+		{
+			var tokens = UserQueryExtensions.Tokenize(input).ToArray();
+			Assert.Equal(expectedValues, tokens.Select(t => t.Value));
+			Assert.Equal(expectedLiterals, tokens.Select(t => t.IsLiteral));
+		}
 	}
 }

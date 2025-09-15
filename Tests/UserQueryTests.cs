@@ -12,6 +12,12 @@ namespace Tests
 			new TestModel() { Name = "Item3", IntValue = 10, FloatValue = 10f, DoubleValue = 10.0, TimeSpanValue = TimeSpan.FromSeconds(120) },
 		];
 
+		private static readonly IEnumerable<TestModel> extendedRoot = root.Concat(
+		[
+			new TestModel() { Name = "Item4", IntValue = 20, FloatValue = 7.5f, DoubleValue = 7.5, TimeSpanValue = TimeSpan.FromSeconds(240) },
+			new TestModel() { Name = "Item5", IntValue = -10, FloatValue = 7.5f, DoubleValue = -7.5, TimeSpanValue = TimeSpan.FromSeconds(240) },
+		]);
+
 		private readonly ITestOutputHelper output;
 
 		public UserQueryTests(ITestOutputHelper output)
@@ -22,6 +28,11 @@ namespace Tests
 		private static UserQueryProvider<TestModel> GetProvider()
 		{
 			return new UserQueryProvider<TestModel>(root.AsQueryable());
+		}
+
+		private static UserQueryProvider<TestModel> GetExtendedProvider()
+		{
+			return new UserQueryProvider<TestModel>(extendedRoot.AsQueryable());
 		}
 
 		[Theory]
@@ -161,6 +172,43 @@ namespace Tests
 		public void Literal_Queries(string query, string[] expectedNames)
 		{
 			var provider = GetProvider();
+			var result = provider.EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		[Theory]
+		[InlineData("name: ='Item1'", new[] { "Item1" })]
+		[InlineData("intvalue: 10", new[] { "Item3" })]
+		[InlineData("floatvalue: <=6", new[] { "Item1", "Item2" })]
+		[InlineData("intvalue: 1, intvalue: 10", new[] { "Item1", "Item3" })]
+		public void Refer_Queries(string query, string[] expectedNames)
+		{
+			var provider = GetProvider();
+			var result = provider.EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		[Theory]
+		[InlineData("intvalue: 5-10", new[] { "Item2" })]
+		[InlineData("floatvalue: 6 - 9", new[] { "Item4", "Item5" })]
+		[InlineData("intvalue: -10-5", new[] { "Item1", "Item5" })]
+		public void RangeOperator_Queries(string query, string[] expectedNames)
+		{
+			var provider = GetExtendedProvider();
+			var result = provider.EvaluateUserQuery(query);
+			var actualNames = result.Select(i => i.Name).ToArray();
+			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
+		}
+
+		[Theory]
+		[InlineData("intvalue < 0", new[] { "Item5" })]
+		[InlineData("intvalue = -10", new[] { "Item5" })]
+		[InlineData("intvalue =-10", new[] { "Item5" })]
+		public void NegativeNumber_Queries(string query, string[] expectedNames)
+		{
+			var provider = GetExtendedProvider();
 			var result = provider.EvaluateUserQuery(query);
 			var actualNames = result.Select(i => i.Name).ToArray();
 			Assert.Equal(expectedNames.OrderBy(n => n), actualNames.OrderBy(n => n));
