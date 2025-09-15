@@ -95,6 +95,7 @@ const PlaylistTab: React.FC = () => {
                             <Dropdown.Header>Export</Dropdown.Header>
                             <Dropdown.Item onClick={() => exportPlaylist('.xspf')} disabled={viewingPlaylist === null}>XSPF</Dropdown.Item>
                             <Dropdown.Item onClick={() => exportPlaylist('.m3u8')} disabled={viewingPlaylist === null}>M3U8</Dropdown.Item>
+                            <Dropdown.Item onClick={() => exportPlaylist('.csv')} disabled={viewingPlaylist === null}>CSV</Dropdown.Item>
                             <Dropdown.Item onClick={() => exportZip()} disabled={viewingPlaylist === null}>ZIP</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={() => createNewPlaylist()}><BsPlus />Create New</Dropdown.Item>

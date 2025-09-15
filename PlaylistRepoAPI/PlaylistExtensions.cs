@@ -56,6 +56,13 @@ namespace PlaylistRepoAPI
 			}
 		}
 
+		/// <summary>
+		/// Get this playlist as a XSPF playlist. <a href="https://www.xspf.org/"/> 
+		/// </summary>
+		/// <param name="playlist">The playlist to convert</param>
+		/// <param name="library">The collection of all media</param>
+		/// <param name="outputStream">Stream to export to</param>
+		/// <param name="settings">Additional export settings</param>
 		public static async Task StreamXspfAsync(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings)
 		{
 			XmlWriter writer = XmlWriter.Create(outputStream, new XmlWriterSettings() { Async = true });
@@ -87,6 +94,13 @@ namespace PlaylistRepoAPI
 			await writer.FlushAsync();
 		}
 
+		/// <summary>
+		/// Get this playlist as a M3U8 playlist.
+		/// </summary>
+		/// <param name="playlist">The playlist to convert</param>
+		/// <param name="library">The collection of all media</param>
+		/// <param name="outputStream">Stream to export to</param>
+		/// <param name="settings">Additional export settings</param>
 		public static async Task StreamM3U8Async(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings)
 		{
 			var writer = new StreamWriter(outputStream, Encoding.UTF8);
@@ -112,6 +126,70 @@ namespace PlaylistRepoAPI
 
 				await writer.WriteLineAsync(title);
 				await writer.WriteLineAsync(location);
+			}
+
+			await writer.FlushAsync();
+		}
+
+		/// <summary>
+		/// Get this playlist as a CSV.
+		/// </summary>
+		/// <param name="playlist">The playlist to convert</param>
+		/// <param name="library">The collection of all media</param>
+		/// <param name="outputStream">Stream to export to</param>
+		/// <param name="settings">Additional export settings</param>
+		public static async Task StreamCSVAsync(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings, char delimiter)
+		{
+			var writer = new StreamWriter(outputStream, Encoding.UTF8);
+			// id, title, ruid, path, hash, mime, primary artist, album, description, rating, length, order
+
+			void Append(object? value)
+			{
+				string text = value?.ToString() ?? "";
+				for (var i = 0; i < text.Length; i++)
+				{
+					if (text[i] == delimiter) continue;
+					if (char.IsWhiteSpace(text[i]))
+						writer.Write(' ');
+					else
+						writer.Write(text[i]);
+				}
+				writer.Write(delimiter);
+			}
+
+			Append("id"); 
+			Append("title");
+			Append("ruid");
+			Append("location");
+			Append("hash");
+			Append("mime");
+			Append("primary artist");
+			Append("album");
+			Append("description");
+			Append("rating");
+			Append("length milliseconds");
+			Append("order");
+
+			var query = playlist.AllEntries(library, true);
+			await query.LoadAsync();
+
+			foreach (var media in query)
+			{
+				writer.WriteLine();
+				string location = GetLocation(media, settings);
+				string hash = media.Hash != null ? Convert.ToBase64String(media.Hash) : "";
+				Append(media.Id);
+				Append(media.Title);
+				Append(media.RemoteUID);
+				Append(location);
+				Append(hash);
+				Append(media.MimeType);
+				Append(media.PrimaryArtist);
+				Append(media.Album);
+				Append(media.Description);
+				Append(media.Rating);
+				Append(media.LengthMilliseconds);
+				Append(media.Order);
 			}
 
 			await writer.FlushAsync();

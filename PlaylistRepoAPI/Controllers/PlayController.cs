@@ -39,6 +39,10 @@ namespace PlaylistRepoAPI.Controllers
 					await playlist.StreamM3U8Async(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
 					stream.Position = 0;
 					return File(stream, "application/vnd.apple.mpegurl");
+				case ".csv":
+					await playlist.StreamCSVAsync(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false }, ',');
+					stream.Position = 0;
+					return File(stream, "text/csv");
 				default:
 					return BadRequest($"Extension: '{extension}' is not valid.");
 			}
