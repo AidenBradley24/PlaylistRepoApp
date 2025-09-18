@@ -1,0 +1,22 @@
+.file-upload-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.2);
+    z-index: 9999;
+}
+
+.file-upload-box {
+    padding: 2rem;
+    border: 2px dashed #3b82f6;
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    color: blue;
+}

@@ -34,7 +34,8 @@ public class PlayRepoDbContext : DbContext
 	/// Ingest media files for untracked media.
 	/// </summary>
 	/// <exception cref="InvalidOperationException"></exception>
-	public async Task IngestUntracked(FileInfo[] files, IProgress<TaskProgress>? progress)
+	/// <returns>A collection of media ingested</returns>
+	public async Task<IEnumerable<Media>> IngestUntracked(ICollection<FileInfo> files, IProgress<TaskProgress>? progress)
 	{
 		int addedCount = 0, updateCount = 0, completedCount = 0;
 		Dictionary<byte[], Media> medias = [];
@@ -73,17 +74,18 @@ public class PlayRepoDbContext : DbContext
 				addedCount++;
 			}
 
-			progress?.Report(TaskProgress.FromNumbers(++completedCount, files.Length));
+			progress?.Report(TaskProgress.FromNumbers(++completedCount, files.Count));
 		}
 
 		progress?.Report(TaskProgress.FromIndeterminate("Finalizing"));
-		await Medias.AddRangeAsync(medias.Values);
+		Medias.AddRange(medias.Values);
 		await SaveChangesAsync();
 		progress?.Report(TaskProgress.FromCompleted($"COMPLETE\n" +
 			$"Added {addedCount} new media files.\n" +
 			$"Updated {updateCount} media files.\n" +
 			string.Join('\n', medias.Values.Select(m => $"ADDED: {m}")) +
 			string.Join('\n', medias.Values.Select(m => $"ADDED: {m}"))));
+		return medias.Values;
 	}
 
 	/// <summary>

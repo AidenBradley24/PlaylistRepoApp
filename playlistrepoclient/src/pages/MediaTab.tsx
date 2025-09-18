@@ -5,6 +5,7 @@ import { BsPlus } from "react-icons/bs";
 import { useEdits } from "../components/EditContext";
 import type { Playlist, Media } from "../models";
 import { useTasks } from "../components/TaskContext";
+import { useOpenFileDialog, DragAndDropUploader } from "../components/FileUpload";
 
 const MediaTab: React.FC = () => {
 
@@ -37,10 +38,17 @@ const MediaTab: React.FC = () => {
         invokeTask('running test', task);
     }
 
+    function uploadMedia() {
+        useOpenFileDialog("api/actions/upload");
+    }
+
     return (
         <div>
             <div className="d-flex gap-4">
                 <div className="d-flex gap-4" style={{ flex: 1 }}>
+                    <h3>Media</h3>
+                </div>
+                <div className="d-flex gap-4" style={{ flex: 3 }}>
                     <Dropdown >
                         <Dropdown.Toggle variant="secondary" id="dropdown-basic">
                             Options
@@ -48,16 +56,22 @@ const MediaTab: React.FC = () => {
 
                         <Dropdown.Menu>
                             <Dropdown.Item onClick={() => createPlaylistFromQuery()}>Create Playlist from Query</Dropdown.Item>
-                            <Dropdown.Item onClick={() => testTask()}><BsPlus />Test</Dropdown.Item>
+                            <Dropdown.Item onClick={() => testTask()}>Test</Dropdown.Item>
+                            <Dropdown.Item onClick={() => uploadMedia()}>Upload Media</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={() => createNewMedia()}><BsPlus />Create New</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                 </div>
-            </div>
-            <h3>Media</h3>
+                <div className="d-flex gap-4" style={{ flex: 3 }}>
+                    Drag and drop media onto this page to upload!
+                    <br />
+                    <br />
+                </div>
 
+            </div>
             <MediaView path="api/data/media" pageSize={20} query={query} setQuery={setQuery} />
+            <DragAndDropUploader uploadUrl="api/action/upload" />
         </div>
     );
 };

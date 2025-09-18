@@ -61,11 +61,11 @@ namespace PlaylistRepoLib.Models.DTOs
 		public virtual void OnSyncDTO(TModel model) { }
 
 		/// <summary>
-		/// Used to patch a property in a DTO
+		/// Used to patch a property in one or more dtos
 		/// </summary>
 		public class PatchElement
 		{
-			public int Id { get; set; }
+			public string UserQuery { get; set; } = "";
 			/// <summary>
 			/// Case insensitive property name
 			/// </summary>

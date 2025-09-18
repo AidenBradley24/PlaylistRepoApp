@@ -83,5 +83,49 @@ namespace PlaylistRepoAPI.Controllers
 
 			return AcceptedAtAction(nameof(Sync), id);
 		}
+
+		[HttpPost("upload")]
+		public async Task<IActionResult> UploadMedia(IEnumerable<IFormFile> files)
+		{
+			Queue<(string fileName, MemoryStream ms)> uploads = [];
+			foreach (var file in files)
+			{
+				using var rs = file.OpenReadStream();
+				var ms = new MemoryStream();
+				await rs.CopyToAsync(ms);
+				ms.Position = 0;
+				uploads.Enqueue((file.FileName, ms));
+			}
+
+			Guid id;
+			try
+			{
+				id = taskService.StartTask<PlayRepoDbContext, IPlayRepoService>(async (progress, _, db, repo) =>
+				{
+					List<FileInfo> savedFiles = [];
+					int index = 0;
+					int count = uploads.Count;
+
+					while (uploads.TryDequeue(out var item))
+					{
+						var (fileName, ms) = item;
+						FileInfo savedFile = new(Path.Combine(repo.RootPath.FullName, fileName));
+						savedFiles.Add(savedFile);
+						using var fs = savedFile.OpenWrite();
+						await ms.CopyToAsync(fs);
+						await ms.DisposeAsync();
+						progress.Report(TaskProgress.FromNumbers(index, count, "Saving"));
+					}
+
+					await db.IngestUntracked(savedFiles, progress);
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
+
+			return AcceptedAtAction(nameof(UploadMedia), id);
+		}
 	}
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.Features;
 using PlaylistRepoAPI;
 using PlaylistRepoAPI.Controllers;
 
@@ -62,5 +63,11 @@ app.MapControllers();
 app.UseDefaultFiles();
 app.MapStaticAssets();
 app.MapFallbackToFile("/index.html");
+
+app.Use(async (context, next) =>
+{
+	context.Features.Get<IHttpMaxRequestBodySizeFeature>()!.MaxRequestBodySize = 4294967296L;
+	await next();
+});
 
 app.Run();

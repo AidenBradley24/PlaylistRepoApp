@@ -62,40 +62,88 @@ namespace PlaylistRepoAPI.Controllers
 		[HttpPatch("media")]
 		public IActionResult PatchMedia([FromBody] MediaDTO.PatchElement patch)
 		{
-			var record = db.Medias.Find(patch.Id);
-			if (record == null) return NotFound();
-			var dto = new MediaDTO(record);
-			if (!dto.Patch(patch)) return BadRequest();
-			dto.UpdateModel(record);
+			IQueryable<Media> records;
+			try
+			{
+				records = db.Medias.EvaluateUserQuery(patch.UserQuery);
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
+			if (!records.Any()) return NotFound();
+			List<MediaDTO> modifiedDtos = [];
+			foreach (var record in records)
+			{
+				var dto = new MediaDTO(record);
+				if (!dto.Patch(patch))
+				{
+					db.ChangeTracker.Clear();
+					return BadRequest();
+				}
+				dto.UpdateModel(record);
+				modifiedDtos.Add(dto);
+			}
 			db.SaveChanges();
-			dto.SyncDTO(record);
-			return Ok(dto);
+			return Ok(modifiedDtos);
 		}
 
 		[HttpPatch("playlists")]
 		public IActionResult PatchPlaylist([FromBody] PlaylistDTO.PatchElement patch)
 		{
-			var record = db.Playlists.Find(patch.Id);
-			if (record == null) return NotFound();
-			var dto = new PlaylistDTO(record);
-			if (!dto.Patch(patch)) return BadRequest();
-			dto.UpdateModel(record);
+			IQueryable<Playlist> records;
+			try
+			{
+				records = db.Playlists.EvaluateUserQuery(patch.UserQuery);
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
+			if (!records.Any()) return NotFound();
+			List<PlaylistDTO> modifiedDtos = [];
+			foreach (var record in records)
+			{
+				var dto = new PlaylistDTO(record);
+				if (!dto.Patch(patch))
+				{
+					db.ChangeTracker.Clear();
+					return BadRequest();
+				}
+				dto.UpdateModel(record);
+				modifiedDtos.Add(dto);
+			}
 			db.SaveChanges();
-			dto.SyncDTO(record);
-			return Ok(dto);
+			return Ok(modifiedDtos);
 		}
 
 		[HttpPatch("remotes")]
 		public IActionResult PatchRemote([FromBody] RemotePlaylistDTO.PatchElement patch)
 		{
-			var record = db.RemotePlaylists.Find(patch.Id);
-			if (record == null) return NotFound();
-			var dto = new RemotePlaylistDTO(record);
-			if (!dto.Patch(patch)) return BadRequest();
-			dto.UpdateModel(record);
+			IQueryable<RemotePlaylist> records;
+			try
+			{
+				records = db.RemotePlaylists.EvaluateUserQuery(patch.UserQuery);
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
+			if (!records.Any()) return NotFound();
+			List<RemotePlaylistDTO> modifiedDtos = [];
+			foreach (var record in records)
+			{
+				var dto = new RemotePlaylistDTO(record);
+				if (!dto.Patch(patch))
+				{
+					db.ChangeTracker.Clear();
+					return BadRequest();
+				}
+				dto.UpdateModel(record);
+				modifiedDtos.Add(dto);
+			}
 			db.SaveChanges();
-			dto.SyncDTO(record);
-			return Ok(dto);
+			return Ok(modifiedDtos);
 		}
 
 		[HttpDelete("media")]
