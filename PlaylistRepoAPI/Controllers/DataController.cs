@@ -146,13 +146,37 @@ namespace PlaylistRepoAPI.Controllers
 			return Ok(modifiedDtos);
 		}
 
-		[HttpDelete("media")]
-		public IActionResult DeleteMedia([FromHeader] int id, [FromHeader] bool alsoDeleteFile = false)
+		[HttpDelete("media/{id}")]
+		public IActionResult DeleteMedia([FromRoute] int id, [FromHeader] bool alsoDeleteFile = false)
 		{
 			var record = db.Medias.Find(id);
 			if (record == null) return NotFound();
 			if (alsoDeleteFile) record.File?.Delete();
 			db.Medias.Remove(record);
+			db.SaveChanges();
+			return Ok();
+		}
+
+		[HttpDelete("media")]
+		public IActionResult DeleteMedias([FromHeader] string query, [FromHeader] bool alsoDeleteFile = false)
+		{
+			IQueryable<Media> records;
+			try
+			{
+				records = db.Medias.EvaluateUserQuery(query);
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid user query: {ex.Message}");
+			}
+
+			if (alsoDeleteFile) 
+				foreach (var record in records)
+				{
+					record.File?.Delete();
+				}
+
+			db.Medias.RemoveRange(records);
 			db.SaveChanges();
 			return Ok();
 		}
@@ -214,8 +238,8 @@ namespace PlaylistRepoAPI.Controllers
 			return Ok(dto);
 		}
 
-		[HttpDelete("remotes")]
-		public IActionResult DeleteRemote([FromHeader] int id, [FromHeader] bool alsoDeleteMedia = false, [FromHeader] bool alsoDeleteMediaFiles = false)
+		[HttpDelete("remotes/{id}")]
+		public IActionResult DeleteRemote([FromRoute] int id, [FromHeader] bool alsoDeleteMedia = false, [FromHeader] bool alsoDeleteMediaFiles = false)
 		{
 			var record = db.RemotePlaylists.Find(id);
 			if (record == null) return NotFound();
@@ -291,8 +315,8 @@ namespace PlaylistRepoAPI.Controllers
 			return Ok(dto);
 		}
 
-		[HttpDelete("playlists")]
-		public IActionResult DeletePlaylist([FromHeader] int id)
+		[HttpDelete("playlists/{id}")]
+		public IActionResult DeletePlaylist([FromRoute] int id)
 		{
 			var record = db.Playlists.Find(id);
 			if (record == null) return NotFound();

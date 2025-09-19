@@ -39,9 +39,8 @@ const RemoteTab: React.FC = () => {
         const deletionRemote = viewingRemote;
         setViewingRemote(null);
 
-        const response = await fetch("api/data/remotes", {
-            method: "DELETE",
-            headers: { "id": `${deletionRemote.id}` }
+        const response = await fetch(`api/data/remotes${deletionRemote.id}`, {
+            method: "DELETE"
         });
 
         if (!response.ok) {

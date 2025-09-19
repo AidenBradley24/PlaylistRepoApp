@@ -40,9 +40,8 @@ const PlaylistTab: React.FC = () => {
         const deletionPlaylist = viewingPlaylist;
         setViewingPlaylist(null);
 
-        const response = await fetch("api/data/playlists", {
-            method: "DELETE",
-            headers: { "id": `${deletionPlaylist.id}` }
+        const response = await fetch(`api/data/playlists/${deletionPlaylist.id}`, {
+            method: "DELETE"
         });
 
         if (!response.ok) {

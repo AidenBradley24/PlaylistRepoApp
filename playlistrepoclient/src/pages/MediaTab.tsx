@@ -42,6 +42,14 @@ const MediaTab: React.FC = () => {
         useOpenFileDialog("api/actions/upload");
     }
 
+    function massDeleteMedia() {
+        // TODO
+    }
+
+    function massPatchMedia() {
+        // TODO
+    }
+
     return (
         <div>
             <div className="d-flex gap-4">
