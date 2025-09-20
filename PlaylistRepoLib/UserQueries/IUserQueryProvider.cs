@@ -14,7 +14,7 @@ public interface IUserQueryProvider<TModel>
 	/// Parse a user defined query of the <typeparamref name="TModel"/> type.
 	/// </summary>
 	/// <remarks>
-	/// <para><b>Supported Operators:</b></para>
+	/// This is a non-exhaustive explaination of user queries. For a full explaination see UserQueries.md.
 	/// <list type="table">
 	///   <listheader>
 	///     <term>Operator</term>
@@ -32,7 +32,6 @@ public interface IUserQueryProvider<TModel>
 	///   <item><term><c>&gt;</c></term><description>greater than (int only)</description></item>
 	///   <item><term><c>&lt;=</c></term><description>less than or equal to (int only)</description></item>
 	///   <item><term><c>&gt;=</c></term><description>greater than or equal to (int only)</description></item>
-	///   <item><term><c>&amp;</c></term><description>logical AND with another term</description></item>
 	/// </list>
 	///
 	/// <para><b>Notes:</b></para>
