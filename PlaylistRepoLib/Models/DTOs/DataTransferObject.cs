@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Serialization;
 
 namespace PlaylistRepoLib.Models.DTOs
 {
@@ -75,6 +77,14 @@ namespace PlaylistRepoLib.Models.DTOs
 			/// Property value automatically parsed
 			/// </summary>
 			public string PropertyValue { get; set; } = "";
+
+			[JsonConverter(typeof(JsonStringEnumConverter))]
+			public PatchType Type { get; set; } = PatchType.replace;
+
+			public enum PatchType
+			{
+				replace, append, prepend
+			}
 		}
 
 		/// <summary>
@@ -94,7 +104,34 @@ namespace PlaylistRepoLib.Models.DTOs
 			{
 				return false;
 			}
-			prop.SetValue(this, value);
+
+			switch (element.Type)
+			{
+				case PatchElement.PatchType.replace:
+					prop.SetValue(this, value);
+					break;
+				case PatchElement.PatchType.append:
+					if (prop.PropertyType == typeof(string))
+					{
+						prop.SetValue(this, (string?)prop.GetValue(this) + (string)value);
+					}
+					else
+					{
+						prop.SetValue(this, value);
+					}
+					break;
+				case PatchElement.PatchType.prepend:
+					if (prop.PropertyType == typeof(string))
+					{
+						prop.SetValue(this, (string)value + (string?)prop.GetValue(this));
+					}
+					else
+					{
+						prop.SetValue(this, value);
+					}
+					break;
+			}
+
 			return true;
 		}
 	}

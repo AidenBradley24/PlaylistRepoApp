@@ -32,3 +32,10 @@ export interface RemotePlaylist {
     link: string;
     type: string | "internet" | "ytdlp";
 }
+
+export interface Patch<T> {
+    userQuery: string;
+    propertyName: keyof T;
+    propertyValue: T[keyof T];
+    type: "replace" | "append" | "prepend";
+}
