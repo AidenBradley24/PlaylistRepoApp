@@ -1,12 +1,16 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import type { Media, Playlist, RemotePlaylist } from "../models";
 import EditPlaylistModal from '../pages/EditPlaylistModal';
 import MediaModal from '../pages/MediaModal';
 import EditRemoteModal from '../pages/EditRemoteModal';
+import { useSearchParams } from "react-router-dom";
 
 const EditContext = createContext<EditContextType | undefined>(undefined);
 
 interface EditContextType {
+    query: string;
+    setQuery: (value: string) => void;
+
     showMediaModal: boolean;
     setShowMediaModal: (value: boolean) => void;
     viewingMedia: Media | null;
@@ -31,6 +35,10 @@ interface EditContextType {
 
 export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
+    const [searchParams, setSearchParams] = useSearchParams();
+    const queryFromUrl = searchParams.get("q") ?? "";
+    const [query, setQuery] = useState<string>(queryFromUrl);
+
     const [showMediaModal, setShowMediaModal] = useState<boolean>(false);
     const [viewingMedia, setViewingMedia] = useState<Media | null>(null);
     const [editingMedia, setEditingMedia] = useState<Media | null>(null);
@@ -43,8 +51,18 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [viewingRemote, setViewingRemote] = useState<RemotePlaylist | null>(null);
     const [editingRemote, setEditingRemote] = useState<RemotePlaylist | null>(null);
 
+    useEffect(() => {
+        if (query) {
+            setSearchParams({ q: query });
+        } else {
+            setSearchParams({});
+        }
+    }, [query, setSearchParams]);
+
     return (
         <EditContext.Provider value={{
+            query,
+            setQuery,
             showMediaModal,
             setShowMediaModal,
             showPlaylistModal,

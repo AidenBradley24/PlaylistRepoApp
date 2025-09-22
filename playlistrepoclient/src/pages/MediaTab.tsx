@@ -14,8 +14,7 @@ const MediaTab: React.FC = () => {
 
     const [massDeleting, setMassDeleting] = useState<boolean>(false);
     const [massPatching, setMassPatching] = useState<boolean>(false);
-    const [query, setQuery] = useState<string>('');
-    const { setShowPlaylistModal, setEditingPlaylist, setShowMediaModal, setViewingMedia, setEditingMedia } = useEdits();
+    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, setShowMediaModal, setViewingMedia, setEditingMedia } = useEdits();
     const { invokeTask } = useTasks()!;
     const { triggerRefresh } = useRefresh()!;
 

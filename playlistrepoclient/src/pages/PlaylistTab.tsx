@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import MediaView from "../components/MediaView";
 import QueryableDropdown from '../components/QueryableDropdown';
 import type {Playlist } from "../models";
@@ -14,10 +14,8 @@ import { download } from "../utils";
 const PlaylistTab: React.FC = () => {
 
     const { triggerRefresh } = useRefresh();
-    const { setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylist } = useEdits(); 
+    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylist } = useEdits(); 
     const { invokeTask } = useTasks()!;
-
-    const [query, setQuery] = useState<string>('');
 
     async function createNewPlaylist() {
         const playlist = {} as Playlist;

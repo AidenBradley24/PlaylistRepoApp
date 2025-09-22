@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import MediaView from "../components/MediaView";
 import QueryableDropdown from '../components/QueryableDropdown';
 import type { RemotePlaylist } from "../models";
@@ -9,12 +9,10 @@ import { useEdits } from "../components/EditContext"
 import { CopyToClipboardButton } from '../components/CopyToClipboard'
 import { BsLink45Deg } from "react-icons/bs";
 import { useTasks } from "../components/TaskContext";
-import { download } from "../utils";
 
 const RemoteTab: React.FC = () => {
 
-    const { setShowRemoteModal, setEditingRemote, viewingRemote, setViewingRemote } = useEdits(); 
-    const [query, setQuery] = useState<string>('');
+    const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingRemote } = useEdits(); 
     const { triggerRefresh } = useRefresh();
     const { invokeTask } = useTasks();
 
