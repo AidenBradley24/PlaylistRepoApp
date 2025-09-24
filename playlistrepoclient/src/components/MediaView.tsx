@@ -29,7 +29,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
     const [loading, setLoading] = useState<boolean>(false);
 
     const { refreshKey } = useRefresh();
-    const { setViewingMedia, setShowMediaModal } = useEdits(); 
+    const { setViewingMedia, setShowMediaModal } = useEdits();
 
     useEffect(() => {
         const handler = setTimeout(() => {

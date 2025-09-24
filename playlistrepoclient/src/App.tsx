@@ -85,7 +85,7 @@ const App: React.FC = () => {
                     <Route path="*" element={<HomePage />} />
                 </Routes>
             </div>
-            </div>
+        </div>
     );
 };
 

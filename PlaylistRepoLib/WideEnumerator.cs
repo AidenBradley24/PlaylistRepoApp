@@ -130,7 +130,7 @@ namespace PlaylistRepoLib
 
 		public bool MoveBy(int length)
 		{
-			for (int i = 0; i < length; i++) 
+			for (int i = 0; i < length; i++)
 				if (!MoveNext()) return false;
 			return true;
 		}

@@ -19,7 +19,7 @@ namespace Tests
 		[InlineData("\"a\\\"b\"", new[] { "a\"b" }, new[] { true })]
 		[InlineData("  abc  ", new[] { "abc" }, new[] { false })]
 		[InlineData("1, 'two', \"three\"", new[] { "1", ",", "two", ",", "three" }, new[] { true, false, true, false, true })]
-		[InlineData("12>=2 17=2, beans='text'", new[] { "12", ">=", "2", "17", "=", "2", ",", "beans", "=", "text"}, new[] { true, false, true, true, false, true, false, false, false, true})]
+		[InlineData("12>=2 17=2, beans='text'", new[] { "12", ">=", "2", "17", "=", "2", ",", "beans", "=", "text" }, new[] { true, false, true, true, false, true, false, false, false, true })]
 		public void Tokenize_BasicCases(string input, string[] expectedValues, bool[] expectedLiterals)
 		{
 			var tokens = UserQueryExtensions.Tokenize(input).ToArray();
@@ -48,9 +48,9 @@ namespace Tests
 		[InlineData("1.0", new[] { "1.0" }, new[] { true })]
 		[InlineData("  1.0  ", new[] { "1.0" }, new[] { true })]
 		[InlineData("4.2, abc", new[] { "4.2", ",", "abc" }, new[] { true, false, false })]
-		[InlineData("beans <=4.6", new[] { "beans", "<=", "4.6"}, new[] {false, false, true})]
-		[InlineData("beans > 5.1!", new[] { "beans", ">", "5.1", "!"}, new[] { false, false, true, false})]
-		[InlineData("beans > 5.1'potatoes'", new[] { "beans", ">", "5.1", "potatoes"}, new[] { false, false, true, true })]
+		[InlineData("beans <=4.6", new[] { "beans", "<=", "4.6" }, new[] { false, false, true })]
+		[InlineData("beans > 5.1!", new[] { "beans", ">", "5.1", "!" }, new[] { false, false, true, false })]
+		[InlineData("beans > 5.1'potatoes'", new[] { "beans", ">", "5.1", "potatoes" }, new[] { false, false, true, true })]
 		public void Tokenize_HandlesDecimalNumbers(string input, string[] expectedValues, bool[] expectedLiterals)
 		{
 			var tokens = UserQueryExtensions.Tokenize(input).ToArray();
@@ -62,7 +62,7 @@ namespace Tests
 		[InlineData("a < -1", new[] { "a", "<", "-1" }, new[] { false, false, true })]
 		[InlineData("a<-1", new[] { "a", "<", "-1" }, new[] { false, false, true })]
 		[InlineData("a1 : 1 - 5", new[] { "a1", ":", "1", "-", "5" }, new[] { false, false, true, false, true })]
-		[InlineData("a1: 1-5", new[] { "a1", ":", "1", "-", "5"}, new[] { false, false, true, false, true })]
+		[InlineData("a1: 1-5", new[] { "a1", ":", "1", "-", "5" }, new[] { false, false, true, false, true })]
 		[InlineData("a1 : 1 - -5", new[] { "a1", ":", "1", "-", "-5" }, new[] { false, false, true, false, true })]
 		[InlineData("a1: 1--5", new[] { "a1", ":", "1", "-", "-5" }, new[] { false, false, true, false, true })]
 		[InlineData("a1: -1-5", new[] { "a1", ":", "-1", "-", "5" }, new[] { false, false, true, false, true })]

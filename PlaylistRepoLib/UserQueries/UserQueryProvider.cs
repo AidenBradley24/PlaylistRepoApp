@@ -1,7 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 using static PlaylistRepoLib.UserQueries.UserQueryExtensions;
 
@@ -151,7 +150,7 @@ public sealed class UserQueryProvider<TModel> : IUserQueryProvider<TModel>
 						if (reference != null && tokens.Foresight.Count >= 2 && tokens.Foresight[0].Value == "-")
 						{
 							newTerm = Expression.AndAlso(
-								EvaluateComparison(reference, tokens.Current, new Token(">=", false)), 
+								EvaluateComparison(reference, tokens.Current, new Token(">=", false)),
 								EvaluateComparison(reference, tokens.Foresight[1], new Token("<=", false))
 								);
 							tokens.MoveBy(2);

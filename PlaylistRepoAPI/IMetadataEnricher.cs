@@ -9,6 +9,6 @@ namespace PlaylistRepoAPI
 		/// </summary>
 		/// <param name="media">Media (not modified)</param>
 		/// <returns>A modifed DTO if successful</returns>
-		public Task<MediaDTO?> TryEnrich(MediaDTO media); 
+		public Task<MediaDTO?> TryEnrich(MediaDTO media);
 	}
 }

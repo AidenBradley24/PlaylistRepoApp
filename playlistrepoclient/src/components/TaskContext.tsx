@@ -10,7 +10,7 @@ type Task = {
     name: string;
     guid: string | null; // tasks with no guid cannot update
     progress: TaskProgress | null;
-    callback?: (taskRecord: Task) => void; 
+    callback?: (taskRecord: Task) => void;
 };
 
 type TaskProgress = {

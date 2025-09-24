@@ -165,12 +165,12 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                         editingMedia &&
                         <Tab eventKey="edit" title={editingMedia.id === 0 ? 'Create' : 'Edit'}>
                             {error && <Alert variant="danger">{error}</Alert>}
-                                <Form onSubmit={handleSubmit}>
-                                    {editingMedia.id !== 0 && <Form.Group className="mb-3">
-                                        <Form.Label>ID</Form.Label>
-                                        <Form.Control type="text" value={editingMedia.id} readOnly />
-                                    </Form.Group>}
-                                
+                            <Form onSubmit={handleSubmit}>
+                                {editingMedia.id !== 0 && <Form.Group className="mb-3">
+                                    <Form.Label>ID</Form.Label>
+                                    <Form.Control type="text" value={editingMedia.id} readOnly />
+                                </Form.Group>}
+
                                 <Form.Group className="mb-3">
                                     <Form.Label>Title</Form.Label>
                                     <Form.Control
@@ -184,8 +184,8 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                     <Form.Label>Primary Artist</Form.Label>
                                     <Form.Control
                                         type="text"
-                                            value={editingMedia.primaryArtist}
-                                            onChange={(e) => editArtist(e.target.value)}
+                                        value={editingMedia.primaryArtist}
+                                        onChange={(e) => editArtist(e.target.value)}
                                     />
                                 </Form.Group>
                                 <Form.Group className="mb-3">
@@ -193,7 +193,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                     <Form.Control
                                         type="text"
                                         value={editingMediaArtists}
-                                            onChange={(e) => editArtists(e.target.value)}
+                                        onChange={(e) => editArtists(e.target.value)}
                                     />
                                 </Form.Group>
                                 <Form.Group className="mb-3">

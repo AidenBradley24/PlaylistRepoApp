@@ -165,7 +165,7 @@ namespace Tests
 		[Theory]
 		[InlineData("1", new[] { "Item1" })]
 		[InlineData("Item", new[] { "Item1", "Item2", "Item3" })]
-		[InlineData("a", new string[0] )]
+		[InlineData("a", new string[0])]
 		[InlineData("", new[] { "Item1", "Item2", "Item3" })]
 		[InlineData("Item orderby name", new[] { "Item1", "Item2", "Item3" })]
 		[InlineData("Item orderbydescending name", new[] { "Item3", "Item2", "Item1" })]

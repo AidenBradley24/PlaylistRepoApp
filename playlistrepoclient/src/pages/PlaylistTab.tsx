@@ -1,7 +1,7 @@
 import React from "react";
 import MediaView from "../components/MediaView";
 import QueryableDropdown from '../components/QueryableDropdown';
-import type {Playlist } from "../models";
+import type { Playlist } from "../models";
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useRefresh } from "../components/RefreshContext";
 import { BsPlus } from "react-icons/bs";
@@ -16,7 +16,7 @@ import Badge from 'react-bootstrap/Badge';
 const PlaylistTab: React.FC = () => {
 
     const { triggerRefresh } = useRefresh();
-    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylist } = useEdits(); 
+    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylist } = useEdits();
     const { invokeTask } = useTasks()!;
 
     async function createNewPlaylist() {
@@ -35,7 +35,7 @@ const PlaylistTab: React.FC = () => {
         setShowPlaylistModal(true);
     }
 
-    async function deletePlaylist () {
+    async function deletePlaylist() {
         if (viewingPlaylist === null) throw new Error();
         const deletionPlaylist = viewingPlaylist;
         setViewingPlaylist(null);
@@ -141,7 +141,7 @@ const PlaylistTab: React.FC = () => {
                 viewingPlaylist === null ? (
                     <div className="mt-3">Select a playlist.</div>
                 ) : (
-                        <MediaView path={`api/data/playlists/${viewingPlaylist.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                    <MediaView path={`api/data/playlists/${viewingPlaylist.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
                 )
             }
         </div>

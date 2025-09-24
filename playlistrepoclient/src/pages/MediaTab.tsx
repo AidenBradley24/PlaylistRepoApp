@@ -169,7 +169,7 @@ const MediaTab: React.FC = () => {
                                 value={values.type}
                                 onChange={(e) => updateField("type", e.target.value as any)}
                             >
-                                {["replace", "append", "prepend"].map((key) => 
+                                {["replace", "append", "prepend"].map((key) =>
                                 (
                                     <option key={key} value={key}>
                                         {key}

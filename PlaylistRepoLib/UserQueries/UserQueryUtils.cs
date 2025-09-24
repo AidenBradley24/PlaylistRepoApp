@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Frozen;
+﻿using System.Collections.Frozen;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -113,7 +112,7 @@ public static class UserQueryExtensions
 			mode = TokenizerFlags.StartMode;
 			return new Token(value, isLiteral);
 		}
-		
+
 		for (int i = 0; i < input.Length; i++)
 		{
 			char c = input[i];
@@ -200,7 +199,7 @@ public static class UserQueryExtensions
 
 			if (mode == TokenizerFlags.StartedHyphenMode)
 			{
-				mode = char.IsDigit(c) && !tight ? TokenizerFlags.NumberMode : TokenizerFlags.SymbolMode;		
+				mode = char.IsDigit(c) && !tight ? TokenizerFlags.NumberMode : TokenizerFlags.SymbolMode;
 			}
 
 			if (mode == TokenizerFlags.MidSymbolHyphenMode)

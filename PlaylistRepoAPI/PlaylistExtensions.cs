@@ -157,7 +157,7 @@ namespace PlaylistRepoAPI
 				writer.Write(delimiter);
 			}
 
-			Append("id"); 
+			Append("id");
 			Append("title");
 			Append("ruid");
 			Append("location");

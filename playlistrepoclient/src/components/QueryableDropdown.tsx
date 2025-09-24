@@ -127,7 +127,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             <Dropdown.Menu as={CustomMenu}>
                 <Dropdown.ItemText key="label">{menuLabel}</Dropdown.ItemText>
                 {entries.map((entry, i) => (
-                    <Dropdown.Item key={i} eventKey={i} active={selection?.id===entry.id}>{getLabel(entry)}</Dropdown.Item>
+                    <Dropdown.Item key={i} eventKey={i} active={selection?.id === entry.id}>{getLabel(entry)}</Dropdown.Item>
                 ))}
                 <Dropdown.Divider />
                 <Dropdown.Item eventKey="create"><BsPlus />Create New</Dropdown.Item>

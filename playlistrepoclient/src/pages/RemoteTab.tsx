@@ -14,7 +14,7 @@ import Badge from 'react-bootstrap/Badge';
 
 const RemoteTab: React.FC = () => {
 
-    const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingRemote } = useEdits(); 
+    const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingRemote } = useEdits();
     const { triggerRefresh } = useRefresh();
     const { invokeTask } = useTasks();
 
@@ -55,7 +55,7 @@ const RemoteTab: React.FC = () => {
         if (viewingRemote === null) throw new Error();
         const task = fetch("api/action/fetch", {
             method: "POST",
-            headers: { "remoteId": `${viewingRemote.id}`}
+            headers: { "remoteId": `${viewingRemote.id}` }
         });
 
         invokeTask(`Fetching Remote: ${viewingRemote.name}`, task, triggerRefresh);
@@ -87,7 +87,7 @@ const RemoteTab: React.FC = () => {
                             <Dropdown.Item onClick={() => createNewRemote()}><BsPlus />Add Remote Playlist</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
-                    {viewingRemote && <CopyToClipboardButton getText={() => Promise.resolve(viewingRemote.link)}><BsLink45Deg /></CopyToClipboardButton>}     
+                    {viewingRemote && <CopyToClipboardButton getText={() => Promise.resolve(viewingRemote.link)}><BsLink45Deg /></CopyToClipboardButton>}
                 </div>
 
                 <div style={{ flex: 1, paddingBottom: '15px' }}>
@@ -129,7 +129,7 @@ const RemoteTab: React.FC = () => {
                 viewingRemote === null ? (
                     <div className="mt-3">Select a playlist.</div>
                 ) : (
-                     <MediaView path={`api/data/remotes/${viewingRemote.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                    <MediaView path={`api/data/remotes/${viewingRemote.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
                 )
             }
         </div>

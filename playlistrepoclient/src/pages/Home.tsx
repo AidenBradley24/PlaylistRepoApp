@@ -4,9 +4,9 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="page-content-narrow">
-            <br/>
+            <br />
             <h1>Welcome to your media repository!</h1>
-            <br/>
+            <br />
             <Accordion defaultActiveKey="0">
                 <Accordion.Item eventKey="0">
                     <Accordion.Header>Basic Instructions</Accordion.Header>
@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
                         <h5>Ordering results</h5>
                         <p>
                             At the end of your query, you can add <code>orderby</code> or <code>orderbydescending</code>
-                            { " " } followed by a property name to sort the results.
+                            {" "} followed by a property name to sort the results.
                         </p>
 
                         <code>
@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
                         <p>
                             Finds items shorter than one hour, sorted by length from shortest to longest.
                         </p>
-                        <br/>
+                        <br />
                         <h5>Property shortcuts and ranges</h5>
                         <p>
                             You can set a property to be used for all following comparisons by adding a colon.
@@ -109,7 +109,7 @@ const HomePage: React.FC = () => {
 
             </Accordion>
         </div>
-        
+
     );
 }
 

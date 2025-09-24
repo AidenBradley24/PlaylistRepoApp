@@ -86,7 +86,7 @@ namespace PlaylistRepoAPI
 				media.MimeType = remote.MediaMime;
 				media.Title = title;
 				media.Description = description;
-				if(durationSeconds != null) media.LengthMilliseconds = durationSeconds ?? 0;
+				if (durationSeconds != null) media.LengthMilliseconds = durationSeconds ?? 0;
 				media.Source = remote;
 				media.RemoteUID = uid;
 				media.RemoteId = remote.Id;

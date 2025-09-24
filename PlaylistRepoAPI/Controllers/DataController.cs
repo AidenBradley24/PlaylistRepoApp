@@ -170,7 +170,7 @@ namespace PlaylistRepoAPI.Controllers
 				return BadRequest($"Invalid user query: {ex.Message}");
 			}
 
-			if (alsoDeleteFile) 
+			if (alsoDeleteFile)
 				foreach (var record in records)
 				{
 					record.File?.Delete();

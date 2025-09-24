@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 
 namespace PlaylistRepoLib.Models;
 
-public class ApiGetResponse<TModel, TDTO> 
-	where TModel : class, new() 
+public class ApiGetResponse<TModel, TDTO>
+	where TModel : class, new()
 	where TDTO : DataTransferObject<TModel>, new()
 {
 	[JsonPropertyName("total")]
@@ -22,7 +22,7 @@ public class ApiGetResponse<TModel, TDTO>
 		Total = result.Count();
 		currentPage -= 1;
 		if (currentPage < 0) currentPage = 0;
-		Data = [.. result.Skip(pageSize * currentPage).Take(pageSize).AsEnumerable().Select((model) => 
+		Data = [.. result.Skip(pageSize * currentPage).Take(pageSize).AsEnumerable().Select((model) =>
 		{
 			var dto = new TDTO();
 			dto.SyncDTO(model);

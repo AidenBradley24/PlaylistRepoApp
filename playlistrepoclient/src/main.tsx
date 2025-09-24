@@ -10,16 +10,16 @@ import { BrowserRouter } from "react-router-dom";
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-    <BrowserRouter>
-    <RefreshProvider>
-    <TaskProvider>
-    <EditProvider>
-    <ThemeProvider dir="rtl">
-        <App />
-    </ThemeProvider>
-    </EditProvider>
-    </TaskProvider>
-    </RefreshProvider>
-    </BrowserRouter>
+        <BrowserRouter>
+            <RefreshProvider>
+                <TaskProvider>
+                    <EditProvider>
+                        <ThemeProvider dir="rtl">
+                            <App />
+                        </ThemeProvider>
+                    </EditProvider>
+                </TaskProvider>
+            </RefreshProvider>
+        </BrowserRouter>
     </StrictMode>,
 )
