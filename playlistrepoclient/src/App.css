@@ -33,3 +33,9 @@
 table {
     border: 1px, black, solid;
 }
+
+.page-content-narrow {
+    max-width: 75rem;
+    margin-left: auto;
+    margin-right: auto;
+}

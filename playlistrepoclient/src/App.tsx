@@ -1,16 +1,18 @@
 ﻿import React, { useState, useEffect } from "react";
 
-import Tab from "react-bootstrap/Tab";
-import Tabs from "react-bootstrap/Tabs";
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
-import { BsMoonFill, BsSunFill } from "react-icons/bs"; // Optional: icons for better UX
+import { BsMoonFill, BsSunFill, BsBoxSeamFill } from "react-icons/bs";
+import HomePage from "./pages/Home";
 import MediaTab from "./pages/MediaTab";
 import PlaylistTab from "./pages/PlaylistTab";
 import RemoteTab from "./pages/RemoteTab";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./app.css";
 
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 const App: React.FC = () => {
 
@@ -34,28 +36,35 @@ const App: React.FC = () => {
         setDarkMode((prev) => !prev);
     };
 
-    const navigate = useNavigate();
     const location = useLocation();
 
-    // Map routes to tab keys
     const routeToKey: Record<string, string> = {
         "/media": "media",
         "/playlists": "playlists",
         "/remotes": "remotes",
     };
 
-    const keyToRoute: Record<string, string> = {
-        media: "/media",
-        playlists: "/playlists",
-        remotes: "/remotes",
-    };
-
-    const activeKey = routeToKey[location.pathname] ?? "media";
+    const activeKey = routeToKey[location.pathname] ?? "";
 
     return (
-            <div className="app-container">
-                <header className="app-header d-flex justify-content-between align-items-center">
-                    <span>Playlist Repository GUI</span>
+        <div className="app-container">
+            <Navbar expand="lg" className="bg-body-tertiary">
+                <Container>
+                    <Navbar.Brand href="/"><BsBoxSeamFill /> Playlist Repo</Navbar.Brand>
+                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                    <Navbar.Collapse>
+                        <Nav variant="underline" activeKey={activeKey}>
+                            <Nav.Item>
+                                <Nav.Link href="/media" eventKey="media">Media</Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link href="/playlists" eventKey="playlists">Playlists</Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link href="/remotes" eventKey="remotes">Remote Playlists</Nav.Link>
+                            </Nav.Item>
+                        </Nav>
+                    </Navbar.Collapse>
                     <Button
                         variant="outline-secondary"
                         size="sm"
@@ -66,27 +75,14 @@ const App: React.FC = () => {
                         {darkMode ? <BsSunFill className="me-1" /> : <BsMoonFill className="me-1" />}
                         {darkMode ? "Light" : "Dark"}
                     </Button>
-                </header>
+                </Container>
+            </Navbar>
             <div id="tab-container">
-                <Tabs
-                    id="app-tabs"
-                    className="mb-3"
-                    fill
-                    activeKey={activeKey}
-                    onSelect={(k) => {
-                        if (k) navigate(keyToRoute[k]);
-                    }}
-                >
-                    <Tab eventKey="media" title="Media" />
-                    <Tab eventKey="playlists" title="Playlists" />
-                    <Tab eventKey="remotes" title="Remotes" />
-                </Tabs>
-
                 <Routes>
                     <Route path="/media" element={<MediaTab />} />
                     <Route path="/playlists" element={<PlaylistTab />} />
                     <Route path="/remotes" element={<RemoteTab />} />
-                    <Route path="*" element={<MediaTab />} /> {/* fallback */}
+                    <Route path="*" element={<HomePage />} />
                 </Routes>
             </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MediaView from "../components/MediaView";
 import Dropdown from 'react-bootstrap/Dropdown';
-import { BsPlus } from "react-icons/bs";
+import { BsPlus, BsUpload, BsArrowRepeat } from "react-icons/bs";
 import { useEdits } from "../components/EditContext";
 import { useRefresh } from "../components/RefreshContext"
 import type { Playlist, Media, Patch } from "../models";
@@ -17,6 +17,7 @@ const MediaTab: React.FC = () => {
     const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, setShowMediaModal, setViewingMedia, setEditingMedia } = useEdits();
     const { invokeTask } = useTasks()!;
     const { triggerRefresh } = useRefresh()!;
+    const { openFileDialog } = useOpenFileDialog("api/actions/upload");
 
     function createPlaylistFromQuery() {
         const playlist = {} as Playlist;
@@ -43,8 +44,11 @@ const MediaTab: React.FC = () => {
         invokeTask('running test', task);
     }
 
-    function uploadMedia() {
-        useOpenFileDialog("api/actions/upload");
+    function refreshMedia() {
+        const task = fetch('api/action/ingest', { method: 'POST', body: "\"\"", headers: { 'content-type': 'application/json' } });
+        invokeTask('ingesting', task, () => {
+            triggerRefresh();
+        });
     }
 
     function massDeleteMedia() {
@@ -68,15 +72,17 @@ const MediaTab: React.FC = () => {
                         </Dropdown.Toggle>
 
                         <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => createPlaylistFromQuery()}>Create Playlist from Query</Dropdown.Item>
-                            <Dropdown.Item onClick={() => testTask()}>Test</Dropdown.Item>
-                            <Dropdown.Item onClick={() => uploadMedia()}>Upload Media</Dropdown.Item>
-                            <Dropdown.Divider />
-                            <Dropdown.Item onClick={() => createNewMedia()}><BsPlus />Create New</Dropdown.Item>
+                            <Dropdown.Item onClick={() => refreshMedia()}><BsArrowRepeat /> Refresh</Dropdown.Item>
+                            <Dropdown.Item onClick={() => openFileDialog()}><BsUpload /> Upload</Dropdown.Item>
+                            <Dropdown.Item onClick={() => createNewMedia()}><BsPlus /> Create</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Header>Mass Operations</Dropdown.Header>
                             <Dropdown.Item onClick={() => massDeleteMedia()}>Delete</Dropdown.Item>
                             <Dropdown.Item onClick={() => massPatchMedia()}>Edit</Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Header>Other</Dropdown.Header>
+                            <Dropdown.Item onClick={() => createPlaylistFromQuery()}>Create Playlist from Query</Dropdown.Item>
+                            <Dropdown.Item onClick={() => testTask()}>Test Server</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                 </div>

@@ -9,6 +9,8 @@ import { useEdits } from "../components/EditContext"
 import { CopyToClipboardButton } from '../components/CopyToClipboard'
 import { BsLink45Deg } from "react-icons/bs";
 import { useTasks } from "../components/TaskContext";
+import Card from 'react-bootstrap/Card';
+import Badge from 'react-bootstrap/Badge';
 
 const RemoteTab: React.FC = () => {
 
@@ -88,15 +90,38 @@ const RemoteTab: React.FC = () => {
                     {viewingRemote && <CopyToClipboardButton getText={() => Promise.resolve(viewingRemote.link)}><BsLink45Deg /></CopyToClipboardButton>}     
                 </div>
 
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, paddingBottom: '15px' }}>
                     {viewingRemote && (
-                        <div>
-                            <h5>Remote Playlist Details</h5>
-                            <p><strong>Title:</strong> {viewingRemote.name}</p>
-                            {viewingRemote.description && <p><strong>Description:</strong> {viewingRemote.description}</p>}
-                            <p><strong>Type:</strong> {viewingRemote.type}</p>
-                            <p><strong>Link:</strong> <a href={viewingRemote.link}>{viewingRemote.link}</a></p>
-                        </div>
+                        <Card style={{ marginRight: 'auto', maxWidth: '40rem' }}>
+                            <Card.Header>{viewingRemote.name}{" "}<Badge bg="secondary">Playlist Details</Badge></Card.Header>
+                            <Card.Body>
+                                <Card.Text>
+                                    <div className="d-flex flex-column gap-2">
+                                        <div className="d-flex align-items-start">
+                                            <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
+                                                Type
+                                            </Badge>
+                                            <span>{viewingRemote.type}</span>
+                                        </div>
+
+                                        <div className="d-flex align-items-start">
+                                            <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
+                                                Link
+                                            </Badge>
+                                            <a href={viewingRemote.link}>{viewingRemote.link}</a>
+                                        </div>
+
+                                        <div className="d-flex align-items-start">
+                                            <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
+                                                Description
+                                            </Badge>
+                                            <span>{viewingRemote.description}</span>
+                                        </div>
+                                    </div>
+                                </Card.Text>
+
+                            </Card.Body>
+                        </Card>
                     )}
                 </div>
             </div>

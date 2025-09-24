@@ -10,6 +10,8 @@ import { CopyToClipboardButton } from '../components/CopyToClipboard'
 import { BsLink45Deg } from "react-icons/bs";
 import { useTasks } from "../components/TaskContext";
 import { download } from "../utils";
+import Card from 'react-bootstrap/Card';
+import Badge from 'react-bootstrap/Badge';
 
 const PlaylistTab: React.FC = () => {
 
@@ -71,7 +73,7 @@ const PlaylistTab: React.FC = () => {
     return (
         <div>
             <div className="d-flex gap-4">
-                <div className="d-flex gap-4" style={{ flex: 1, height: '50px' }}>
+                <div className="d-flex gap-4" style={{ flex: 2, height: '50px' }}>
                     <QueryableDropdown
                         getLabel={playlist => playlist.title}
                         getPath="api/data/playlists"
@@ -101,14 +103,37 @@ const PlaylistTab: React.FC = () => {
                     <CopyToClipboardButton getText={() => Promise.resolve(copyLink())}><BsLink45Deg /></CopyToClipboardButton>
                 </div>
 
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, paddingBottom: '15px' }}>
                     {viewingPlaylist && (
-                        <div>
-                            <h5>Playlist Details</h5>
-                            <p><strong>Title:</strong> {viewingPlaylist.title}</p>
-                            {viewingPlaylist.description && <p><strong>Description:</strong> {viewingPlaylist.description}</p>}
-                            <p><strong>User Query:</strong> {viewingPlaylist.userQuery}</p>
-                        </div>
+                        <Card style={{ marginRight: 'auto', maxWidth: '40rem' }}>
+                            <Card.Header>{viewingPlaylist.title}{" "}<Badge bg="secondary">Playlist Details</Badge></Card.Header>
+                            <Card.Body>
+                                <div className="d-flex flex-column gap-2">
+                                    <div className="d-flex align-items-start">
+                                        <Badge
+                                            bg="secondary"
+                                            className="me-2 text-center flex-shrink-0"
+                                            style={{ width: "100px" }}
+                                        >
+                                            Query
+                                        </Badge>
+                                        <code>{viewingPlaylist.userQuery}</code>
+                                    </div>
+
+                                    <div className="d-flex align-items-start">
+                                        <Badge
+                                            bg="secondary"
+                                            className="me-2 text-center flex-shrink-0"
+                                            style={{ width: "100px" }}
+                                        >
+                                            Description
+                                        </Badge>
+                                        <span>{viewingPlaylist.description}</span>
+                                    </div>
+                                </div>
+                            </Card.Body>
+
+                        </Card>
                     )}
                 </div>
             </div>

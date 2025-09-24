@@ -27,6 +27,7 @@ namespace PlaylistRepoAPI
 				if (tagFile.Tag.Title != null) media.Title = tagFile.Tag.Title;
 				if (tagFile.Tag.Album != null) media.Album = tagFile.Tag.Album;
 				if (tagFile.Tag.Performers != null) media.Artists = tagFile.Tag.Performers;
+				media.LengthMilliseconds = tagFile.Properties.Duration.Ticks / 10000L; // 10000 ticks is one millisecond
 			}
 			catch
 			{

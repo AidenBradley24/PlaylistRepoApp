@@ -4,6 +4,7 @@ import type { Response, Media } from "../models";
 import { useRefresh } from "./RefreshContext";
 import { useEdits } from "./EditContext";
 import { BsSortDown, BsSortUp, BsXLg } from "react-icons/bs";
+import { formatMillisecondsToHHMMSS } from "../utils";
 
 import "./records.css";
 
@@ -242,7 +243,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                                 <td>{record.primaryArtist ?? "-"}</td>
                                 <td>{record.album ?? "-"}</td>
                                 <td>{record.rating === 0 ? "-" : record.rating} / 10</td>
-                                <td>{record.lengthMilliseconds === 0 ? "-" : record.lengthMilliseconds}</td>
+                                <td>{record.lengthMilliseconds === 0 ? "-" : formatMillisecondsToHHMMSS(record.lengthMilliseconds)}</td>
                                 <td>{record.mimeType ?? "-"}</td>
                             </tr>
                         ))
