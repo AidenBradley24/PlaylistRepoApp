@@ -3,15 +3,14 @@ import { BsStar, BsStarFill, BsStarHalf } from "react-icons/bs";
 
 export interface RatingProps {
     rating: number;
-    onChangeRating?: (rating: number) => void;
 }
 
-const Rating: React.FC<RatingProps> = ({ rating, onChangeRating }) => {
+const Rating: React.FC<RatingProps> = ({ rating }) => {
     const renderStars = (rating: number) => {
 
-        const wholeStarsCount = Math.floor(rating);
+        const wholeStarsCount = Math.floor(rating / 2);
         const hasHalfStar = rating % 2 === 1;
-        const emptyStarsCount = 5 - wholeStarsCount + (hasHalfStar ? 1 : 0);
+        const emptyStarsCount = 5 - (wholeStarsCount + (hasHalfStar ? 1 : 0));
 
         const stars = [];
 

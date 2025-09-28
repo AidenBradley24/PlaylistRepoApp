@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Tabs, Tab, Form, Alert } from "react-bootstrap";
+import { Row, Col, Modal, Button, Tabs, Tab, Form, Alert } from "react-bootstrap";
 import type { Media } from "../models";
 import { useRefresh } from "../components/RefreshContext";
 import { formatMillisecondsToHHMMSS } from "../utils";
+import Rating from "../components/Rating";
 
 interface MediaModalProps {
     viewingMedia: Media | null;
@@ -108,7 +109,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
     return (
         <Modal show={show} onHide={onHide} centered size="lg">
             <Modal.Header closeButton>
-                <Modal.Title>Media</Modal.Title>
+                <Modal.Title>{viewingMedia?.title} - Preview</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Tabs defaultActiveKey={viewingMedia ? 'view' : 'edit'} id="media-tabs" className="mb-3">
@@ -116,47 +117,64 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                     {viewingMedia &&
                         <Tab eventKey="view" title="Details">
                             <div>
-                                <p><strong>ID:</strong> {viewingMedia.id}</p>
-                                <p><strong>Title:</strong> {viewingMedia.title}</p>
-                                <p><strong>Artists:</strong> {viewingMedia?.artists?.join(", ")}</p>
-                                <p><strong>Album:</strong> {viewingMedia.album}</p>
-                                <p><strong>Rating:</strong> {viewingMedia.rating}</p>
-                                <p><strong>Length:</strong> {formatMillisecondsToHHMMSS(viewingMedia.lengthMilliseconds)}</p>
-                                <p><strong>Type:</strong> {viewingMedia.mimeType}</p>
+                                <Row className="mb-2">
+                                    <Col md={4}><strong>ID:</strong> {viewingMedia.id}</Col>
+                                    <Col md={4}><strong>Title:</strong> {viewingMedia.title}</Col>
+                                    <Col md={4}><strong>Artists:</strong> {viewingMedia?.artists?.join(", ")}</Col>
+                                </Row>
+                                <Row className="mb-2">
+                                    <Col md={4}><strong>Album:</strong> {viewingMedia.album}</Col>
+                                    <Col md={4}><strong>Rating:</strong> <Rating rating={viewingMedia.rating} /></Col>
+                                    <Col md={4}><strong>Length:</strong> {formatMillisecondsToHHMMSS(viewingMedia.lengthMilliseconds)}</Col>
+                                </Row>
+                                <Row className="mb-3">
+                                    <Col md={4}><strong>Type:</strong> {viewingMedia.mimeType}</Col>
+                                </Row>
 
                                 <div style={{ marginTop: "1rem" }}>
-                                    {viewingMedia.isOnFile && <div>
-                                        <h5>Preview</h5>
-                                        {
-                                            viewingMedia.mimeType?.startsWith("image/") && (
+                                    {viewingMedia.isOnFile ? (
+                                        <div>
+                                            {viewingMedia.mimeType?.startsWith("image/") && (
                                                 <img
                                                     src={`api/play/media/${viewingMedia.id}`}
                                                     alt={viewingMedia.title ?? "media"}
                                                     style={{ maxWidth: "100%", borderRadius: "8px" }}
                                                 />
                                             )}
-                                        {
-                                            viewingMedia.mimeType?.startsWith("audio/") && (
-                                                <audio controls src={`api/play/media/${viewingMedia.id}`} style={{ width: "100%" }} />
+                                            {viewingMedia.mimeType?.startsWith("audio/") && (
+                                                <audio
+                                                    controls
+                                                    src={`api/play/media/${viewingMedia.id}`}
+                                                    style={{ width: "100%" }}
+                                                />
                                             )}
-                                        {
-                                            viewingMedia.mimeType?.startsWith("video/") && (
-                                                <video controls src={`api/play/media/${viewingMedia.id}`} style={{ width: "100%", borderRadius: "8px" }} />
+                                            {viewingMedia.mimeType?.startsWith("video/") && (
+                                                <video
+                                                    controls
+                                                    src={`api/play/media/${viewingMedia.id}`}
+                                                    style={{ width: "100%", borderRadius: "8px" }}
+                                                />
                                             )}
-                                        {
-                                            viewingMedia.mimeType?.startsWith("text/") && (
+                                            {viewingMedia.mimeType?.startsWith("text/") && (
                                                 <iframe
                                                     src={`api/play/media/${viewingMedia.id}`}
                                                     title="text preview"
-                                                    style={{ width: "100%", height: "300px", border: "1px solid #ccc", borderRadius: "8px" }}
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "300px",
+                                                        border: "1px solid #ccc",
+                                                        borderRadius: "8px",
+                                                    }}
                                                 />
                                             )}
-                                        {!viewingMedia.mimeType && <p>No preview available</p>}
-                                    </div>
-                                    }
-                                    {!viewingMedia.isOnFile && <p>This media has no content yet.</p>}
+                                            {!viewingMedia.mimeType && <p>No preview available</p>}
+                                        </div>
+                                    ) : (
+                                        <p>This media has no content yet.</p>
+                                    )}
                                 </div>
                             </div>
+
                         </Tab>
                     }
 
