@@ -16,6 +16,20 @@ namespace PlaylistRepoAPI.Controllers
 			return File(fs, media.MimeType, true);
 		}
 
+		[HttpGet("media/preview/{id}")]
+		public IActionResult PreviewFile([FromRoute] int id)
+		{
+			var media = db.Medias.Find(id);
+			if (media == null) return NotFound();
+			if (!media.IsOnFile) return NoContent();
+			var fs = media.File!.OpenRead();
+			if (media.MimeType.StartsWith("text"))
+			{
+				return File(fs, "text/plain", true);
+			}
+			return File(fs, media.MimeType, true);
+		}
+
 		[HttpGet("playlist/{file}")]
 		public async Task<IActionResult> GetPlaylistAync([FromRoute] string file)
 		{

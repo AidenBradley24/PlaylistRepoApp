@@ -3,7 +3,7 @@ import type { Media, Playlist, RemotePlaylist } from "../models";
 import EditPlaylistModal from '../pages/EditPlaylistModal';
 import MediaModal from '../pages/MediaModal';
 import EditRemoteModal from '../pages/EditRemoteModal';
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 
 const EditContext = createContext<EditContextType | undefined>(undefined);
 
@@ -14,21 +14,22 @@ interface EditContextType {
     showMediaModal: boolean;
     setShowMediaModal: (value: boolean) => void;
     viewingMedia: Media | null;
-    setViewingMedia: (value: Media | null) => void;
+    setViewingMediaId: (id: number) => void;
     editingMedia: Media | null;
     setEditingMedia: (value: Media | null) => void;
+
+    viewingPlaylistId: number;
+    setViewingPlaylistId: (id: number) => void;
 
     showPlaylistModal: boolean;
     setShowPlaylistModal: (value: boolean) => void;
     viewingPlaylist: Playlist | null;
-    setViewingPlaylist: (value: Playlist | null) => void;
     editingPlaylist: Playlist | null;
     setEditingPlaylist: (value: Playlist | null) => void;
 
     showRemoteModal: boolean;
     setShowRemoteModal: (value: boolean) => void;
     viewingRemote: RemotePlaylist | null;
-    setViewingRemote: (value: RemotePlaylist | null) => void;
     editingRemote: RemotePlaylist | null;
     setEditingRemote: (value: RemotePlaylist | null) => void;
 }
@@ -36,12 +37,19 @@ interface EditContextType {
 export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
+
     const queryFromUrl = searchParams.get("q") ?? "";
     const [query, setQuery] = useState<string>(queryFromUrl);
 
     const [showMediaModal, setShowMediaModal] = useState<boolean>(false);
+    const mediaFromUrl = Number(searchParams.get("m")) ?? 0;
+    const [viewingMediaId, setViewingMediaId] = useState<number>(mediaFromUrl);
     const [viewingMedia, setViewingMedia] = useState<Media | null>(null);
     const [editingMedia, setEditingMedia] = useState<Media | null>(null);
+
+    const playlistFromUrl = Number(searchParams.get("p")) ?? 0;
+    const [viewingPlaylistId, setViewingPlaylistId] = useState<number>(playlistFromUrl);
 
     const [showPlaylistModal, setShowPlaylistModal] = useState<boolean>(false);
     const [viewingPlaylist, setViewingPlaylist] = useState<Playlist | null>(null);
@@ -52,12 +60,53 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [editingRemote, setEditingRemote] = useState<RemotePlaylist | null>(null);
 
     useEffect(() => {
-        if (query) {
-            setSearchParams({ q: query });
-        } else {
-            setSearchParams({});
+        const params = {} as any;
+        if (viewingPlaylistId !== 0) params["p"] = viewingPlaylistId;
+        if (query) params['q'] = query;
+        if (viewingMediaId !== 0) params["m"] = viewingMediaId;
+        setSearchParams(params);
+    }, [query, viewingMediaId, viewingPlaylistId, setSearchParams]);
+
+    useEffect(() => {
+        if (viewingMediaId > 0) {
+            fetch(`api/data/media/${viewingMediaId}`).then(async (response) => {
+                if (!response.ok) {
+                    setViewingMedia(null);
+                    throw new Error("NOT OKAY");
+                }
+                setViewingMedia(await response.json() as Media);
+            });
+            setShowMediaModal(true);
         }
-    }, [query, setSearchParams]);
+        setViewingMedia(null);
+    }, [viewingMediaId]);
+
+    useEffect(() => {
+        if (viewingPlaylistId > 0) {
+            if (location.pathname === "/playlists") {
+                fetch(`api/data/playlists/${viewingPlaylistId}`).then(async (response) => {
+                    if (!response.ok) {
+                        setViewingPlaylist(null);
+                        throw new Error("NOT OKAY");
+                    }
+                    setViewingPlaylist(await response.json() as Playlist);
+                });
+            }
+            else if (location.pathname === "/remotes") {
+                fetch(`api/data/remotes/${viewingPlaylistId}`).then(async (response) => {
+                    if (!response.ok) {
+                        setViewingRemote(null);
+                        throw new Error("NOT OKAY");
+                    }
+                    setViewingRemote(await response.json() as RemotePlaylist);
+                });
+            }
+            else {
+                throw new Error("Incorrect pathname " + location.pathname);
+            }
+        }
+        setViewingPlaylist(null);
+    }, [viewingPlaylistId]);
 
     return (
         <EditContext.Provider value={{
@@ -68,25 +117,28 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
             showPlaylistModal,
             setShowPlaylistModal,
             viewingMedia,
-            setViewingMedia,
             editingMedia,
             setEditingMedia,
             viewingPlaylist,
-            setViewingPlaylist,
             editingPlaylist,
             setEditingPlaylist,
             showRemoteModal,
             setShowRemoteModal,
             viewingRemote,
-            setViewingRemote,
             editingRemote,
-            setEditingRemote
+            setEditingRemote,
+            setViewingMediaId,
+            setViewingPlaylistId,
+            viewingPlaylistId
         }}>
             {children}
             <MediaModal
                 show={showMediaModal}
                 viewingMedia={viewingMedia}
-                onHide={() => setShowMediaModal(false)}
+                onHide={() => {
+                    setShowMediaModal(false)
+                    setViewingMediaId(0);
+                }}
                 onSaved={() => { }}
                 editingMedia={editingMedia}
                 setEditingMedia={setEditingMedia}

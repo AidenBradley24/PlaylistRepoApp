@@ -29,13 +29,14 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
     const [loading, setLoading] = useState<boolean>(false);
 
     const { refreshKey } = useRefresh();
-    const { setViewingMedia, setShowMediaModal } = useEdits();
+    const { setViewingMediaId, setShowMediaModal } = useEdits();
 
     useEffect(() => {
+        const timeout = records.length === 0 ? 0 : 500;
         const handler = setTimeout(() => {
             setDebouncedQuery(query);
             setPage(1);
-        }, 500);
+        }, timeout);
 
         return () => {
             clearTimeout(handler);
@@ -147,7 +148,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
 
     /** Open modal for a selected record */
     const handleRowClick = (record: Media) => {
-        setViewingMedia(record);
+        setViewingMediaId(record.id);
         setShowMediaModal(true);
     };
 

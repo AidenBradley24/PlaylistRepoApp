@@ -28,7 +28,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
     useEffect(() => {
         if (!editingMedia) return;
         if (!editingMedia.artists || editingMediaArtists === "") {
-            setEditingMediaArtists(editingMedia.artists!.join(","));
+            setEditingMediaArtists(editingMedia.artists?.join(",") ?? "");
             return;
         }
     }, [editingMedia?.artists, editingMediaArtists])
@@ -106,13 +106,16 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
         }
     }
 
+    const isCreate = editingMedia && editingMedia.id === 0;
+    const modalTitle = isCreate ? "Create Media Record" : `${viewingMedia?.title} - Preview`;
+
     return (
         <Modal show={show} onHide={onHide} centered size="lg">
             <Modal.Header closeButton>
-                <Modal.Title>{viewingMedia?.title} - Preview</Modal.Title>
+                <Modal.Title>{modalTitle}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Tabs defaultActiveKey={viewingMedia ? 'view' : 'edit'} id="media-tabs" className="mb-3">
+                <Tabs defaultActiveKey={isCreate ? 'edit' : 'view'} id="media-tabs" className="mb-3">
                     {/* View Tab */}
                     {viewingMedia &&
                         <Tab eventKey="view" title="Details">
@@ -136,7 +139,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                         <div>
                                             {viewingMedia.mimeType?.startsWith("image/") && (
                                                 <img
-                                                    src={`api/play/media/${viewingMedia.id}`}
+                                                    src={`api/play/media/preview/${viewingMedia.id}`}
                                                     alt={viewingMedia.title ?? "media"}
                                                     style={{ maxWidth: "100%", borderRadius: "8px" }}
                                                 />
@@ -144,20 +147,20 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                             {viewingMedia.mimeType?.startsWith("audio/") && (
                                                 <audio
                                                     controls
-                                                    src={`api/play/media/${viewingMedia.id}`}
+                                                    src={`api/play/media/preview/${viewingMedia.id}`}
                                                     style={{ width: "100%" }}
                                                 />
                                             )}
                                             {viewingMedia.mimeType?.startsWith("video/") && (
                                                 <video
                                                     controls
-                                                    src={`api/play/media/${viewingMedia.id}`}
+                                                    src={`api/play/media/preview/${viewingMedia.id}`}
                                                     style={{ width: "100%", borderRadius: "8px" }}
                                                 />
                                             )}
                                             {viewingMedia.mimeType?.startsWith("text/") && (
                                                 <iframe
-                                                    src={`api/play/media/${viewingMedia.id}`}
+                                                    src={`api/play/media/preview/${viewingMedia.id}`}
                                                     title="text preview"
                                                     style={{
                                                         width: "100%",
@@ -181,7 +184,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                     {/* Edit Tab */}
                     {
                         editingMedia &&
-                        <Tab eventKey="edit" title={editingMedia.id === 0 ? 'Create' : 'Edit'}>
+                        <Tab eventKey="edit" title={isCreate ? 'Create' : 'Edit'}>
                             {error && <Alert variant="danger">{error}</Alert>}
                             <Form onSubmit={handleSubmit}>
                                 {editingMedia.id !== 0 && <Form.Group className="mb-3">

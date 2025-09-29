@@ -9,8 +9,8 @@ import type { Response } from "../models";
 export interface QueryableDropdownProps {
     menuLabel: string;
     getPath: string;
-    selection: any | undefined;
-    setSelection: (data: any | null) => void;
+    selection: number;
+    setSelection: (id: number) => void;
     getLabel: (entry: any) => string;
     onCreateNew: () => any;
 }
@@ -21,7 +21,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
     const [query, setQuery] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
 
-    const { refreshKey } = useRefresh(); // subscribe to refresh key
+    const { refreshKey } = useRefresh();
 
     const fetchRecords = useCallback(async (query: string) => {
         try {
@@ -31,7 +31,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
                     const message = await response.text();
                     setError(message);
                     setEntries([]);
-                    setSelection(null);
+                    setSelection(0);
                     return;
                 }
                 throw new Error("fetch failed");
@@ -40,22 +40,23 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             setEntries(result.data);
             setError(null);
             if (result.data.length === 0) {
-                setSelection(null);
+                setSelection(0);
             }
             else if (!selection) {
-                setSelection(result.data[0]);
+                console.log("no seleection");
+                setSelection(result.data[0].id);
             }
             else {
-                let index = result.data.findIndex(item => item.id === selection.id);
+                const index = result.data.findIndex(item => item.id === selection);
                 if (index === -1)
-                    setSelection(result.data[0]);
+                    setSelection(result.data[0].id);
                 else
-                    setSelection(result.data[index]);
+                    setSelection(result.data[index].id);
             }
         } catch (e) {
             console.error(e);
             setEntries([]);
-            setSelection(null);
+            setSelection(0);
             setError("An unexpected error occurred");
         }
     }, [getPath, refreshKey]);
@@ -69,8 +70,12 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
     }, [query, fetchRecords]);
 
     function getSelectedTitle(): string {
-        if (selection === null) return "Select...";
-        return getLabel(selection);
+        if (selection === 0) return "Select...";
+        const index = entries.findIndex(item => item.id === selection);
+        if (index < 0) {
+            return "";
+        }
+        return getLabel(entries[index]);
     }
 
     function makeSelection(dropdownKey: string | null) {
@@ -81,7 +86,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
         }
         const index = Number.parseInt(dropdownKey, 10);
         if (!isNaN(index)) {
-            setSelection(entries[index]);
+            setSelection(entries[index].id);
         }
     }
 
@@ -127,7 +132,7 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
             <Dropdown.Menu as={CustomMenu}>
                 <Dropdown.ItemText key="label">{menuLabel}</Dropdown.ItemText>
                 {entries.map((entry, i) => (
-                    <Dropdown.Item key={i} eventKey={i} active={selection?.id === entry.id}>{getLabel(entry)}</Dropdown.Item>
+                    <Dropdown.Item key={i} eventKey={i} active={selection === entry.id}>{getLabel(entry)}</Dropdown.Item>
                 ))}
                 <Dropdown.Divider />
                 <Dropdown.Item eventKey="create"><BsPlus />Create New</Dropdown.Item>

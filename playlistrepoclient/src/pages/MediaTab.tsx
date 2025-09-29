@@ -14,7 +14,7 @@ const MediaTab: React.FC = () => {
 
     const [massDeleting, setMassDeleting] = useState<boolean>(false);
     const [massPatching, setMassPatching] = useState<boolean>(false);
-    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, setShowMediaModal, setViewingMedia, setEditingMedia } = useEdits();
+    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, setShowMediaModal, setViewingMediaId, setEditingMedia } = useEdits();
     const { invokeTask } = useTasks()!;
     const { triggerRefresh } = useRefresh()!;
     const { openFileDialog } = useOpenFileDialog("api/actions/upload");
@@ -35,7 +35,7 @@ const MediaTab: React.FC = () => {
         media.title = '';
         media.description = '';
         setEditingMedia(media);
-        setViewingMedia(null);
+        setViewingMediaId(0);
         setShowMediaModal(true);
     }
 

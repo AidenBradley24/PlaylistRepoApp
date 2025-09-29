@@ -16,7 +16,7 @@ import Badge from 'react-bootstrap/Badge';
 const PlaylistTab: React.FC = () => {
 
     const { triggerRefresh } = useRefresh();
-    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylist } = useEdits();
+    const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylistId, viewingPlaylistId } = useEdits();
     const { invokeTask } = useTasks()!;
 
     async function createNewPlaylist() {
@@ -38,7 +38,7 @@ const PlaylistTab: React.FC = () => {
     async function deletePlaylist() {
         if (viewingPlaylist === null) throw new Error();
         const deletionPlaylist = viewingPlaylist;
-        setViewingPlaylist(null);
+        setViewingPlaylistId(0);
 
         const response = await fetch(`api/data/playlists/${deletionPlaylist.id}`, {
             method: "DELETE"
@@ -75,12 +75,12 @@ const PlaylistTab: React.FC = () => {
             <div className="d-flex gap-4">
                 <div className="d-flex gap-4" style={{ flex: 2, height: '50px' }}>
                     <QueryableDropdown
-                        getLabel={playlist => playlist.title}
+                        getLabel={playlist => playlist?.title}
                         getPath="api/data/playlists"
                         menuLabel="Select Playlist"
                         onCreateNew={() => createNewPlaylist()}
-                        selection={viewingPlaylist}
-                        setSelection={setViewingPlaylist}
+                        selection={viewingPlaylistId}
+                        setSelection={setViewingPlaylistId}
                     />
                     <Dropdown >
                         <Dropdown.Toggle variant="secondary" id="dropdown-basic">

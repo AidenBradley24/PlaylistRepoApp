@@ -14,7 +14,7 @@ import Badge from 'react-bootstrap/Badge';
 
 const RemoteTab: React.FC = () => {
 
-    const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingRemote } = useEdits();
+    const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingPlaylistId, viewingPlaylistId } = useEdits();
     const { triggerRefresh } = useRefresh();
     const { invokeTask } = useTasks();
 
@@ -37,7 +37,7 @@ const RemoteTab: React.FC = () => {
     async function deleteRemote() {
         if (viewingRemote === null) throw new Error();
         const deletionRemote = viewingRemote;
-        setViewingRemote(null);
+        setViewingPlaylistId(0);
 
         const response = await fetch(`api/data/remotes${deletionRemote.id}`, {
             method: "DELETE"
@@ -66,12 +66,12 @@ const RemoteTab: React.FC = () => {
             <div className="d-flex gap-4">
                 <div className="d-flex gap-4" style={{ flex: 1, height: '50px' }}>
                     <QueryableDropdown
-                        getLabel={remote => remote.name}
+                        getLabel={remote => remote?.name}
                         getPath="api/data/remotes"
                         menuLabel="Select Remote Playlist"
                         onCreateNew={() => createNewRemote()}
-                        selection={viewingRemote}
-                        setSelection={setViewingRemote}
+                        selection={viewingPlaylistId}
+                        setSelection={setViewingPlaylistId}
                     />
                     <Dropdown >
                         <Dropdown.Toggle variant="secondary" id="dropdown-basic">
@@ -95,31 +95,24 @@ const RemoteTab: React.FC = () => {
                         <Card style={{ marginRight: 'auto', maxWidth: '40rem' }}>
                             <Card.Header>{viewingRemote.name}{" "}<Badge bg="secondary">Playlist Details</Badge></Card.Header>
                             <Card.Body>
-                                <Card.Text>
-                                    <div className="d-flex flex-column gap-2">
-                                        <div className="d-flex align-items-start">
-                                            <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
-                                                Type
-                                            </Badge>
-                                            <span>{viewingRemote.type}</span>
-                                        </div>
-
-                                        <div className="d-flex align-items-start">
-                                            <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
-                                                Link
-                                            </Badge>
-                                            <a href={viewingRemote.link}>{viewingRemote.link}</a>
-                                        </div>
-
-                                        <div className="d-flex align-items-start">
-                                            <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
-                                                Description
-                                            </Badge>
-                                            <span>{viewingRemote.description}</span>
-                                        </div>
-                                    </div>
-                                </Card.Text>
-
+                                <div className="d-flex align-items-start">
+                                    <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
+                                        Type
+                                    </Badge>
+                                    <span>{viewingRemote.type}</span>
+                                </div>
+                                <div className="d-flex align-items-start">
+                                    <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
+                                        Link
+                                    </Badge>
+                                    <a href={viewingRemote.link}>{viewingRemote.link}</a>
+                                </div>
+                                <div className="d-flex align-items-start">
+                                    <Badge bg="secondary" className="me-2 text-center flex-shrink-0" style={{ width: "100px" }}>
+                                        Description
+                                    </Badge>
+                                    <span>{viewingRemote.description}</span>
+                                </div>
                             </Card.Body>
                         </Card>
                     )}
