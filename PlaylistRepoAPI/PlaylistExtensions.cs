@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PlaylistRepoLib.Models;
-using PlaylistRepoLib.UserQueries;
+using UserQueries;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Xml;

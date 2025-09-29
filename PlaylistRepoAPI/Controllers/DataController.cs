@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PlaylistRepoLib.Models;
 using PlaylistRepoLib.Models.DTOs;
-using PlaylistRepoLib.UserQueries;
+using UserQueries;
 
 namespace PlaylistRepoAPI.Controllers
 {

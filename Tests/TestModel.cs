@@ -1,4 +1,4 @@
-﻿using PlaylistRepoLib.UserQueries;
+﻿using UserQueries;
 
 namespace Tests
 {
