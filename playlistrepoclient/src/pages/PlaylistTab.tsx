@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import MediaView from "../components/MediaView";
 import QueryableDropdown from '../components/QueryableDropdown';
 import type { Playlist } from "../models";
@@ -12,8 +12,12 @@ import { useTasks } from "../components/TaskContext";
 import { download } from "../utils";
 import Card from 'react-bootstrap/Card';
 import Badge from 'react-bootstrap/Badge';
+import MassOperationMedia from "../components/MassOperationMedia";
 
 const PlaylistTab: React.FC = () => {
+
+    const [massDeleting, setMassDeleting] = useState<boolean>(false);
+    const [massPatching, setMassPatching] = useState<boolean>(false);
 
     const { triggerRefresh } = useRefresh();
     const { query, setQuery, setShowPlaylistModal, setEditingPlaylist, viewingPlaylist, setViewingPlaylistId, viewingPlaylistId } = useEdits();
@@ -37,6 +41,8 @@ const PlaylistTab: React.FC = () => {
 
     async function deletePlaylist() {
         if (viewingPlaylist === null) throw new Error();
+        if (!window.confirm(`Are you sure you want to delete this playlist?: '${viewingPlaylist.title}'`)) return;
+
         const deletionPlaylist = viewingPlaylist;
         setViewingPlaylistId(0);
 
@@ -88,16 +94,21 @@ const PlaylistTab: React.FC = () => {
                         </Dropdown.Toggle>
 
                         <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => editExistingPlaylist()} disabled={viewingPlaylist === null}>Edit</Dropdown.Item>
-                            <Dropdown.Item onClick={() => deletePlaylist()} disabled={viewingPlaylist === null}>Delete</Dropdown.Item>
+                            <Dropdown.Header>Playlist</Dropdown.Header>
+                            <Dropdown.Item onClick={() => createNewPlaylist()}><BsPlus />Create New</Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Item onClick={() => editExistingPlaylist()} disabled={viewingPlaylist === null}>Edit Playlist</Dropdown.Item>
+                            <Dropdown.Item onClick={() => deletePlaylist()} disabled={viewingPlaylist === null}>Delete Playlist</Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Header>Mass Media Operations</Dropdown.Header>
+                            <Dropdown.Item onClick={() => setMassPatching(true)}>Edit</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setMassDeleting(true)}>Delete</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Header>Export</Dropdown.Header>
                             <Dropdown.Item onClick={() => exportPlaylist('.xspf')} disabled={viewingPlaylist === null}>XSPF</Dropdown.Item>
                             <Dropdown.Item onClick={() => exportPlaylist('.m3u8')} disabled={viewingPlaylist === null}>M3U8</Dropdown.Item>
                             <Dropdown.Item onClick={() => exportPlaylist('.csv')} disabled={viewingPlaylist === null}>CSV</Dropdown.Item>
                             <Dropdown.Item onClick={() => exportZip()} disabled={viewingPlaylist === null}>ZIP</Dropdown.Item>
-                            <Dropdown.Divider />
-                            <Dropdown.Item onClick={() => createNewPlaylist()}><BsPlus />Create New</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                     <CopyToClipboardButton getText={() => Promise.resolve(copyLink())}><BsLink45Deg /></CopyToClipboardButton>
@@ -141,7 +152,10 @@ const PlaylistTab: React.FC = () => {
                 viewingPlaylist === null ? (
                     <div className="mt-3">Select a playlist.</div>
                 ) : (
-                    <MediaView path={`api/data/playlists/${viewingPlaylist.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                    <>
+                        <MediaView path={`api/data/playlists/${viewingPlaylist.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                        <MassOperationMedia massUrl={`api/data/playlists/${viewingPlaylist.id}/media`} query={query} massDeleting={massDeleting} massPatching={massPatching} setMassDeleting={setMassDeleting} setMassPatching={setMassPatching} />
+                    </>
                 )
             }
         </div>

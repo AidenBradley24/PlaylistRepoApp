@@ -187,11 +187,17 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                         <Tab eventKey="edit" title={isCreate ? 'Create' : 'Edit'}>
                             {error && <Alert variant="danger">{error}</Alert>}
                             <Form onSubmit={handleSubmit}>
-                                {editingMedia.id !== 0 && <Form.Group className="mb-3">
+                                {editingMedia.id !== 0 &&
+                                <Form.Group className="mb-3">
                                     <Form.Label>ID</Form.Label>
                                     <Form.Control type="text" value={editingMedia.id} readOnly />
+                                    <Form.Check
+                                        type="switch"
+                                        label="Locked"
+                                        checked={editingMedia.locked}
+                                        onChange={(e) => updateField("locked", e.target.checked)}
+                                    />
                                 </Form.Group>}
-
                                 <Form.Group className="mb-3">
                                     <Form.Label>Title</Form.Label>
                                     <Form.Control

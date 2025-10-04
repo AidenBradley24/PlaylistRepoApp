@@ -19,7 +19,8 @@ public class RemotePlaylist
 	public string Description { get; set; } = "";
 
 	public string Link { get; set; } = "";
-	public string? MediaMime { get; set; }
+	public string MediaMime { get; set; } = "";
+
 	public RemoteType Type { get; set; } = RemoteType.internet;
 
 	public enum RemoteType

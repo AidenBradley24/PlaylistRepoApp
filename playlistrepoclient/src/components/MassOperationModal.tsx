@@ -81,7 +81,6 @@ function MassOperationModal<T extends Record<string, any>>({
                             onChange={(e) =>
                                 updateStringField("userQuery", e.target.value)
                             }
-                            required
                         />
                     </Form.Group>
 

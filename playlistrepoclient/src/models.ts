@@ -14,7 +14,8 @@ export interface Media {
     rating: number,
     lengthMilliseconds: number,
     order: number,
-    isOnFile: boolean
+    isOnFile: boolean,
+    locked: boolean
 }
 
 export interface Playlist {
@@ -30,7 +31,8 @@ export interface RemotePlaylist {
     name: string,
     description: string;
     link: string;
-    type: string | "internet" | "ytdlp";
+    type: string;
+    mediaMime: string;
 }
 
 export interface Patch<T> {

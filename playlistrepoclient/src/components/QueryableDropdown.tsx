@@ -43,7 +43,6 @@ const QueryableDropdown: React.FC<QueryableDropdownProps> = ({ menuLabel, getPat
                 setSelection(0);
             }
             else if (!selection) {
-                console.log("no seleection");
                 setSelection(result.data[0].id);
             }
             else {

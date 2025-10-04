@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import MediaView from "../components/MediaView";
 import QueryableDropdown from '../components/QueryableDropdown';
 import type { RemotePlaylist } from "../models";
@@ -11,8 +11,12 @@ import { BsLink45Deg } from "react-icons/bs";
 import { useTasks } from "../components/TaskContext";
 import Card from 'react-bootstrap/Card';
 import Badge from 'react-bootstrap/Badge';
+import MassOperationMedia from "../components/MassOperationMedia";
 
 const RemoteTab: React.FC = () => {
+
+    const [massDeleting, setMassDeleting] = useState<boolean>(false);
+    const [massPatching, setMassPatching] = useState<boolean>(false);
 
     const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingPlaylistId, viewingPlaylistId } = useEdits();
     const { triggerRefresh } = useRefresh();
@@ -36,11 +40,17 @@ const RemoteTab: React.FC = () => {
 
     async function deleteRemote() {
         if (viewingRemote === null) throw new Error();
+        if (!window.confirm(`Are you sure you want to delete this remote?: '${viewingRemote.name}'`)) return;
+
         const deletionRemote = viewingRemote;
         setViewingPlaylistId(0);
 
-        const response = await fetch(`api/data/remotes${deletionRemote.id}`, {
-            method: "DELETE"
+        const response = await fetch(`api/data/remotes/${deletionRemote.id}`, {
+            method: "DELETE",
+            headers: {
+                alsoDeleteMedia: 'true',
+                alsoDeleteMediaFiles: 'true'
+            }
         });
 
         if (!response.ok) {
@@ -79,12 +89,17 @@ const RemoteTab: React.FC = () => {
                         </Dropdown.Toggle>
 
                         <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => editExistingRemote()} disabled={viewingRemote === null}>Edit</Dropdown.Item>
-                            <Dropdown.Item onClick={() => deleteRemote()} disabled={viewingRemote === null}>Delete</Dropdown.Item>
+                            <Dropdown.Header>Remote</Dropdown.Header>
+                            <Dropdown.Item onClick={() => createNewRemote()}><BsPlus />Add New</Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Item onClick={() => editExistingRemote()} disabled={viewingRemote === null}>Edit Remote</Dropdown.Item>
+                            <Dropdown.Item onClick={() => deleteRemote()} disabled={viewingRemote === null}>Delete Remote</Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Header>Mass Media Operations</Dropdown.Header>
+                            <Dropdown.Item onClick={() => setMassPatching(true)}>Edit</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setMassDeleting(true)}>Delete</Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={() => fetchRemote()} disabled={viewingRemote === null}>Fetch from Remote</Dropdown.Item>
-                            <Dropdown.Divider />
-                            <Dropdown.Item onClick={() => createNewRemote()}><BsPlus />Add Remote Playlist</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                     {viewingRemote && <CopyToClipboardButton getText={() => Promise.resolve(viewingRemote.link)}><BsLink45Deg /></CopyToClipboardButton>}
@@ -122,7 +137,10 @@ const RemoteTab: React.FC = () => {
                 viewingRemote === null ? (
                     <div className="mt-3">Select a playlist.</div>
                 ) : (
-                    <MediaView path={`api/data/remotes/${viewingRemote.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                    <>
+                        <MediaView path={`api/data/remotes/${viewingRemote.id}/media`} pageSize={15} query={query} setQuery={setQuery} />
+                        <MassOperationMedia massUrl={`api/data/remotes/${viewingRemote.id}/media`} query={query} massDeleting={massDeleting} massPatching={massPatching} setMassDeleting={setMassDeleting} setMassPatching={setMassPatching} />
+                    </>             
                 )
             }
         </div>

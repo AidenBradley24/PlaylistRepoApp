@@ -91,6 +91,18 @@ const EditRemoteModal: React.FC<EditRemoteModalProps> = ({ title, show, onHide, 
                         </Form.Select>
                     </Form.Group>
                     <Form.Group className="mb-3">
+                        <Form.Label>Media Type</Form.Label>
+                        <Form.Select
+                            value={editingPlaylist.mediaMime}
+                            onChange={(e) => updateField("mediaMime", e.target.value)}
+                            defaultValue={""}
+                        >
+                            <option value="">(auto)</option>
+                            <option value="audio/mp3">audio/mp3</option>
+                            <option value="video/mp4">video/mp4</option>
+                        </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
                         <Form.Label>Link</Form.Label>
                         <Form.Control
                             type="text"

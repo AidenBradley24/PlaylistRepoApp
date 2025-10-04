@@ -9,6 +9,8 @@
 
 		public string Type { get; set; } = "internet";
 
+		public string MediaMime { get; set; } = "";
+
 		public override void OnSyncDTO(RemotePlaylist model)
 		{
 			Type = Enum.GetName(model.Type) ?? "";

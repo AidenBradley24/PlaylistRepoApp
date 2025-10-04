@@ -3,7 +3,8 @@ import { InputGroup, Table, Form, Button, Pagination, Spinner } from "react-boot
 import type { Response, Media } from "../models";
 import { useRefresh } from "./RefreshContext";
 import { useEdits } from "./EditContext";
-import { BsSortDown, BsSortUp, BsXLg } from "react-icons/bs";
+import { BsSortDown, BsSortUp, BsXLg, BsFillLockFill, BsFillUnlockFill } from "react-icons/bs";
+import { MdFileDownloadDone, MdFileDownloadOff } from "react-icons/md";
 import { formatMillisecondsToHHMMSS } from "../utils";
 
 import "./records.css";
@@ -205,6 +206,8 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                         <th onClick={() => handleSort("id")} style={{ cursor: "pointer" }}>
                             ID {sortColumn === "id" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
+                        <th/>
+                        <th/>
                         <th onClick={() => handleSort("title")} style={{ cursor: "pointer" }}>
                             Title {sortColumn === "title" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
@@ -240,6 +243,8 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                                 onClick={() => handleRowClick(record)}
                             >
                                 <td>{record.id ?? "-"}</td>
+                                <td>{record.isOnFile ? (<MdFileDownloadDone />) : (<MdFileDownloadOff />)}</td>
+                                <td>{record.locked ? (<BsFillLockFill />) : (<BsFillUnlockFill />)}</td>
                                 <td>{record.title ?? "-"}</td>
                                 <td>{record.primaryArtist ?? "-"}</td>
                                 <td>{record.album ?? "-"}</td>
