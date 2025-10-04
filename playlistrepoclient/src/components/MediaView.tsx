@@ -231,7 +231,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                 <tbody>
                     {records.length === 0 ? (
                         <tr>
-                            <td colSpan={7} className="text-center">
+                            <td colSpan={9} className="text-center">
                                 No data
                             </td>
                         </tr>

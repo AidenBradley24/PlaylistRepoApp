@@ -20,7 +20,8 @@ const HomePage: React.FC = () => {
                         <p>The playlists tab allows the creation of collections of media. These collections can be exported into various formats.</p>
                         <hr />
                         <h4>Remote Playlists Tab</h4>
-                        <p>The remote playlists tab allows the importation of playlists and media from external platforms.</p>
+                        <p>The remote playlists tab allows the importation of playlists and media from external platforms such as YouTube.</p>
+                        <p>Uses <a href="https://github.com/yt-dlp/yt-dlp">YT-DLP</a> to download media.</p>
                     </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey="1">

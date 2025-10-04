@@ -71,6 +71,27 @@ const RemoteTab: React.FC = () => {
         invokeTask(`Fetching Remote: ${viewingRemote.name}`, task, triggerRefresh);
     }
 
+    async function downloadRemote() {
+        if (viewingRemote === null) throw new Error();
+        const task = fetch("api/action/download", {
+            method: "POST",
+            headers: { "remoteId": `${viewingRemote.id}`, "query": query }
+        });
+
+        invokeTask(`Downloading Remote: ${viewingRemote.name}`, task, triggerRefresh);
+    }
+
+    async function syncRemote() {
+        if (viewingRemote === null) throw new Error();
+        const task = fetch("api/action/sync", {
+            method: "POST",
+            headers: { "remoteId": `${viewingRemote.id}` }
+        });
+
+        invokeTask(`Syncing Remote: ${viewingRemote.name}`, task, triggerRefresh);
+    }
+
+
     return (
         <div>
             <div className="d-flex gap-4">
@@ -99,7 +120,9 @@ const RemoteTab: React.FC = () => {
                             <Dropdown.Item onClick={() => setMassPatching(true)}>Edit</Dropdown.Item>
                             <Dropdown.Item onClick={() => setMassDeleting(true)}>Delete</Dropdown.Item>
                             <Dropdown.Divider />
-                            <Dropdown.Item onClick={() => fetchRemote()} disabled={viewingRemote === null}>Fetch from Remote</Dropdown.Item>
+                            <Dropdown.Item onClick={() => syncRemote()} disabled={viewingRemote === null}>Sync Remote</Dropdown.Item>
+                            <Dropdown.Item onClick={() => fetchRemote()} disabled={viewingRemote === null}>Fetch Remote</Dropdown.Item>
+                            <Dropdown.Item onClick={() => downloadRemote()} disabled={viewingRemote === null}>Download Remote</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                     {viewingRemote && <CopyToClipboardButton getText={() => Promise.resolve(viewingRemote.link)}><BsLink45Deg /></CopyToClipboardButton>}

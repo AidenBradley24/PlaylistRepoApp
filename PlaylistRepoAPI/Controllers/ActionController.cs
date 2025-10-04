@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PlaylistRepoLib;
 using PlaylistRepoLib.Models;
+using UserQueries;
 
 namespace PlaylistRepoAPI.Controllers
 {
@@ -48,7 +49,7 @@ namespace PlaylistRepoAPI.Controllers
 			return AcceptedAtAction(nameof(Fetch), id);
 		}
 
-		[HttpPost("download")]
+		[HttpPost("direct-download")]
 		public IActionResult Download([FromHeader] int remoteId, [FromBody] string[] mediaUIDs)
 		{
 			RemotePlaylist? remote = db.RemotePlaylists.FirstOrDefault(r => r.Id == remoteId);
@@ -57,6 +58,25 @@ namespace PlaylistRepoAPI.Controllers
 			try
 			{
 				id = taskService.StartTask<IRemoteService>((progress, _, dl) => dl.Download(remote, mediaUIDs, progress));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
+
+			return AcceptedAtAction(nameof(Download), id);
+		}
+
+		[HttpPost("download")]
+		public IActionResult Download([FromHeader] int remoteId, [FromHeader] string query)
+		{
+			RemotePlaylist? remote = db.RemotePlaylists.FirstOrDefault(r => r.Id == remoteId);
+			if (remote == null) return BadRequest("Remote does not exist.");
+			var array = remote.AllEntries(db.Medias, false).EvaluateUserQuery(query).Where(m => m.RemoteUID != null).Select(m => m.RemoteUID!).ToArray();
+			Guid id;
+			try
+			{
+				id = taskService.StartTask<IRemoteService>((progress, _, dl) => dl.Download(remote, array, progress));
 			}
 			catch (Exception ex)
 			{

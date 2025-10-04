@@ -355,7 +355,7 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpDelete("media")]
-		public IActionResult DeleteMedias([FromHeader] string query, [FromHeader] bool alsoDeleteFile = false)
+		public IActionResult DeleteMedias([FromHeader] string query = "", [FromHeader] bool alsoDeleteFile = false)
 		{
 			IQueryable<Media> records;
 			try
@@ -389,7 +389,7 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpDelete("playlists/{id}/media")]
-		public IActionResult DeletePlaylistMedias([FromHeader] string query, [FromRoute] int id, [FromHeader] bool alsoDeleteFile = false)
+		public IActionResult DeletePlaylistMedias([FromRoute] int id, [FromHeader] string query = "", [FromHeader] bool alsoDeleteFile = false)
 		{
 			var playlist = db.Playlists.Find(id);
 			if (playlist == null) return NotFound();
@@ -436,7 +436,7 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpDelete("remotes/{id}/media")]
-		public IActionResult DeleteRemoteMedias([FromHeader] string query, [FromRoute] int id, [FromHeader] bool alsoDeleteFile = false)
+		public IActionResult DeleteRemoteMedias([FromRoute] int id, [FromHeader] string query = "", [FromHeader] bool alsoDeleteFile = false)
 		{
 			var playlist = db.RemotePlaylists.Find(id);
 			if (playlist == null) return NotFound();
