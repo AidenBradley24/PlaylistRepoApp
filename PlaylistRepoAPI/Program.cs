@@ -31,6 +31,8 @@ builder.Services.AddScoped<IConversionService, ConversionService>();
 builder.Services.AddSingleton<IExportService, ExportService>();
 builder.Services.AddSingleton<IRemoteService, RemoteService>();
 builder.Services.AddScoped<YtDlpService>();
+builder.Services.AddScoped<HttpClient>();
+builder.Services.AddScoped<InternetRemoteService>();
 
 builder.Services.AddScoped<IMetadataEnricher, MediaHeuristicMetadataEnricher>();
 builder.Services.AddScoped<MetadataEnrichmentService>();

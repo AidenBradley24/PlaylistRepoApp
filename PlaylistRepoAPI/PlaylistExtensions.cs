@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PlaylistRepoLib;
 using PlaylistRepoLib.Models;
-using UserQueries;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Xml;
+using System.Xml.Linq;
+using UserQueries;
 
 namespace PlaylistRepoAPI
 {
@@ -55,6 +57,8 @@ namespace PlaylistRepoAPI
 				return $"{settings.ApiUrl}/api/play/media/{media.Id}";
 			}
 		}
+
+		#region Streaming Playlists
 
 		/// <summary>
 		/// Get this playlist as a XSPF playlist. <a href="https://www.xspf.org/"/> 
@@ -194,6 +198,146 @@ namespace PlaylistRepoAPI
 
 			await writer.FlushAsync();
 		}
+
+		#endregion
+
+		#region Playlist Parsers
+
+		public static async Task<(Playlist playlist, List<Media> mediaList)> ParseXspfAsync(Stream inputStream)
+		{
+			var mediaList = new List<Media>();
+			var bakedEntries = new List<int>();
+			var doc = await XDocument.LoadAsync(inputStream, LoadOptions.None, default);
+
+			var playlistElem = doc.Root;
+			var title = playlistElem?.Element(XName.Get("title", "http://xspf.org/ns/0/"))?.Value ?? "Imported XSPF";
+			var description = playlistElem?.Element(XName.Get("annotation", "http://xspf.org/ns/0/"))?.Value ?? "";
+
+			var trackList = playlistElem?.Element(XName.Get("trackList", "http://xspf.org/ns/0/"));
+			if (trackList != null)
+			{
+				foreach (var track in trackList.Elements(XName.Get("track", "http://xspf.org/ns/0/")))
+				{
+					var media = new Media
+					{
+						Title = track.Element(XName.Get("title", "http://xspf.org/ns/0/"))?.Value ?? "",
+						PrimaryArtist = track.Element(XName.Get("creator", "http://xspf.org/ns/0/"))?.Value ?? "",
+						Album = track.Element(XName.Get("album", "http://xspf.org/ns/0/"))?.Value ?? "",
+						LengthMilliseconds = long.TryParse(track.Element(XName.Get("duration", "http://xspf.org/ns/0/"))?.Value, out var len) ? len : 0,
+						FilePath = track.Element(XName.Get("location", "http://xspf.org/ns/0/"))?.Value ?? "",
+						Description = "",
+						MimeType = MimeTypes.GetMimeType(Path.GetExtension(track.Element(XName.Get("location", "http://xspf.org/ns/0/"))?.Value ?? "")),
+						Rating = 0,
+						Order = mediaList.Count,
+						RemoteUID = mediaList.Count.ToString(), // NOTE that this means if the order of the playlist changes the playlist can't keep track of ids
+					};
+					mediaList.Add(media);
+					bakedEntries.Add(media.Id);
+				}
+			}
+
+			var playlist = new Playlist
+			{
+				Title = title,
+				Description = description,
+				UserQuery = "",
+				BakedEntries = bakedEntries
+			};
+
+			return (playlist, mediaList);
+		}
+
+		public static async Task<(Playlist playlist, List<Media> mediaList)> ParseM3U8Async(Stream inputStream)
+		{
+			var mediaList = new List<Media>();
+			var bakedEntries = new List<int>();
+			using var reader = new StreamReader(inputStream, Encoding.UTF8);
+			string? line;
+			string title = "Imported M3U8";
+			string description = "";
+			while ((line = await reader.ReadLineAsync()) != null)
+			{
+				if (line.StartsWith("#EXTINF:"))
+				{
+					var extinf = line[8..];
+					var commaIdx = extinf.IndexOf(',');
+					var duration = commaIdx > 0 ? extinf[..commaIdx] : "0";
+					var info = commaIdx > 0 ? extinf[(commaIdx + 1)..] : "";
+					var nextLine = await reader.ReadLineAsync();
+					if (nextLine != null && !nextLine.StartsWith("#"))
+					{
+						var media = new Media
+						{
+							Title = info,
+							LengthMilliseconds = long.TryParse(duration, out var len) ? len * 1000 : 0,
+							FilePath = nextLine,
+							Description = "",
+							MimeType = "",
+							Rating = 0,
+							Order = mediaList.Count,
+							RemoteUID = mediaList.Count.ToString(), // NOTE that this means if the order of the playlist changes the playlist can't keep track of ids
+						};
+						mediaList.Add(media);
+						bakedEntries.Add(media.Id);
+					}
+				}
+			}
+			var playlist = new Playlist
+			{
+				Title = title,
+				Description = description,
+				UserQuery = "",
+				BakedEntries = bakedEntries
+			};
+			return (playlist, mediaList);
+		}
+
+		public static async Task<(Playlist playlist, List<Media> mediaList)> ParseCSVAsync(Stream inputStream, char delimiter)
+		{
+			var mediaList = new List<Media>();
+			var bakedEntries = new List<int>();
+			using var reader = new StreamReader(inputStream, Encoding.UTF8);
+			string? headerLine = await reader.ReadLineAsync() ?? throw new Exception("CSV is empty");
+			var headers = headerLine.Split(delimiter);
+
+			string? line;
+			while ((line = await reader.ReadLineAsync()) != null)
+			{
+				if (string.IsNullOrWhiteSpace(line)) continue;
+				var fields = line.Split(delimiter);
+				var media = new Media
+				{
+					Id = int.TryParse(GetField(headers, fields, "id"), out var id) ? id : 0,
+					Title = GetField(headers, fields, "title"),
+					RemoteUID = GetField(headers, fields, "ruid"),
+					FilePath = GetField(headers, fields, "location"),
+					MimeType = GetField(headers, fields, "mime"),
+					PrimaryArtist = GetField(headers, fields, "primary artist"),
+					Album = GetField(headers, fields, "album"),
+					Description = GetField(headers, fields, "description"),
+					Rating = int.TryParse(GetField(headers, fields, "rating"), out var rating) ? rating : 0,
+					LengthMilliseconds = long.TryParse(GetField(headers, fields, "length milliseconds"), out var len) ? len : 0,
+					Order = int.TryParse(GetField(headers, fields, "order"), out var order) ? order : mediaList.Count
+				};
+				mediaList.Add(media);
+				bakedEntries.Add(media.Id);
+			}
+			var playlist = new Playlist
+			{
+				Title = "Imported CSV",
+				Description = "",
+				UserQuery = "",
+				BakedEntries = bakedEntries
+			};
+			return (playlist, mediaList);
+
+			static string GetField(string[] headers, string[] fields, string name)
+			{
+				var idx = Array.FindIndex(headers, h => h.Trim().Equals(name, StringComparison.OrdinalIgnoreCase));
+				return idx >= 0 && idx < fields.Length ? fields[idx].Trim() : "";
+			}
+		}
+		#endregion
 	}
 
 	public class PlaylistStreamingSettings

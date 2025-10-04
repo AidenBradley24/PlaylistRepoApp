@@ -31,6 +31,15 @@ namespace PlaylistRepoLib
 			};
 		}
 
+		public static TaskProgress FromError(string message)
+		{
+			return new TaskProgress()
+			{
+				Progress = ERROR,
+				Status = message
+			};
+		}
+
 		public static TaskProgress FromNumbers(int completed, int total, string message = "Running")
 		{
 			int progress = 100 * completed / total;

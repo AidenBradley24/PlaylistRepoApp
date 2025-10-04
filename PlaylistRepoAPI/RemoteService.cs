@@ -9,7 +9,7 @@ namespace PlaylistRepoAPI
 		{
 			IRemoteService? service = remote.Type switch
 			{
-				RemotePlaylist.RemoteType.internet => throw new NotImplementedException(),
+				RemotePlaylist.RemoteType.internet => services.GetService<InternetRemoteService>(),
 				RemotePlaylist.RemoteType.ytdlp => services.GetService<YtDlpService>(),
 				_ => throw new NotImplementedException()
 			};

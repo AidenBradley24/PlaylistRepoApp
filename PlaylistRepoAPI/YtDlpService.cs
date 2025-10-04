@@ -74,7 +74,7 @@ namespace PlaylistRepoAPI
 					continue;
 				}
 
-				Media? media = await dbContext.Medias.FirstOrDefaultAsync(m => m.RemoteUID == uid);
+				Media? media = await remote.AllEntries(dbContext.Medias).FirstOrDefaultAsync(m => m.RemoteUID == uid);
 				if (media?.Locked ?? false) continue;
 
 				if (media == null)
@@ -119,7 +119,7 @@ namespace PlaylistRepoAPI
 			foreach (var file in downloadDir.EnumerateFiles())
 			{
 				var (uid, title, uploader, durationSeconds, order, plID) = GetAttributes(file.Name);
-				Media? media = await dbContext.Medias.FirstOrDefaultAsync(m => m.Source == remote && m.RemoteUID == uid);
+				Media? media = await remote.AllEntries(dbContext.Medias).FirstOrDefaultAsync(m => m.RemoteUID == uid);
 				if (media == null) continue;
 				FileInfo newFile = new(Path.Combine(repoService.RootPath.FullName, media.GenerateFileName(format)));
 				File.Copy(file.FullName, newFile.FullName, true);
@@ -175,7 +175,7 @@ namespace PlaylistRepoAPI
 							continue;
 						}
 
-						Media? media = await dbContext.Medias.FirstOrDefaultAsync(m => m.RemoteUID == uid);
+						Media? media = await remote.AllEntries(dbContext.Medias).FirstOrDefaultAsync(m => m.RemoteUID == uid);
 						if (media?.Locked ?? false) continue;
 
 						if (media == null)
