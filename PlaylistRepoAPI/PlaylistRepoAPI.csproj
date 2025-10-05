@@ -1,13 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <OutputPath>$(SolutionDir)out\api\</OutputPath>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <SpaRoot>..\playlistrepoclient</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:59584</SpaProxyServerUrl>
+    <Version>0.0.0</Version>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <Company>Aiden Bradley</Company>
+    <Authors>Aiden Bradley</Authors>
+    <Title>Playlist Repository API</Title>
+    <PackageProjectUrl>https://github.com/AidenBradley24/PlaylistRepoApp</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/AidenBradley24/PlaylistRepoApp</RepositoryUrl>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
@@ -21,24 +35,9 @@
   <ItemGroup>
     <ProjectReference Include="..\playlistrepoclient\playlistrepoclient.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\PlaylistRepoLib\PlaylistRepoLib.csproj" />
   </ItemGroup>
-
-  <!-- Run React build before publishing -->
-  <Target Name="PublishRunWebpack" BeforeTargets="PrepareForPublish">
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\playlistrepoclient"
-          Command="npm install" />
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\playlistrepoclient"
-          Command="npm run build" />
-
-    <!-- Copy React build output to wwwroot -->
-    <ItemGroup>
-      <DistFiles Include="$(MSBuildProjectDirectory)\..\playlistrepoclient\dist\**\*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DistFiles)"
-          DestinationFolder="$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)"
-          SkipUnchangedFiles="true" />
-  </Target>
 
 </Project>

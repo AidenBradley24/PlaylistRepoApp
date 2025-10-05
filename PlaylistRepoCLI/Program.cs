@@ -19,6 +19,7 @@ public class Program
 				(InitOptions opts) => RunInitAsync(opts),
 				(IngestOptions opts) => RunIngestAsync(opts),
 				(AddOptions opts) => RunAddAsync(opts),
+				(SyncOptions opts) => RunSyncAsync(opts),
 				(FetchOptions opts) => RunFetchAsync(opts),
 				(CreateOptions opts) => RunCreateAsync(opts),
 				(ListOptions opts) => RunListAsync(opts),
@@ -29,20 +30,23 @@ public class Program
 
 	abstract class ApiOptions
 	{
-		[Option(MetaValue = "http://url-to-api", Default = null, HelpText = "Specify a URL to a running API.", Required = false)] public string? ApiUrl { get; set; }
-
+		[Option('d', "dir", HelpText = "Specify a directory to serve. Defaults to current directory. Ignored if the url is set.", Required = false)]
+		public string? RepoDirectory { get; set; }
+		[Option('l', "url", MetaValue = "http://url-to-api", Default = null, HelpText = "Specify a URL to a running API.", Required = false)] 
+		public string? ApiUrl { get; set; }
 		public ApiHandeler CreateAPI()
 		{
-			return ApiUrl == null ?
-				new ApiHandeler(new DirectoryInfo(Environment.CurrentDirectory)) :
-				new ApiHandeler(ApiUrl);
+			if (ApiUrl != null)
+				return new ApiHandeler(ApiUrl);
+			string dir = RepoDirectory ?? Environment.CurrentDirectory;
+			return new ApiHandeler(new DirectoryInfo(dir));	
 		}
 	}
 
 	[Verb("host", aliases: ["start", "serve"], HelpText = "Start the server")]
 	class HostOptions
 	{
-		[Option('p', "path", Required = false)]
+		[Option('d', "dir", HelpText = "Specify a directory to run the serve on. Defaults to current directory.", Required = false)]
 		public string? PathToHost { get; set; }
 	}
 
@@ -102,7 +106,7 @@ public class Program
 		return 0;
 	}
 
-	[Verb("fetch", HelpText = "Fetch media metadata from a remote YT playlist.")]
+	[Verb("fetch", HelpText = "Fetch media metadata from a remote playlist.")]
 	class FetchOptions : ApiOptions
 	{
 		[Value(0, MetaName = "id", HelpText = "Numeric ID or the name of the remote playlist", Required = true)] public string RemoteId { get; set; } = null!;
@@ -112,6 +116,23 @@ public class Program
 	{
 		using var api = opts.CreateAPI();
 		var response = await api.TaskRequest(HttpMethod.Post, "/api/action/fetch", request =>
+		{
+			request.Headers.Add("remoteId", opts.RemoteId);
+		});
+		Console.WriteLine(response);
+		return 0;
+	}
+
+	[Verb("sync", HelpText = "Sync media metadata and download from a remote playlist.")]
+	class SyncOptions : ApiOptions
+	{
+		[Value(0, MetaName = "id", HelpText = "Numeric ID or the name of the remote playlist", Required = true)] public string RemoteId { get; set; } = null!;
+	}
+
+	private static async Task<int> RunSyncAsync(SyncOptions opts)
+	{
+		using var api = opts.CreateAPI();
+		var response = await api.TaskRequest(HttpMethod.Post, "/api/action/sync", request =>
 		{
 			request.Headers.Add("remoteId", opts.RemoteId);
 		});

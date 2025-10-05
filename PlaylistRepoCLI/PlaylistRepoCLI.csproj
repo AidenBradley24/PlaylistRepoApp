@@ -1,12 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputPath>$(SolutionDir)out\cli\</OutputPath>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>0.0.0</Version>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <Title>Playlist Repository</Title>
+    <Company>Aiden Bradley</Company>
+    <Authors>Aiden Bradley</Authors>
+    <PackageProjectUrl>https://github.com/AidenBradley24/PlaylistRepoApp</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/AidenBradley24/PlaylistRepoApp</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
@@ -14,14 +29,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlaylistRepoLib\PlaylistRepoLib.csproj" />
-    <ProjectReference Include="..\PlaylistRepoAPI\PlaylistRepoAPI.csproj" />
+    <ProjectReference Include="..\PlaylistRepoAPI\PlaylistRepoAPI.csproj">
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
-
-  <Target Name="CopyApiToCliOutput" AfterTargets="Build">
-    <ItemGroup>
-      <ApiFiles Include="$(SolutionDir)out\api\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(ApiFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-  </Target>
 
 </Project>
