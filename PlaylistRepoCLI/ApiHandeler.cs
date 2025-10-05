@@ -84,6 +84,47 @@ namespace PlaylistRepoCLI
 			return taskProgress?.Status;
 		}
 
+		public async Task<(string? status, Stream? exportStream)> ExportRequest(HttpMethod httpMethod, string requestUrl, Action<HttpRequestMessage>? mutateHttpRequest = null)
+		{
+			ObjectDisposedException.ThrowIf(isDisposed, this);
+
+			using var http = new HttpClient();
+			HttpRequestMessage httpRequest = new(httpMethod, ApiUrl + requestUrl);
+			mutateHttpRequest?.Invoke(httpRequest);
+			var response = await http.SendAsync(httpRequest);
+			if (!response.IsSuccessStatusCode)
+			{
+				string? error = await response.Content.ReadAsStringAsync();
+				Console.WriteLine($"Error: {error}");
+				return (error, null);
+			}
+			string? id = await response.Content.ReadFromJsonAsync<string>();
+			Guid guid = Guid.Parse(id!);
+			Console.WriteLine("request started");
+
+			TaskProgress? taskProgress = null;
+			ConsoleHelpers.WriteProgress(taskProgress);
+			do
+			{
+				ConsoleHelpers.RewriteProgress(taskProgress);
+				await Task.Delay(POLLING_RATE);
+				response = await http.GetAsync($"{ApiUrl}/api/service/status/{guid}");
+				if (!response.IsSuccessStatusCode)
+				{
+					Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
+					break;
+				}
+
+				taskProgress = await response.Content.ReadFromJsonAsync<TaskProgress>();
+			} while (!(taskProgress?.IsCompleted ?? false));
+			ConsoleHelpers.ClearProgress();
+			Console.WriteLine("Preparing export...");
+			response = await http.GetAsync($"{ApiUrl}/api/export/result/{guid}");
+			if (response.StatusCode != System.Net.HttpStatusCode.OK) 
+				return (taskProgress?.Status, null);
+			return (taskProgress?.Status, response.Content.ReadAsStream());
+		}
+
 		/// <summary>
 		/// Request a function on the API
 		/// </summary>

@@ -22,6 +22,7 @@ public class Program
 				(FetchOptions opts) => RunFetchAsync(opts),
 				(CreateOptions opts) => RunCreateAsync(opts),
 				(ListOptions opts) => RunListAsync(opts),
+				(ExportOptions opts) => RunExportAsync(opts),
 				errs => Task.FromResult(-1)
 			);
 	}
@@ -245,6 +246,44 @@ public class Program
 			await list<Playlist, PlaylistDTO>($"/api/data/playlists?query={userQuery}&pageSize={opts.PageSize}&currentPage={opts.PageNumber}", "PLAYLISTS");
 
 		Console.WriteLine(result.ToString());
+		return 0;
+	}
+
+	[Verb("export", HelpText = "Export a particular playlist in a specific format: .xspf .m3u8 .zip .csv")]
+	class ExportOptions : ApiOptions
+	{
+		[Value(0, MetaName = "Playlist ID", Required = true, HelpText = "A filter upon the output returned.")]
+		public int PlaylistId { get; set; }
+
+		[Value(0, MetaName = "Export Path", Required = true, HelpText = "Full path of exported file.")]
+		public string ExportPath { get; set; } = "";
+	}
+
+	private static async Task<int> RunExportAsync(ExportOptions opts)
+	{
+		using var api = opts.CreateAPI();
+		string fileExtenstion = Path.GetExtension(opts.ExportPath);
+		var (response, stream) = await api.ExportRequest(HttpMethod.Get, $"/api/export/playlist/{opts.PlaylistId}{fileExtenstion}");
+		Console.WriteLine(response);
+		if (stream == null)
+		{
+			Console.WriteLine("No content to export.");
+			return 1;
+		}
+		try
+		{
+			using FileStream fs = new(opts.ExportPath, FileMode.CreateNew, FileAccess.Write);
+			await stream.CopyToAsync(fs);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("Unable to export file.");
+			Console.WriteLine(ex.Message);
+		}
+		finally
+		{
+			stream.Dispose();
+		}
 		return 0;
 	}
 }
