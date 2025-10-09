@@ -63,7 +63,7 @@ app.UseMiddleware<RepoMiddleware>();
 app.MapControllers();
 
 app.UseDefaultFiles();
-app.MapStaticAssets();
+app.UseStaticFiles();
 app.MapFallbackToFile("/index.html");
 
 app.Use(async (context, next) =>

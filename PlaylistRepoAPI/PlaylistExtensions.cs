@@ -16,23 +16,28 @@ namespace PlaylistRepoAPI
 		/// </summary>
 		public static IQueryable<Media> AllEntries(this Playlist playlist, IQueryable<Media> library, bool requireFile = false)
 		{
-			var query = library.EvaluateUserQuery(playlist.UserQuery).Union(library.Where(media => playlist.BakedEntries.Contains(media.Id)));
+			IQueryable<Media> query = playlist.UserQuery != "/" ? library.EvaluateUserQuery(playlist.UserQuery) : Enumerable.Empty<Media>().AsQueryable();
+			query = query.Union(playlist.WhiteList.Select(id => library.First(m => m.Id == id)));
+			query = query.ExceptBy(playlist.BlackList, m => m.Id);
 			if (requireFile) query = query.Where(media => media.FilePath != null);
 			return query;
 		}
 
 		/// <summary>
-		/// Add all entries in <see cref="Playlist.UserQuery"/> to <see cref="Playlist.BakedEntries"/>
+		/// Add all entries in <see cref="Playlist.UserQuery"/> to <see cref="Playlist.WhiteList"/>
 		/// </summary>
 		public static void Bake(this Playlist playlist, IQueryable<Media> library)
 		{
-			foreach (var media in library.EvaluateUserQuery(playlist.UserQuery))
+			var query = library.EvaluateUserQuery(playlist.UserQuery);
+			HashSet<int> entries = [.. playlist.WhiteList, .. query.Select(m => m.Id)];
+			foreach (int id in playlist.BlackList)
 			{
-				if (!playlist.BakedEntries.Contains(media.Id))
-				{
-					playlist.BakedEntries.Add(media.Id);
-				}
+				entries.Remove(id);
 			}
+
+			playlist.WhiteList = [.. entries];
+			playlist.BlackList = [];
+			playlist.UserQuery = "/";
 		}
 
 		private static string GetLocation(Media media, PlaylistStreamingSettings settings)
@@ -232,7 +237,6 @@ namespace PlaylistRepoAPI
 						RemoteUID = mediaList.Count.ToString(), // NOTE that this means if the order of the playlist changes the playlist can't keep track of ids
 					};
 					mediaList.Add(media);
-					bakedEntries.Add(media.Id);
 				}
 			}
 
@@ -241,7 +245,7 @@ namespace PlaylistRepoAPI
 				Title = title,
 				Description = description,
 				UserQuery = "",
-				BakedEntries = bakedEntries
+				WhiteList = bakedEntries
 			};
 
 			return (playlist, mediaList);
@@ -287,7 +291,7 @@ namespace PlaylistRepoAPI
 				Title = title,
 				Description = description,
 				UserQuery = "",
-				BakedEntries = bakedEntries
+				WhiteList = bakedEntries
 			};
 			return (playlist, mediaList);
 		}
@@ -327,7 +331,7 @@ namespace PlaylistRepoAPI
 				Title = "Imported CSV",
 				Description = "",
 				UserQuery = "",
-				BakedEntries = bakedEntries
+				WhiteList = bakedEntries
 			};
 			return (playlist, mediaList);
 

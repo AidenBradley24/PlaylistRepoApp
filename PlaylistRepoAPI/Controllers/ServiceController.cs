@@ -7,8 +7,16 @@ namespace PlaylistRepoAPI.Controllers
 	[Route("api/[controller]")]
 	public class ServiceController(IPlayRepoService repoService, ITaskService taskService) : ControllerBase
 	{
+		[HttpGet("status")]
+		public IActionResult GetStatus()
+		{
+			if (repoService.IsRepoInitialized)
+				return Ok();
+			return StatusCode(StatusCodes.Status503ServiceUnavailable);
+		}
+
 		[HttpGet("status/{id}")]
-		public ActionResult<TaskStatus> Status(Guid id)
+		public ActionResult<TaskStatus> GetTaskStatus(Guid id)
 		{
 			var status = taskService.GetProgress(id);
 			if (status == null)

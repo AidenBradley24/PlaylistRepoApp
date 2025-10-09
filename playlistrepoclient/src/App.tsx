@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
+import Alert from 'react-bootstrap/Alert';
 
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
@@ -45,6 +46,13 @@ const App: React.FC = () => {
     };
 
     const activeKey = routeToKey[location.pathname] ?? "";
+    const [serviceAvailable, setServiceAvailable] = useState<boolean | undefined>(undefined);
+
+    if (serviceAvailable === undefined) {
+        fetch("api/service/status").then(response => {
+            setServiceAvailable(response.ok);
+        });
+    }
 
     return (
         <div className="app-container">
@@ -52,7 +60,7 @@ const App: React.FC = () => {
                 <Container>
                     <Navbar.Brand href="/"><BsBoxSeamFill /> Playlist Repo</Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                    <Navbar.Collapse>
+                    {serviceAvailable !== false && (<Navbar.Collapse>
                         <Nav variant="underline" activeKey={activeKey}>
                             <Nav.Item>
                                 <Nav.Link href="/media" eventKey="media">Media</Nav.Link>
@@ -64,7 +72,7 @@ const App: React.FC = () => {
                                 <Nav.Link href="/remotes" eventKey="remotes">Remote Playlists</Nav.Link>
                             </Nav.Item>
                         </Nav>
-                    </Navbar.Collapse>
+                    </Navbar.Collapse>)}
                     <Button
                         variant="outline-secondary"
                         size="sm"
@@ -78,12 +86,20 @@ const App: React.FC = () => {
                 </Container>
             </Navbar>
             <div id="tab-container">
-                <Routes>
-                    <Route path="/media" element={<MediaTab />} />
-                    <Route path="/playlists" element={<PlaylistTab />} />
-                    <Route path="/remotes" element={<RemoteTab />} />
-                    <Route path="*" element={<HomePage />} />
-                </Routes>
+                {serviceAvailable === false && (
+                    <>
+                        <Alert variant="danger">The PlaylistRepo service is currently unavailable. Check your host to ensure that the Repo is selected and created.</Alert>
+                        <HomePage />
+                    </>
+                )}
+                {serviceAvailable !== false && (
+                    <Routes>
+                        <Route path="/media" element={<MediaTab />} />
+                        <Route path="/playlists" element={<PlaylistTab />} />
+                        <Route path="/remotes" element={<RemoteTab />} />
+                        <Route path="*" element={<HomePage />} />
+                    </Routes>
+                )}
             </div>
         </div>
     );

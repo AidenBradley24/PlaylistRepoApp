@@ -6,8 +6,8 @@
 		{
 			var path = context.Request.Path.Value ?? string.Empty;
 
-			// Allow requests under "/service/"
-			if (path.StartsWith("/service/", StringComparison.OrdinalIgnoreCase))
+			// Allow requests under "service"
+			if (path.StartsWith("/api/service/", StringComparison.OrdinalIgnoreCase))
 			{
 				await next(context);
 				return;

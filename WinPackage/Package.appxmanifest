@@ -10,7 +10,7 @@
   <Identity
     Name="AidenBradley.PlaylistRepo"
     Publisher="CN=Aweso"
-    Version="0.0.0.0" />
+    Version="0.1.0.0" />
 
   <Properties>
     <DisplayName>PlaylistRepo</DisplayName>

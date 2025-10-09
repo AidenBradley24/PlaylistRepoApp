@@ -26,7 +26,12 @@ public class Playlist
 	/// <summary>
 	/// Entries definitively in the playlist
 	/// </summary>
-	public List<int> BakedEntries { get; set; } = [];
+	public List<int> WhiteList { get; set; } = [];
+
+	/// <summary>
+	/// Entries definitvely not in the playlist
+	/// </summary>
+	public List<int> BlackList { get; set; } = [];
 
 	public string GenerateFileName(string extension)
 	{

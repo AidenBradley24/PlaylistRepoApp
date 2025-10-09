@@ -85,6 +85,8 @@ public class Program
 		else
 		{
 			Console.WriteLine("Unable to initialize. Either the repo is already initialized or there is a file system issue.");
+			Console.WriteLine((int)response.StatusCode);
+			Console.WriteLine(response.ReasonPhrase);
 			return 1;
 		}
 	}

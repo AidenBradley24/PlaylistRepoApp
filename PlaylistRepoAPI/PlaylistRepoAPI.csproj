@@ -24,11 +24,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="9.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
+    <DistFiles Include="wwwroot\**\*" />
+    <ResolvedFileToPublish Include="@(DistFiles)"
+                           RelativePath="%(DistFiles.Identity)"
+                           CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
     <PackageReference Include="taglib-sharp-netstandard2.0" Version="2.1.0" />
   </ItemGroup>
 
@@ -39,5 +46,51 @@
     </ProjectReference>
     <ProjectReference Include="..\PlaylistRepoLib\PlaylistRepoLib.csproj" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Path to your React (Vite) client project -->
+    <SpaRoot>..\playlistrepoclient\</SpaRoot>
+    <SpaBuildPath>$(SpaRoot)dist\</SpaBuildPath>
+  </PropertyGroup>
+
+  <!--
+  Run npm build only during PUBLISH (not normal builds)
+-->
+  <Target Name="BuildReactApp" BeforeTargets="Publish">
+    <Message Text="Building React app..." Importance="High" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+  </Target>
+
+  <!--
+  Copy the built React app into wwwroot during PUBLISH
+-->
+  <Target Name="CopyReactBuild" AfterTargets="Publish">
+    <Message Text="Copying React app to wwwroot..." Importance="High" />
+
+    <ItemGroup>
+      <!-- Collect all files from React's dist directory -->
+      <SpaBuildFiles Include="$(SpaBuildPath)**\*" />
+    </ItemGroup>
+
+    <MakeDir Directories="wwwroot" />
+
+    <Copy
+      SourceFiles="@(SpaBuildFiles)"
+      DestinationFolder="wwwroot\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+
+    <!-- Ensure copied files are included in published output -->
+    <ItemGroup>
+      <DistFiles Include="wwwroot\**\*" />
+      <ResolvedFileToPublish Include="@(DistFiles)"
+                             RelativePath="%(DistFiles.Identity)"
+                             CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+  </PropertyGroup>
 
 </Project>

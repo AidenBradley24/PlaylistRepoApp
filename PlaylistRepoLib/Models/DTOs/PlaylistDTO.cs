@@ -6,7 +6,6 @@
 		public string Title { get; set; } = "";
 		public string Description { get; set; } = "";
 		public string UserQuery { get; set; } = "";
-		public List<int> BakedEntries { get; set; } = [];
 
 		public PlaylistDTO() { }
 
@@ -23,7 +22,6 @@
 				Title = Title,
 				Description = Description,
 				UserQuery = UserQuery,
-				BakedEntries = [.. BakedEntries]
 			};
 		}
 	}

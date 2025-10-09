@@ -23,7 +23,6 @@ export interface Playlist {
     title: string,
     description: string;
     userQuery: string;
-    bakedEntries: number[];
 }
 
 export interface RemotePlaylist {
