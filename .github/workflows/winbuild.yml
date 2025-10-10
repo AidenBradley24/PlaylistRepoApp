@@ -69,14 +69,31 @@ jobs:
         run: |
           iscc wininstaller.iss /dMyAppVersion=${{ steps.get_version.outputs.version }}
 
-      # 10. Collect and Upload artifacts to release
-      - name: Upload artifacts to GitHub Release
+      # 10. Verify installer exists
+      - name: Verify installer
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "Output\PlaylistRepoInstaller.exe")) {
+            Write-Error "Installer not found! Failing build."
+            exit 1
+          }
+
+      # 11. Create ZIP packages
+      - name: Create ZIP archives
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get_version.outputs.version }}"
+          Compress-Archive -Path "publish/PlaylistRepoCLI/*" -DestinationPath "PlaylistRepoCLI-v$version.zip"
+          Compress-Archive -Path "publish/PlaylistRepoAPI/*" -DestinationPath "PlaylistRepoAPI-v$version.zip"
+
+      # 12. Upload artifacts to GitHub Release
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            Output/*.exe
-            publish/PlaylistRepoCLI/**
-            publish/PlaylistRepoAPI/**
+            Output/PlaylistRepoInstaller.exe
+            PlaylistRepoCLI-v${{ steps.get_version.outputs.version }}.zip
+            PlaylistRepoAPI-v${{ steps.get_version.outputs.version }}.zip
           fail_on_unmatched_files: true
           tag_name: ${{ github.ref_name }}
           name: "PlaylistRepo ${{ steps.get_version.outputs.version }}"
