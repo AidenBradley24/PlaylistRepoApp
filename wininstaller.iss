@@ -1,35 +1,61 @@
-#define MyAppVersion GetStringParam("MyAppVersion", "0.0.0")
+; Define a default if not provided
+#ifndef MyAppVersion
+#define MyAppVersion "0.0.0"
+#pragma message "using default version"
+#endif
+
+#pragma message "Compiling version " + MyAppVersion
 
 [Setup]
 AppName=PlaylistRepo
 AppVersion={#MyAppVersion}
+AppPublisherURL=https://github.com/AidenBradley24/PlaylistRepoApp
+AppSupportURL=https://github.com/AidenBradley24/PlaylistRepoApp/issues
+AppUpdatesURL=https://github.com/AidenBradley24/PlaylistRepoApp/releases
+
 DefaultDirName={autopf}\PlaylistRepo
 DefaultGroupName=PlaylistRepo
 OutputBaseFilename=PlaylistRepoInstaller
-OutputDir=Output
 Compression=lzma
 SolidCompression=yes
+DisableProgramGroupPage=yes
+
+LicenseFile=LICENSE.txt
+VersionInfoVersion={#MyAppVersion}
+VersionInfoCompany=Aiden Bradley
+VersionInfoDescription=PlaylistRepo CLI, API, and Web Interface
+VersionInfoCopyright=© 2025 Aiden Bradley
 
 [Files]
-Source: "publish\PlaylistRepoCLI\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "publish\PlaylistRepoCLI\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "scripts\playlistrepo.bat"; DestDir: "{app}"
 
 [Icons]
 Name: "{group}\PlaylistRepo CLI"; Filename: "{app}\PlaylistRepoCLI.exe"
 
 [Registry]
-; Add PlaylistRepo to PATH (if not already present)
+; Add PlaylistRepo to PATH (for current user)
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "PATH"; ValueData: "{olddata};{app}"; Flags: preservestringtype
 
-[Run]
-; Launch CLI after install (optional)
-Filename: "{app}\PlaylistRepoCLI.exe"; Description: "Run PlaylistRepo CLI"; Flags: nowait postinstall skipifsilent
-
 [Code]
-procedure CurStepChanged(CurStep: TSetupStep);
+function IsYtDlpInstalled: Boolean;
+var
+  ResultCode: Integer;
 begin
-  if CurStep = ssPostInstall then
-  begin
-    ; Tell Windows to update environment variables for new PATH
-    SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, LPARAM('Environment'), SMTO_ABORTIFHUNG, 5000, 0);
-  end;
+  { Try to detect yt-dlp.exe in PATH }
+  Result := (Exec('cmd.exe', '/c where yt-dlp', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0));
 end;
+
+[Run]
+; Install yt-dlp if not already installed
+Filename: "winget"; \
+  Parameters: "install -e --id yt-dlp.yt-dlp -h"; \
+  StatusMsg: "Installing dependency: yt-dlp..."; \
+  Flags: runhidden; \
+  Check: not IsYtDlpInstalled()
+
+; Run your app after install
+Filename: "{app}\PlaylistRepoCLI.exe"; \
+  Parameters: "serve"; \
+  Description: "Run PlaylistRepo CLI"; \
+  Flags: nowait postinstall skipifsilent

@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using PlaylistRepoLib.Models;
 using PlaylistRepoLib.Models.DTOs;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
@@ -48,6 +49,9 @@ public class Program
 	{
 		[Option('d', "dir", HelpText = "Specify a directory to run the serve on. Defaults to current directory.", Required = false)]
 		public string? PathToHost { get; set; }
+
+		[Option("open-browser", Required = false, Default = true)]
+		public bool OpenBrowser { get; set; }
 	}
 
 	private static Task<int> RunHostAsync(HostOptions opts)
@@ -56,6 +60,10 @@ public class Program
 		using var api = new ApiHandeler(dir);
 		Console.WriteLine($"Started hosting playlist repository at '{dir.FullName}'");
 		Console.WriteLine(api.ApiUrl);
+		if (opts.OpenBrowser)
+		{
+			Process.Start(new ProcessStartInfo(api.ApiUrl) { UseShellExecute = true }); ;
+		}
 		bool exit = false;
 		Console.CancelKeyPress += (_, _) => exit = true;
 		while (!exit)

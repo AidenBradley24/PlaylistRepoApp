@@ -44,5 +44,28 @@ namespace PlaylistRepoLib
 		{
 			return GetEnumerator();
 		}
+
+		public static bool IsInsideProject(DirectoryInfo targetDirectory)
+		{
+			if (Environment.ProcessPath == null) return false;
+			var project = new FileInfo(Environment.ProcessPath).Directory!;
+			return IsInsideProject(targetDirectory, project);
+		}
+
+		private static bool IsInsideProject(DirectoryInfo targetDirectory, DirectoryInfo project)
+		{
+			if (targetDirectory.FullName == project.FullName)
+			{
+				return true;
+			}
+
+			var parent = targetDirectory.Parent;
+			if (parent == null)
+			{
+				return false;
+			}
+
+			return IsInsideProject(parent, project);
+		}
 	}
 }

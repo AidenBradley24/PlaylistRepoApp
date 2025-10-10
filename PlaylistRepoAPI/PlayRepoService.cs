@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using PlaylistRepoLib;
+using System.Diagnostics.CodeAnalysis;
 
 namespace PlaylistRepoAPI
 {
@@ -43,6 +44,7 @@ namespace PlaylistRepoAPI
 
 		public bool Initialize()
 		{
+			if (FileSpec.IsInsideProject(RootPath)) return false;
 			if (IsRepoInitialized) return false;
 			RootPath.CreateSubdirectory(".playrepo");
 			return true;

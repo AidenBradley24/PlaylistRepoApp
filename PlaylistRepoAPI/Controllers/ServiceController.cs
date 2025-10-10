@@ -10,9 +10,11 @@ namespace PlaylistRepoAPI.Controllers
 		[HttpGet("status")]
 		public IActionResult GetStatus()
 		{
-			if (repoService.IsRepoInitialized)
-				return Ok();
-			return StatusCode(StatusCodes.Status503ServiceUnavailable);
+			if (FileSpec.IsInsideProject(repoService.RootPath))
+				return StatusCode(StatusCodes.Status503ServiceUnavailable, "invalid root");
+			if (!repoService.IsRepoInitialized)
+				return StatusCode(StatusCodes.Status503ServiceUnavailable); ;
+			return Ok();
 		}
 
 		[HttpGet("status/{id}")]

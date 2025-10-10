@@ -88,7 +88,7 @@ const App: React.FC = () => {
             <div id="tab-container">
                 {serviceAvailable === false && (
                     <>
-                        <Alert variant="danger">The PlaylistRepo service is currently unavailable. Check your host to ensure that the Repo is selected and created.</Alert>
+                        <Alert variant="info">The PlaylistRepo service is currently unavailable. Check your host to ensure that the Repo is selected and created.</Alert>
                         <HomePage />
                     </>
                 )}
