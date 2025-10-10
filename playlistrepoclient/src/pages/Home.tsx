@@ -11,6 +11,9 @@ const HomePage: React.FC = () => {
                 <Accordion.Item eventKey="0">
                     <Accordion.Header>Basic Instructions</Accordion.Header>
                     <Accordion.Body>
+                        <h4>Create a Repo</h4>
+                        <p>To create a Playlist Repo run <code>playlistrepo init</code> inside of a directory within the terminal.</p>
+                        <hr />
                         <h4>Media Tab</h4>
                         <p>The media tab contains all the media inside of the repository directory.</p>
                         <p>To add media, simply drag media files into the media window.
