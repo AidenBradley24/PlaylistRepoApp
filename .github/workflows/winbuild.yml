@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -74,5 +77,12 @@ jobs:
             Output/*.exe
             publish/PlaylistRepoCLI/**
             publish/PlaylistRepoAPI/**
+          fail_on_unmatched_files: true
+          tag_name: ${{ github.ref_name }}
+          name: "PlaylistRepo ${{ steps.get_version.outputs.version }}"
+          draft: false
+          prerelease: false
+          append_body: false
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
