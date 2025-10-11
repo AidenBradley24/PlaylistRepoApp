@@ -21,7 +21,7 @@ Compression=lzma
 SolidCompression=yes
 DisableProgramGroupPage=yes
 
-LicenseFile=LICENSE.txt
+LicenseFile=..\LICENSE.txt
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany=Aiden Bradley
 VersionInfoDescription=PlaylistRepo CLI, API, and Web Interface
