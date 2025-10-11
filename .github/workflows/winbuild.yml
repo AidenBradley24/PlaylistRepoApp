@@ -54,11 +54,11 @@ jobs:
 
       # 6. Publish API (includes npm build)
       - name: Publish PlaylistRepoAPI
-        run: dotnet publish PlaylistRepoAPI/PlaylistRepoAPI.csproj -c Release -r win-x64 --self-contained false -o publish/PlaylistRepoAPI
+        run: dotnet publish PlaylistRepoAPI/PlaylistRepoAPI.csproj -c Release -r win-x64 -o publish/PlaylistRepoAPI
 
       # 7. Publish CLI
       - name: Publish PlaylistRepoCLI
-        run: dotnet publish PlaylistRepoCLI/PlaylistRepoCLI.csproj -c Release -r win-x64 --self-contained false -o publish/PlaylistRepoCLI
+        run: dotnet publish PlaylistRepoCLI/PlaylistRepoCLI.csproj -c Release -r win-x64 -o publish/PlaylistRepoCLI
 
       # 8. Install Inno Setup
       - name: Install Inno Setup

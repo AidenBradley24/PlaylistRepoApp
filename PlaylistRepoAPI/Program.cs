@@ -12,7 +12,11 @@ if (args.Length == 0)
 DirectoryInfo path = new(args[0]);
 
 // build api
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+	WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
+}); 
+
 builder.Configuration.AddCommandLine(args);
 string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7002";
 builder.WebHost.UseUrls(url);
@@ -43,13 +47,16 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<PlayRepoDbContext>();
 
+#if DEBUG
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+#endif
 
 var app = builder.Build();
 app.UseHttpsRedirection();
 
+#if DEBUG
 // Enable Swagger in development
 if (app.Environment.IsDevelopment() || true) // use `|| true` for always-on in local dev
 {
@@ -58,13 +65,14 @@ if (app.Environment.IsDevelopment() || true) // use `|| true` for always-on in l
 }
 
 app.MapSwagger();
+#endif
 
 app.UseMiddleware<RepoMiddleware>();
 app.MapControllers();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
-app.MapFallbackToFile("/index.html");
+app.MapFallbackToFile("index.html");
 
 app.Use(async (context, next) =>
 {

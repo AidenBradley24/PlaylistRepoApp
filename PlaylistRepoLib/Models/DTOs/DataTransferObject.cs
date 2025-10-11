@@ -48,6 +48,13 @@ namespace PlaylistRepoLib.Models.DTOs
 			}
 		}
 
+		public override string ToString()
+		{
+			TModel model = new();
+			UpdateModel(model);
+			return model.ToString() ?? base.ToString() ?? "";
+		}
+
 		/// <summary>
 		/// Update the model to match the contents of this DTO.
 		/// Used to update properties manually. Note that properties with the same name are updated automatically afterwards.

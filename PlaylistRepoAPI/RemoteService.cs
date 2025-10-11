@@ -38,7 +38,7 @@ namespace PlaylistRepoAPI
 			await service.Sync(remote, progress);
 		}
 
-		public async Task Update(IProgress<TaskProgress>? progress = null)
+		public Task Update(IProgress<TaskProgress>? progress = null)
 		{
 			throw new NotImplementedException();
 			// TODO update all services

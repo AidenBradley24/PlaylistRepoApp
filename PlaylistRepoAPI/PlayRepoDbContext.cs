@@ -22,7 +22,7 @@ public class PlayRepoDbContext : DbContext
 	protected override void OnConfiguring(DbContextOptionsBuilder options)
 	{
 		options.EnableSensitiveDataLogging();
-		options.UseSqlite($"Data Source=\"{Path.Combine(playRepo.DotDir.FullName, "library.db")}\"");
+		options.UseSqlite($"Data Source=\"{Path.Combine(playRepo.DotDir!.FullName, "library.db")}\"");
 	}
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

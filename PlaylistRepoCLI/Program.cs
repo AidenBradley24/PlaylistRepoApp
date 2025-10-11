@@ -69,7 +69,8 @@ public class Program
 		while (!exit)
 		{
 			Console.Write(">> ");
-			Console.ReadLine();
+			string line = Console.ReadLine() ?? "";
+			if (line.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
 		}
 		Console.WriteLine("Host Terminated");
 		return Task.FromResult(0);
@@ -169,7 +170,7 @@ public class Program
 			{
 				Type = Enum.Parse<RemotePlaylist.RemoteType>(opts.Type),
 				Link = opts.RemoteURL,
-				MediaMime = opts.MediaType
+				MediaMime = opts.MediaType ?? ""
 			};
 			if (opts.RemoteName != null) newRemote.Name = opts.RemoteName;
 			if (opts.RemoteDescription != null) newRemote.Description = opts.RemoteDescription;
