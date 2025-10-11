@@ -17,8 +17,8 @@ namespace PlaylistRepoAPI
 		public static IQueryable<Media> AllEntries(this Playlist playlist, IQueryable<Media> library, bool requireFile = false)
 		{
 			IQueryable<Media> query = playlist.UserQuery != "/" ? library.EvaluateUserQuery(playlist.UserQuery) : Enumerable.Empty<Media>().AsQueryable();
-			query = query.Union(playlist.WhiteList.Select(id => library.First(m => m.Id == id)));
-			query = query.ExceptBy(playlist.BlackList, m => m.Id);
+			query = query.EvaluateUserQuery(string.Join(',', playlist.WhiteList.Select(id => "id=" + id)));
+			query = query.EvaluateUserQuery(string.Join('&', playlist.WhiteList.Select(id => "id!=" + id)));
 			if (requireFile) query = query.Where(media => media.FilePath != null);
 			return query;
 		}

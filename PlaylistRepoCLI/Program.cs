@@ -198,7 +198,15 @@ public class Program
 			if (opts.PlaylistDescription != null) newPlaylist.Description = opts.PlaylistDescription;
 			request.Content = JsonContent.Create(newPlaylist);
 		});
-		Console.WriteLine(response);
+		if (response.IsSuccessStatusCode)
+		{
+			Console.WriteLine("Playlist created.");
+		}
+		else
+		{
+			Console.WriteLine("An error has occured.");
+			Console.WriteLine(response);
+		}
 		return 0;
 	}
 

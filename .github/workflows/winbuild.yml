@@ -67,7 +67,7 @@ jobs:
       # 9. Build Installer
       - name: Build installer
         run: |
-          iscc wininstaller.iss /dMyAppVersion=${{ steps.get_version.outputs.version }}
+          iscc scripts/wininstaller.iss /dMyAppVersion=${{ steps.get_version.outputs.version }}
 
       # 10. Verify installer exists
       - name: Verify installer

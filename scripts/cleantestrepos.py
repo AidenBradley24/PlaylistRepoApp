@@ -1,7 +1,7 @@
 import os
 import shutil
 
-abspath = os.path.abspath(__file__)
+abspath = os.path.abspath(__file__) + "../"
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
