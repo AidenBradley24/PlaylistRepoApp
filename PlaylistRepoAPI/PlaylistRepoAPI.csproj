@@ -56,8 +56,12 @@
 
   <Target Name="CopyReactBuild" BeforeTargets="Publish">
     <Message Text="Copying React app to wwwroot..." Importance="High" />
-    <RemoveDir Directories="wwwroot" />
-    <MakeDir Directories="wwwroot" />
+
+    <!-- Delete the contents of the wwwroot directory if it exists -->
+    <RemoveDir Directories="wwwroot" Condition="Exists('wwwroot')" />
+
+    <!-- Create an empty wwwroot directory if it doesn't exist -->
+    <MakeDir Directories="wwwroot" Condition="!Exists('wwwroot')" />
 
     <ItemGroup>
       <SpaBuildFiles Include="$(SpaBuildPath)**\*" />
