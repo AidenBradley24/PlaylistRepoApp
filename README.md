@@ -29,7 +29,7 @@ dotnet publish PlaylistRepoAPI/PlaylistRepoAPI.csproj -c Release -r win-x64 -o p
 dotnet publish PlaylistRepoCLI/PlaylistRepoCLI.csproj -c Release -r win-x64 -o publish/PlaylistRepoCLI
 
 # BUILD INSTALLER...
-iscc wininstaller.iss /dMyAppVersion=0.0.0 # <- INSERT VERSION HERE
+iscc scripts/wininstaller.iss /dMyAppVersion=0.0.0 # <- INSERT VERSION HERE
 
 # ...OR RUN INSTALL SCRIPT
 powershell.exe -ExecutionPolicy Bypass -File .\scripts\install.ps1

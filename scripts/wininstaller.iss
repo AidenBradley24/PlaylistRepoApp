@@ -16,6 +16,7 @@ AppUpdatesURL=https://github.com/AidenBradley24/PlaylistRepoApp/releases
 DefaultDirName={autopf}\PlaylistRepo
 DefaultGroupName=PlaylistRepo
 OutputBaseFilename=PlaylistRepoInstaller
+OutputDir=..\Output
 Compression=lzma
 SolidCompression=yes
 DisableProgramGroupPage=yes
@@ -27,8 +28,8 @@ VersionInfoDescription=PlaylistRepo CLI, API, and Web Interface
 VersionInfoCopyright=© 2025 Aiden Bradley
 
 [Files]
-Source: "publish\PlaylistRepoCLI\*"; DestDir: "{app}"; Flags: recursesubdirs
-Source: "scripts\playlistrepo.bat"; DestDir: "{app}"
+Source: "..\publish\PlaylistRepoCLI\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: ".\playlistrepo.bat"; DestDir: "{app}"
 
 [Icons]
 Name: "{group}\PlaylistRepo CLI"; Filename: "{app}\PlaylistRepoCLI.exe"
