@@ -58,7 +58,7 @@ namespace PlaylistRepoCLI
 			if (!response.IsSuccessStatusCode)
 			{
 				string? error = await response.Content.ReadAsStringAsync();
-				Console.WriteLine($"Error: {error}");
+				Console.WriteLine($"Error: {(int)response.StatusCode} {response.ReasonPhrase} {error}");
 				return error;
 			}
 			string? id = await response.Content.ReadFromJsonAsync<string>();
@@ -74,7 +74,7 @@ namespace PlaylistRepoCLI
 				response = await http.GetAsync($"{ApiUrl}/api/service/status/{guid}");
 				if (!response.IsSuccessStatusCode)
 				{
-					Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
+					Console.WriteLine($"Error: {(int)response.StatusCode} {response.ReasonPhrase} {await response.Content.ReadAsStringAsync()}");
 					break;
 				}
 
@@ -95,7 +95,7 @@ namespace PlaylistRepoCLI
 			if (!response.IsSuccessStatusCode)
 			{
 				string? error = await response.Content.ReadAsStringAsync();
-				Console.WriteLine($"Error: {error}");
+				Console.WriteLine($"Error: {(int)response.StatusCode} {response.ReasonPhrase} {error}");
 				return (error, null);
 			}
 			string? id = await response.Content.ReadFromJsonAsync<string>();
@@ -111,7 +111,7 @@ namespace PlaylistRepoCLI
 				response = await http.GetAsync($"{ApiUrl}/api/service/status/{guid}");
 				if (!response.IsSuccessStatusCode)
 				{
-					Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
+					Console.WriteLine($"Error: {(int)response.StatusCode} {response.ReasonPhrase} {await response.Content.ReadAsStringAsync()}");
 					break;
 				}
 
@@ -120,7 +120,7 @@ namespace PlaylistRepoCLI
 			ConsoleHelpers.ClearProgress();
 			Console.WriteLine("Preparing export...");
 			response = await http.GetAsync($"{ApiUrl}/api/export/result/{guid}");
-			if (response.StatusCode != System.Net.HttpStatusCode.OK) 
+			if (response.StatusCode != System.Net.HttpStatusCode.OK)
 				return (taskProgress?.Status, null);
 			return (taskProgress?.Status, response.Content.ReadAsStream());
 		}

@@ -33,14 +33,14 @@ public class Program
 	{
 		[Option('d', "dir", HelpText = "Specify a directory to serve. Defaults to current directory. Ignored if the url is set.", Required = false)]
 		public string? RepoDirectory { get; set; }
-		[Option('l', "url", MetaValue = "http://url-to-api", Default = null, HelpText = "Specify a URL to a running API.", Required = false)] 
+		[Option('l', "url", MetaValue = "http://url-to-api", Default = null, HelpText = "Specify a URL to a running API.", Required = false)]
 		public string? ApiUrl { get; set; }
 		public ApiHandeler CreateAPI()
 		{
 			if (ApiUrl != null)
 				return new ApiHandeler(ApiUrl);
 			string dir = RepoDirectory ?? Environment.CurrentDirectory;
-			return new ApiHandeler(new DirectoryInfo(dir));	
+			return new ApiHandeler(new DirectoryInfo(dir));
 		}
 	}
 
@@ -64,6 +64,7 @@ public class Program
 		{
 			Process.Start(new ProcessStartInfo(api.ApiUrl) { UseShellExecute = true }); ;
 		}
+		Console.WriteLine("type 'exit' or ctrl-c to exit");
 		bool exit = false;
 		Console.CancelKeyPress += (_, _) => exit = true;
 		while (!exit)
@@ -176,7 +177,15 @@ public class Program
 			if (opts.RemoteDescription != null) newRemote.Description = opts.RemoteDescription;
 			request.Content = JsonContent.Create(newRemote);
 		});
-		Console.WriteLine(response);
+		if (response.IsSuccessStatusCode)
+		{
+			Console.WriteLine("Remote playlist added.");
+		}
+		else
+		{
+			Console.WriteLine("An error has occured.");
+			Console.WriteLine(response);
+		}
 		return 0;
 	}
 

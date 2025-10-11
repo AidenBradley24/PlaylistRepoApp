@@ -94,7 +94,7 @@ namespace PlaylistRepoAPI
 			}
 			var stream = await response.Content.ReadAsStreamAsync();
 			var mediaRefs = await ParseFile(stream, Path.GetFileName(remote.Link), remote);
-			
+
 			foreach (var mediaRef in mediaRefs)
 			{
 				Media? media = await remote.AllEntries(dbContext.Medias).FirstOrDefaultAsync(m => m.RemoteUID == mediaRef.RemoteUID);

@@ -1,6 +1,6 @@
 ﻿using PlaylistRepoLib.Models.DTOs;
-using UserQueries;
 using System.Text.Json.Serialization;
+using UserQueries;
 
 namespace PlaylistRepoLib.Models;
 

@@ -214,6 +214,9 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                         <th onClick={() => handleSort("artist")} style={{ cursor: "pointer" }}>
                             Artist {sortColumn === "artist" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
+                        <th onClick={() => handleSort("genre")} style={{ cursor: "pointer" }}>
+                            Genre {sortColumn === "genre" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
+                        </th>
                         <th onClick={() => handleSort("album")} style={{ cursor: "pointer" }}>
                             Album {sortColumn === "album" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
@@ -225,9 +228,6 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                         </th>
                         <th onClick={() => handleSort("type")} style={{ cursor: "pointer" }}>
                             Type {sortColumn === "type" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
-                        </th>
-                        <th onClick={() => handleSort("genre")} style={{ cursor: "pointer" }}>
-                            Genre {sortColumn === "genre" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
                     </tr>
                 </thead>
@@ -250,11 +250,11 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                                 <td>{record.locked ? (<BsFillLockFill />) : (<BsFillUnlockFill />)}</td>
                                 <td>{record.title ?? "-"}</td>
                                 <td>{record.primaryArtist ?? "-"}</td>
+                                <td>{record.genre ?? "-"}</td>
                                 <td>{record.album ?? "-"}</td>
                                 <td>{record.rating === 0 ? "-" : record.rating} / 10</td>
                                 <td>{record.lengthMilliseconds === 0 ? "-" : formatMillisecondsToHHMMSS(record.lengthMilliseconds)}</td>
                                 <td>{record.mimeType ?? "-"}</td>
-                                <td>{record.genre ?? "-"}</td>
                             </tr>
                         ))
                     )}

@@ -15,7 +15,7 @@ DirectoryInfo path = new(args[0]);
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
 	WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
-}); 
+});
 
 builder.Configuration.AddCommandLine(args);
 string url = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7002";
