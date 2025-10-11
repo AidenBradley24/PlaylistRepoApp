@@ -15,7 +15,8 @@ export interface Media {
     lengthMilliseconds: number,
     order: number,
     isOnFile: boolean,
-    locked: boolean
+    locked: boolean,
+    genre: string
 }
 
 export interface Playlist {

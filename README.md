@@ -25,17 +25,19 @@ Designed to completely replace and combine the functionality of my previous YTAu
 
 ##### Commands WINDOWS POWERSHELL (run in the project root):
 ```powershell
-dotnet publish PlaylistRepoCLI\PlaylistRepoCLI.csproj -c Release -r win-x64 -o publish\PlaylistRepoCLI
+dotnet publish PlaylistRepoAPI/PlaylistRepoAPI.csproj -c Release -r win-x64 -o publish/PlaylistRepoAPI
+dotnet publish PlaylistRepoCLI/PlaylistRepoCLI.csproj -c Release -r win-x64 -o publish/PlaylistRepoCLI
 
-# BUILD INSTALLER
+# BUILD INSTALLER...
 iscc wininstaller.iss /dMyAppVersion=0.0.0 # <- INSERT VERSION HERE
 
-# OR RUN INSTALL SCRIPT
+# ...OR RUN INSTALL SCRIPT
 powershell.exe -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
 ##### Commands LINUX TERMINAL (run in the project root):
 ```console
+dotnet publish PlaylistRepoAPI/PlaylistRepoAPI.csproj-c Release -r linux-x64 -o publish/PlaylistRepoAPI
 dotnet publish PlaylistRepoCLI/PlaylistRepoCLI.csproj -c Release -r linux-x64 -o publish/PlaylistRepoCLI
 bash scripts/install.bash
 ```

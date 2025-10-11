@@ -132,6 +132,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                 </Row>
                                 <Row className="mb-3">
                                     <Col md={4}><strong>Type:</strong> {viewingMedia.mimeType}</Col>
+                                    <Col md={4}><strong>Genre:</strong> {viewingMedia.genre}</Col>
                                 </Row>
 
                                 <div style={{ marginTop: "1rem" }}>
@@ -256,6 +257,14 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
                                         type="number"
                                         value={editingMedia.order}
                                         onChange={(e) => updateField("order", parseInt(e.target.value))}
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Genre</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={editingMedia.genre}
+                                        onChange={(e) => updateField("genre", e.target.value)}
                                     />
                                 </Form.Group>
                                 <div className="d-flex justify-content-end">

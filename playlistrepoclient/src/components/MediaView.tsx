@@ -226,12 +226,15 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                         <th onClick={() => handleSort("type")} style={{ cursor: "pointer" }}>
                             Type {sortColumn === "type" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
                         </th>
+                        <th onClick={() => handleSort("genre")} style={{ cursor: "pointer" }}>
+                            Genre {sortColumn === "genre" && (sortDirection === "asc" ? <BsSortUp /> : <BsSortDown />)}
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {records.length === 0 ? (
                         <tr>
-                            <td colSpan={9} className="text-center">
+                            <td colSpan={10} className="text-center">
                                 No data
                             </td>
                         </tr>
@@ -251,6 +254,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                                 <td>{record.rating === 0 ? "-" : record.rating} / 10</td>
                                 <td>{record.lengthMilliseconds === 0 ? "-" : formatMillisecondsToHHMMSS(record.lengthMilliseconds)}</td>
                                 <td>{record.mimeType ?? "-"}</td>
+                                <td>{record.genre ?? "-"}</td>
                             </tr>
                         ))
                     )}

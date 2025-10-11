@@ -87,7 +87,8 @@ const MassOperationMedia: React.FC<MassOperationMediaProps> = ({ massUrl, massDe
                                         "description",
                                         "rating",
                                         "order",
-                                        "locked"
+                                        "locked",
+                                        "genre"
                                     ] as (keyof Media)[]
                                 ).map((key) => (
                                     <option key={key} value={key}>

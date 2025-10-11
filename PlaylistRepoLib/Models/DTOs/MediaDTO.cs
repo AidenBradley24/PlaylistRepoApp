@@ -8,6 +8,7 @@
 		public string Title { get; set; } = "unnamed media";
 		public string PrimaryArtist { get; set; } = "";
 		public string[]? Artists { get; set; }
+		public string Genre { get; set; } = "";
 		public string Album { get; set; } = "";
 		public string Description { get; set; } = "";
 		public int Rating { get; set; } = 0;
@@ -32,6 +33,7 @@
 				Title = Title,
 				PrimaryArtist = PrimaryArtist,
 				Artists = Artists == null ? [] : [.. Artists],
+				Genre = Genre,
 				Album = Album,
 				Description = Description,
 				Rating = Rating,

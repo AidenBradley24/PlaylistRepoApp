@@ -57,6 +57,9 @@ public partial class Media
 
 	public string[]? Artists { get; set; }
 
+	[UserQueryable("genre")]
+	public string Genre { get; set; } = "";
+
 	[UserQueryable("album")]
 	public string Album { get; set; } = "";
 
