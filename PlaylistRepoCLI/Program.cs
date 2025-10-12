@@ -167,9 +167,9 @@ public class Program
 		using var api = opts.CreateAPI();
 		var response = await api.Request(HttpMethod.Post, "/api/data/remotes", request =>
 		{
-			RemotePlaylist newRemote = new()
+			RemotePlaylistDTO newRemote = new()
 			{
-				Type = Enum.Parse<RemotePlaylist.RemoteType>(opts.Type),
+				Type = opts.Type,
 				Link = opts.RemoteURL,
 				MediaMime = opts.MediaType ?? ""
 			};
@@ -179,7 +179,8 @@ public class Program
 		});
 		if (response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("Remote playlist added.");
+			var dto = await response.Content.ReadFromJsonAsync<RemotePlaylistDTO>();
+			Console.WriteLine($"Remote playlist added as ID: {dto!.Id}.");
 		}
 		else
 		{
@@ -202,14 +203,15 @@ public class Program
 		using var api = opts.CreateAPI();
 		var response = await api.Request(HttpMethod.Post, "/api/data/playlists", request =>
 		{
-			Playlist newPlaylist = new() { UserQuery = opts.UserQuery };
+			PlaylistDTO newPlaylist = new() { UserQuery = opts.UserQuery };
 			if (opts.PlaylistTitle != null) newPlaylist.Title = opts.PlaylistTitle;
 			if (opts.PlaylistDescription != null) newPlaylist.Description = opts.PlaylistDescription;
 			request.Content = JsonContent.Create(newPlaylist);
 		});
 		if (response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("Playlist created.");
+			var dto = await response.Content.ReadFromJsonAsync<PlaylistDTO>();
+			Console.WriteLine($"Playlist created as ID: {dto!.Id}.");
 		}
 		else
 		{

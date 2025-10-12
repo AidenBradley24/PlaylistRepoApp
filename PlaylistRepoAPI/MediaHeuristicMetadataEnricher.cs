@@ -245,26 +245,34 @@ public class MediaHeuristicMetadataEnricher : IMetadataEnricher
 	/// </summary>
 	private static bool Try_Provided(MediaDTO media, [NotNullWhen(true)] out MediaDTO? modified)
 	{
-		modified = media.Clone();
-
-		if (media.Description.Contains("Provided to YouTube by"))
+		try
 		{
-			string[] lines = LineifyDescription(media.Description);
-			Debug.Assert(lines[0].Contains("Provided to YouTube by"));
+			modified = media.Clone();
 
-			string[] performers = lines[1].Split('·')[1..];
-			for (int i = 0; i < performers.Length; i++)
+			if (media.Description.Contains("Provided to YouTube by"))
 			{
-				performers[i] = performers[i].Trim();
+				string[] lines = LineifyDescription(media.Description);
+				Debug.Assert(lines[0].Contains("Provided to YouTube by"));
+
+				string[] performers = lines[1].Split('·')[1..];
+				for (int i = 0; i < performers.Length; i++)
+				{
+					performers[i] = performers[i].Trim();
+				}
+
+				modified.Artists = performers;
+				modified.Album = lines[2].Trim();
+
+				return true;
 			}
 
-			modified.Artists = performers;
-			modified.Album = lines[2].Trim();
-
-			return true;
+			return false;
 		}
-
-		return false;
+		catch
+		{
+			modified = null;
+			return false;
+		}
 	}
 
 	/// <summary>
@@ -272,6 +280,15 @@ public class MediaHeuristicMetadataEnricher : IMetadataEnricher
 	/// </summary>
 	private static bool Try_SoundtrackParenthesis(MediaDTO media, [NotNullWhen(true)] out MediaDTO? modified)
 	{
+		try
+		{
+
+		}
+		catch
+		{
+			modified = null;
+			return false;
+		}
 		modified = media.Clone();
 		if (IsStandaloneWord("OST", media.Title, out string usedWord) || IsStandaloneWord("O.S.T.", media.Title, out usedWord) || IsStandaloneWord("Soundtrack", media.Title, out usedWord))
 		{
@@ -318,73 +335,64 @@ public class MediaHeuristicMetadataEnricher : IMetadataEnricher
 	/// </summary>
 	private static bool Try_Soundtrack(MediaDTO media, [NotNullWhen(true)] out MediaDTO? modified)
 	{
-		modified = media.Clone();
-		if (IsStandaloneWord("OST", media.Title, out string usedWord) || IsStandaloneWord("O.S.T", media.Title, out usedWord) || IsStandaloneWord("Soundtrack", media.Title, out usedWord))
+		try
 		{
-			var bits = media.Title.Split(SEPERATORS, StringSplitOptions.RemoveEmptyEntries);
-
-			int i;
-			for (i = 0; i < bits.Length; i++)
+			modified = media.Clone();
+			if (IsStandaloneWord("OST", media.Title, out string usedWord) || IsStandaloneWord("O.S.T", media.Title, out usedWord) || IsStandaloneWord("Soundtrack", media.Title, out usedWord))
 			{
-				if (IsStandaloneWord(usedWord, bits[i], out _)) break;
-			}
+				var bits = media.Title.Split(SEPERATORS, StringSplitOptions.RemoveEmptyEntries);
 
-			int soundtrackIndex = i;
-			if (i < bits.Length)
-			{
-				string album = bits[i].Trim().Trim(CLEAN_UP_TRIM);
-				int blacklist = -1;
-
-				if (album == usedWord)
+				int i;
+				for (i = 0; i < bits.Length; i++)
 				{
-					i--;
-					if (i < 0)
+					if (IsStandaloneWord(usedWord, bits[i], out _)) break;
+				}
+
+				int soundtrackIndex = i;
+				if (i < bits.Length)
+				{
+					string album = bits[i].Trim().Trim(CLEAN_UP_TRIM);
+					int blacklist = -1;
+
+					if (album == usedWord)
 					{
-						return false;
+						i--;
+						if (i < 0)
+						{
+							return false;
+						}
+
+						blacklist = i;
+
+						album = bits[i].Trim();
+						if (album.Length == 0)
+						{
+							return false;
+						}
 					}
 
-					blacklist = i;
-
-					album = bits[i].Trim();
-					if (album.Length == 0)
+					if (usedWord.Equals("O.S.T", StringComparison.InvariantCultureIgnoreCase))
 					{
-						return false;
-					}
-				}
-
-				if (usedWord.Equals("O.S.T", StringComparison.InvariantCultureIgnoreCase))
-				{
-					album = album.Replace("O.S.T", "OST", StringComparison.InvariantCultureIgnoreCase);
-				}
-
-				string a = "";
-				foreach (string word in album.Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
-				{
-					string trimmedWord = word.Trim(CLEAN_UP_TRIM);
-					if (trimmedWord.Equals("OST", StringComparison.InvariantCultureIgnoreCase) ||
-						trimmedWord.Equals("Soundtrack", StringComparison.InvariantCultureIgnoreCase))
-					{
-						break;
+						album = album.Replace("O.S.T", "OST", StringComparison.InvariantCultureIgnoreCase);
 					}
 
-					a += word + " ";
-				}
+					string a = "";
+					foreach (string word in album.Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+					{
+						string trimmedWord = word.Trim(CLEAN_UP_TRIM);
+						if (trimmedWord.Equals("OST", StringComparison.InvariantCultureIgnoreCase) ||
+							trimmedWord.Equals("Soundtrack", StringComparison.InvariantCultureIgnoreCase))
+						{
+							break;
+						}
 
-				modified.Album = a + "Soundtrack";
-				i++;
-				string? title = null;
-				for (; i < bits.Length; i++)
-				{
-					if (i == blacklist) continue;
-					string bit = ProcessTitle(bits[i], modified.Album);
-					if (string.IsNullOrWhiteSpace(bit) || IsNumberBody(bit)) continue;
-					title = bit;
-					break;
-				}
-				i = soundtrackIndex - 1;
-				if (title == null)
-				{
-					for (; i >= 0; i--)
+						a += word + " ";
+					}
+
+					modified.Album = a + "Soundtrack";
+					i++;
+					string? title = null;
+					for (; i < bits.Length; i++)
 					{
 						if (i == blacklist) continue;
 						string bit = ProcessTitle(bits[i], modified.Album);
@@ -392,71 +400,104 @@ public class MediaHeuristicMetadataEnricher : IMetadataEnricher
 						title = bit;
 						break;
 					}
+					i = soundtrackIndex - 1;
+					if (title == null)
+					{
+						for (; i >= 0; i--)
+						{
+							if (i == blacklist) continue;
+							string bit = ProcessTitle(bits[i], modified.Album);
+							if (string.IsNullOrWhiteSpace(bit) || IsNumberBody(bit)) continue;
+							title = bit;
+							break;
+						}
+					}
+
+					if (title == null) return false;
+					modified.Title = title.Trim(CLEAN_UP_TRIM);
 				}
 
-				if (title == null) return false;
-				modified.Title = title.Trim(CLEAN_UP_TRIM);
+				return true;
 			}
 
-			return true;
+			return false;
 		}
-
-		return false;
+		catch
+		{
+			modified = null;
+			return false;
+		}
 	}
 
 	private static bool Try_FromKeyword(MediaDTO media, [NotNullWhen(true)] out MediaDTO? modified)
 	{
-		modified = media.Clone();
-		if (IsStandaloneWord("From", media.Title, out string usedWord))
+		try
 		{
-			if (!media.Title.Contains($"({usedWord}", StringComparison.InvariantCultureIgnoreCase)) return false;
-
-			string[] bits = media.Title.Split("(", StringSplitOptions.TrimEntries);
-			string title = bits[0].Trim();
-			string album = bits[1][usedWord.Length..^1];
-
-			foreach (char q in QUOTES)
+			modified = media.Clone();
+			if (IsStandaloneWord("From", media.Title, out string usedWord))
 			{
-				album = album.Replace(q.ToString(), "");
+				if (!media.Title.Contains($"({usedWord}", StringComparison.InvariantCultureIgnoreCase)) return false;
+
+				string[] bits = media.Title.Split("(", StringSplitOptions.TrimEntries);
+				string title = bits[0].Trim();
+				string album = bits[1][usedWord.Length..^1];
+
+				foreach (char q in QUOTES)
+				{
+					album = album.Replace(q.ToString(), "");
+				}
+
+				album = album.Trim();
+				modified.Title = title;
+				modified.Album = album;
+				return true;
 			}
 
-			album = album.Trim();
-			modified.Title = title;
-			modified.Album = album;
-			return true;
+			return false;
 		}
-
-		return false;
+		catch
+		{
+			modified = null;
+			return false;
+		}
 	}
 
 	private static bool Try_MusicKeyword(MediaDTO media, [NotNullWhen(true)] out MediaDTO? modified)
 	{
-		modified = media.Clone();
-		if (IsWord("Music ", media.Description, out string usedWord) || IsWord("Title ", media.Description, out usedWord))
+		try
 		{
-			var lines = LineifyDescription(media.Description).AsEnumerable();
-			var possibleLines = lines.Where(l => l.StartsWith(usedWord, StringComparison.InvariantCultureIgnoreCase));
-			if (!possibleLines.Any())
+			modified = media.Clone();
+			if (IsWord("Music ", media.Description, out string usedWord) || IsWord("Title ", media.Description, out usedWord))
 			{
-				throw new FormatException("Not real 'music keyword'");
+				var lines = LineifyDescription(media.Description).AsEnumerable();
+				var possibleLines = lines.Where(l => l.StartsWith(usedWord, StringComparison.InvariantCultureIgnoreCase));
+				if (!possibleLines.Any())
+				{
+					throw new FormatException("Not real 'music keyword'");
+				}
+
+				string titleLine = possibleLines.First();
+				titleLine = titleLine[usedWord.Length..];
+				(string title, string album) = SplitFirst(titleLine);
+
+				title = title.Trim(CLEAN_UP_TRIM);
+				album = album.Trim(CLEAN_UP_TRIM);
+				if (!media.Title.Contains(title))
+				{
+					throw new FormatException("Not real 'music keyword'");
+				}
+
+				modified.Title = title;
+				modified.Album = string.IsNullOrWhiteSpace(album) ? "" : album;
+				return true;
 			}
 
-			string titleLine = possibleLines.First();
-			titleLine = titleLine[usedWord.Length..];
-			(string title, string album) = SplitFirst(titleLine);
-
-			title = title.Trim(CLEAN_UP_TRIM);
-			album = album.Trim(CLEAN_UP_TRIM);
-			if (!media.Title.Contains(title))
-			{
-				throw new FormatException("Not real 'music keyword'");
-			}
-
-			modified.Title = title;
-			modified.Album = string.IsNullOrWhiteSpace(album) ? "" : album;
-			return true;
+			return false;
 		}
-
-		return false;
+		catch
+		{
+			modified = null;
+			return false;
+		}
 	}
 }

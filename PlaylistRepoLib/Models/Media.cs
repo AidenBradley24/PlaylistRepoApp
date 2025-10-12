@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PlaylistRepoLib.Models.DTOs;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -8,7 +9,7 @@ using UserQueries;
 namespace PlaylistRepoLib.Models;
 
 [PrimaryUserQueryable(nameof(Title))]
-public partial class Media
+public partial class Media : IHasDTO<Media, MediaDTO>
 {
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 	[UserQueryable("id")]
@@ -137,13 +138,18 @@ public partial class Media
 		return sb.ToString();
 	}
 
+	public static string SanitizeFileName(string name, char replaceChar)
+	{
+		return Path.GetInvalidFileNameChars().Aggregate(name, (current, c) => current.Replace(c, replaceChar));
+	}
+
 	public string GenerateFileName(string extension)
 	{
-		StringBuilder sb = new(Title);
-		if (Album != null)
+		StringBuilder sb = new(SanitizeFileName(Title, '#'));
+		if (!string.IsNullOrWhiteSpace(Album))
 		{
 			sb.Append(" – ");
-			sb.Append(Album);
+			sb.Append(SanitizeFileName(Album, '#'));
 			if (Order != 0)
 			{
 				sb.Append('[');
@@ -152,15 +158,28 @@ public partial class Media
 			}
 		}
 
-		if (PrimaryArtist != null)
+		if (!string.IsNullOrWhiteSpace(PrimaryArtist))
 		{
 			sb.Append(" – ");
-			sb.Append(PrimaryArtist);
+			sb.Append(SanitizeFileName(PrimaryArtist, '#'));
+		}
+
+		if (sb.Length > 30)
+		{
+			sb.Clear();
+			sb.Append(SanitizeFileName(Title, '#'));
+
+			if (sb.Length > 30)
+			{
+				sb.Clear();
+				sb.Append(Id);
+			}
 		}
 
 		if (!extension.StartsWith('.'))
 			sb.Append('.');
 		sb.Append(extension);
+
 		return sb.ToString();
 	}
 }

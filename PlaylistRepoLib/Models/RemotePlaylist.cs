@@ -1,11 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PlaylistRepoLib.Models.DTOs;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using UserQueries;
 
 namespace PlaylistRepoLib.Models;
 
 [PrimaryUserQueryable(nameof(Name))]
-public class RemotePlaylist
+public class RemotePlaylist : IHasDTO<RemotePlaylist, RemotePlaylistDTO>
 {
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 

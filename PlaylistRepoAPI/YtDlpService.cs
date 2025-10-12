@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PlaylistRepoLib;
 using PlaylistRepoLib.Models;
+using PlaylistRepoLib.Models.DTOs;
 using System.Diagnostics;
 
 namespace PlaylistRepoAPI
@@ -90,6 +91,11 @@ namespace PlaylistRepoAPI
 				media.Source = remote;
 				media.RemoteUID = uid;
 				media.RemoteId = remote.Id;
+
+				var enricher = new MediaHeuristicMetadataEnricher();
+				var dto = await enricher.TryEnrich(media.GetDTO());
+				dto?.UpdateModel(media);
+
 				counter++;
 			}
 
@@ -137,8 +143,8 @@ namespace PlaylistRepoAPI
 			string format = GetFormat(remote);
 
 			// Filter out existing media files
-			string filter = "--match-filter \"" + string.Join('&', dbContext.Medias.Where(m => m.RemoteId == remote.Id && m.FilePath != null)
-				.Select(s => $"id!={s}")) + "\"";
+			string filter = "--match-filter \"" + string.Join('&', [ "id!=a", ..dbContext.Medias.Where(m => m.RemoteId == remote.Id && m.FilePath != null)
+				.Select(s => $"id!={s}")]) + "\"";
 
 			process.StartInfo.Arguments = $"\"{remote.Link}\" -P \"{downloadDir.FullName}\" {format} {filter} {SYNC_ARGS}";
 			process.StartInfo.RedirectStandardOutput = true;
@@ -195,7 +201,9 @@ namespace PlaylistRepoAPI
 						media.RemoteUID = uid;
 						media.RemoteId = remote.Id;
 
-						// TODO add metadata fillers
+						var enricher = new MediaHeuristicMetadataEnricher();
+						var dto = await enricher.TryEnrich(media.GetDTO());
+						dto?.UpdateModel(media);
 					}
 
 					file.Delete();
@@ -207,7 +215,24 @@ namespace PlaylistRepoAPI
 				}
 			}
 
-			await dbContext.IngestExisting([.. newMedias.Concat(existingMedias).Select(m => (fileMap[m.RemoteUID!], m))], progress);
+			if (existingMedias.Count > 0)
+			{
+				Console.WriteLine("!!! There shouldn't ever be existing medias on a ytdlp sync, but there are " + existingMedias.Count);
+			}
+
+			// move downloaded files and generate bundles
+			List<(FileInfo, Media)> bundles = [];
+			foreach (var media in newMedias)
+			{
+				var file = fileMap[media.RemoteUID!];
+				string newFileName = media.GenerateFileName(file.Extension);
+				string path = Path.Combine(repoService.RootPath.FullName, newFileName);
+				file.MoveTo(path, true);
+				bundles.Add((file, media));
+			}
+
+			await dbContext.IngestExisting([.. bundles], progress);
+			downloadDir.Delete(true);
 		}
 
 		private static void OutputHandler(object sender, DataReceivedEventArgs args, IProgress<TaskProgress>? progress)

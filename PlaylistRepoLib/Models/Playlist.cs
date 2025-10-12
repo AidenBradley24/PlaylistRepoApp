@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PlaylistRepoLib.Models.DTOs;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using UserQueries;
@@ -6,7 +7,7 @@ using UserQueries;
 namespace PlaylistRepoLib.Models;
 
 [PrimaryUserQueryable(nameof(Title))]
-public class Playlist
+public class Playlist : IHasDTO<Playlist, PlaylistDTO>
 {
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 	[UserQueryable("id")]

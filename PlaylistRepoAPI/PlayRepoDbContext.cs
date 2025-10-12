@@ -68,6 +68,7 @@ public class PlayRepoDbContext : DbContext
 					Title = Path.GetFileNameWithoutExtension(file.Name),
 					Hash = hash,
 					FilePath = playRepo.GetRelativePath(file),
+					MimeType = MimeTypes.GetMimeType(file.Name)
 				};
 				media.SyncFromMediaFile();
 				medias.Add(hash, media);
@@ -91,7 +92,7 @@ public class PlayRepoDbContext : DbContext
 	/// <summary>
 	/// Ingest media files for existing media.
 	/// </summary>
-	/// <param name="mediaBundles">Media must already be tracked by db.</param>
+	/// <param name="mediaBundles">Media must already be tracked by db. Files must already be inside of repo directory.</param>
 	/// <param name="progress"></param>
 	/// <returns></returns>
 	public async Task IngestExisting((FileInfo, Media)[] mediaBundles, IProgress<TaskProgress>? progress)
@@ -107,6 +108,7 @@ public class PlayRepoDbContext : DbContext
 			}
 			media.Hash = hash;
 			media.FilePath = playRepo.GetRelativePath(file);
+			media.MimeType = MimeTypes.GetMimeType(media.File!.Name);
 			progress?.Report(TaskProgress.FromNumbers(++completedCount, mediaBundles.Length));
 		}
 
