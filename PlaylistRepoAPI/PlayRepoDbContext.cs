@@ -49,17 +49,14 @@ public class PlayRepoDbContext : DbContext
 
 			Media media;
 			var matching = Medias.Where(m => m.Hash == hash);
-			int matchCount = matching.Count();
-			if (matchCount == 1)
+			if (matching.Any())
 			{
-				media = await matching.FirstAsync();
-				media.FilePath = playRepo.GetRelativePath(file);
-				media.SyncFromMediaFile();
-				updateCount++;
-			}
-			else if (matchCount > 1 || medias.ContainsKey(hash))
-			{
-				throw new InvalidOperationException($"Cannot contain multiple identical media.\n{string.Join('\n', matching)}");
+				foreach (var match in matching)
+				{
+					match.FilePath = playRepo.GetRelativePath(file);
+					match.SyncFromMediaFile();
+					updateCount++;
+				}
 			}
 			else
 			{
@@ -83,9 +80,7 @@ public class PlayRepoDbContext : DbContext
 		await SaveChangesAsync();
 		progress?.Report(TaskProgress.FromCompleted($"COMPLETE\n" +
 			$"Added {addedCount} new media files.\n" +
-			$"Updated {updateCount} media files.\n" +
-			string.Join('\n', medias.Values.Select(m => $"ADDED: {m}")) +
-			string.Join('\n', medias.Values.Select(m => $"ADDED: {m}"))));
+			$"Updated {updateCount} media files."));
 		return medias.Values;
 	}
 
@@ -116,7 +111,6 @@ public class PlayRepoDbContext : DbContext
 		progress?.Report(TaskProgress.FromIndeterminate("Finalizing"));
 		await SaveChangesAsync();
 		progress?.Report(TaskProgress.FromCompleted($"COMPLETE\n" +
-			$"Ingested {completedCount} media files.\n" +
-			string.Join('\n', mediaBundles.Select(m => $"ADDED: {m.Item2.Title}"))));
+			$"Ingested {completedCount} media files."));
 	}
 }

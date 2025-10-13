@@ -91,6 +91,7 @@ namespace PlaylistRepoAPI
 				media.Source = remote;
 				media.RemoteUID = uid;
 				media.RemoteId = remote.Id;
+				if (order != null) media.Order = order.Value;
 
 				var enricher = new MediaHeuristicMetadataEnricher();
 				var dto = await enricher.TryEnrich(media.GetDTO());
@@ -200,6 +201,8 @@ namespace PlaylistRepoAPI
 						media.Source = remote;
 						media.RemoteUID = uid;
 						media.RemoteId = remote.Id;
+						media.LengthMilliseconds = durationSeconds ?? 0;
+						media.Order = order ?? 0;
 
 						var enricher = new MediaHeuristicMetadataEnricher();
 						var dto = await enricher.TryEnrich(media.GetDTO());
@@ -251,7 +254,7 @@ namespace PlaylistRepoAPI
 
 		private static string GetFormat(RemotePlaylist remote)
 		{
-			if (remote.MediaMime == null)
+			if (string.IsNullOrWhiteSpace(remote.MediaMime))
 				return $"-f \"bestvideo+bestaudio/best\" --merge-output-format mp4";
 			if (remote.MediaMime.StartsWith("video"))
 				return $"-f \"bestvideo+bestaudio/best\" --merge-output-format {MimeTypes.GetMimeTypeExtensions(remote.MediaMime).First()} ";

@@ -112,7 +112,7 @@ public class Program
 	private static async Task<int> RunIngestAsync(IngestOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.TaskRequest(HttpMethod.Post, "/action/ingest", request =>
+		var response = await api.TaskRequest(HttpMethod.Post, "/api/action/ingest", request =>
 		{
 			request.Content = new StringContent($"\"{opts.FileSpec}\"", Encoding.UTF8, "application/json");
 		});
