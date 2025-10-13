@@ -48,13 +48,6 @@ begin
 end;
 
 [Run]
-; Install yt-dlp if not already installed
-Filename: "winget"; \
-  Parameters: "install -e --id yt-dlp.yt-dlp -h"; \
-  StatusMsg: "Installing dependency: yt-dlp..."; \
-  Flags: runhidden; \
-  Check: not IsYtDlpInstalled()
-
 ; Run your app after install
 Filename: "{app}\PlaylistRepoCLI.exe"; \
   Parameters: "serve"; \

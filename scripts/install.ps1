@@ -2,13 +2,14 @@
 $SrcDir = "publish\PlaylistRepoCLI"
 $DestDir = "C:\Program Files\PlaylistRepo"
 
-Copy-Item -Path "scripts\playlistrepo.bat" -Destination $SrcDir
-
 # Create the destination directory if it doesn't exist
 New-Item -ItemType Directory -Force -Path $DestDir | Out-Null
 
 # Move the published content to the destination directory
 Move-Item -Path "$SrcDir\*" -Destination $DestDir -Force
+
+# Add batch that points to cli
+Copy-Item -Path "scripts\playlistrepo.bat" -Destination $SrcDir
 
 # Add the destination directory to the system PATH
 $PathVariable = [System.Environment]::GetEnvironmentVariable('Path', 'Machine')

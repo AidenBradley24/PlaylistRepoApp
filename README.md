@@ -39,14 +39,16 @@ powershell.exe -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```console
 dotnet publish PlaylistRepoAPI/PlaylistRepoAPI.csproj-c Release -r linux-x64 -o publish/PlaylistRepoAPI
 dotnet publish PlaylistRepoCLI/PlaylistRepoCLI.csproj -c Release -r linux-x64 -o publish/PlaylistRepoCLI
-bash scripts/install.bash
+sh scripts/install.sh
 ```
 
 ### OPTION 2 -- *Download installer*
 - [Github Releases](https://github.com/AidenBradley24/PlaylistRepoApp/releases)
 
 ### *FINALLY*
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) (ensure it's installed and available in your PATH)
+- Dependencies (go to [/scripts](/scripts) install-dependencies or do yourself below):
+	- [yt-dlp](https://github.com/yt-dlp/yt-dlp) (ensure it's installed and available in your PATH)
+	- [ffmpeg](https://www.ffmpeg.org/) (ensure it's installed and available in your PATH)
 - Run the installer.
 - Optionally, or if you want you can build the app and use it in place. But you will need to manually add the app to your PATH
 

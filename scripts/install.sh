@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Set the source and destination directories
 SRC_DIR="publish/PlaylistRepoCLI"
@@ -10,9 +10,13 @@ sudo mkdir -p "$DEST_DIR"
 # Move the published content to the destination directory
 sudo mv "$SRC_DIR"/* "$DEST_DIR"
 
+# Add shell that points to cli
+sudo cp scripts/playlistrepo.sh "${DEST_DIR}playlistrepo.sh"
+sudo chmod +x "${DEST_DIR}playlistrepo.sh"
+
 # Add the destination directory to the system PATH
 sudo tee -a /etc/profile.d/playlistrepocli.sh << EOF
 export PATH="\$PATH:$DEST_DIR"
 EOF
 
-echo "PlaylistRepo has been installed to $DEST_DIR and added to the system PATH."
+echo "PlaylistRepo has been installed to $DEST_DIR and added to the system PATH."   
