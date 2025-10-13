@@ -6,7 +6,6 @@ using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
 using System.Web;
-using TagLib.Ogg.Codecs;
 
 namespace PlaylistRepoCLI;
 
@@ -344,18 +343,25 @@ public class Program
 	[Verb("enrich", HelpText = "Enrich Metadata of a media record")]
 	class EnrichOptions : ApiOptions
 	{
-		[Value(0, MetaName = "Media ID", Required = true, HelpText = "The media id whose metadata is enriched")]
-		public int MediaId { get; set; }
+		[Value(0, MetaName = "Media Query", Default = "", Required = false, HelpText = "A user query to specify what media to enrich.")]
+		public string UserQuery { get; set; } = "";
 	}
 
 	private static async Task<int> RunEnrichAsync(EnrichOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Post, $"/api/metadata/enrich/{opts.MediaId}");
+		var response = await api.Request(HttpMethod.Post, $"/api/metadata/enrich", request =>
+		{
+			request.Headers.Add("query", opts.UserQuery);
+		});
 		if (response.IsSuccessStatusCode)
 		{
-			var dto = await response.Content.ReadFromJsonAsync<MediaDTO>();
-			Console.WriteLine($"Media enriched {dto}");
+			var dtos = await response.Content.ReadFromJsonAsync<MediaDTO[]>();
+			Console.WriteLine($"Media enriched:");
+			foreach(var dto in dtos!)
+			{
+				Console.WriteLine(dto);
+			}
 			return 0;
 		}
 		Console.WriteLine("An error has occured.");
@@ -366,18 +372,25 @@ public class Program
 	[Verb("autoname", HelpText = "Automatically name this media file")]
 	class AutoRenameOptions : ApiOptions
 	{
-		[Value(0, MetaName = "Media ID", Required = true, HelpText = "The media id whose file is renamed")]
-		public int MediaId { get; set; }
+		[Value(0, MetaName = "Media Query", Default = "", Required = false, HelpText = "A user query to specify what media auto-rename.")]
+		public string UserQuery { get; set; } = "";
 	}
 
 	private static async Task<int> RunAutoRenameAsync(AutoRenameOptions opts)
 	{
 		using var api = opts.CreateAPI();
-		var response = await api.Request(HttpMethod.Post, $"/api/metadata/autoname/{opts.MediaId}");
+		var response = await api.Request(HttpMethod.Post, $"/api/metadata/autoname", request =>
+		{
+			request.Headers.Add("query", opts.UserQuery);
+		});
 		if (response.IsSuccessStatusCode)
 		{
-			var s = await response.Content.ReadFromJsonAsync<string>();
-			Console.WriteLine($"Media renamed: {s}");
+			var strings = await response.Content.ReadFromJsonAsync<string[]>();
+			Console.WriteLine($"Media renamed:");
+			foreach (var s in strings!)
+			{
+				Console.WriteLine(s);
+			}
 			return 0;
 		}
 		Console.WriteLine("An error has occured.");

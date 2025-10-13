@@ -14,9 +14,11 @@ namespace PlaylistRepoAPI
 				tagFile.Tag.Album = media.Album ?? "";
 				tagFile.Tag.Performers = media.Artists ?? [];
 				tagFile.Tag.Genres = [media.Genre];
+				tagFile.Save();
 			}
 			catch
 			{
+				Console.WriteLine("Error writing tags");
 				// do nothing
 			}	
 		}

@@ -1,37 +1,49 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PlaylistRepoLib.Models;
 using PlaylistRepoLib.Models.DTOs;
+using UserQueries;
 
 namespace PlaylistRepoAPI.Controllers
 {
 	[ApiController]
 	[Route("api/[controller]")]
-	public class MetadataController(PlayRepoService repo, PlayRepoDbContext db, MetadataEnrichmentService service) : ControllerBase
+	public class MetadataController(IPlayRepoService repo, PlayRepoDbContext db, MetadataEnrichmentService service) : ControllerBase
 	{
-		[HttpPost("enrich/{id}")]
-		public async Task<IActionResult> Enrich([FromRoute] int id)
+		[HttpPost("enrich")]
+		public async Task<IActionResult> Enrich([FromHeader] string query = "")
 		{
-			var media = db.Medias.Find(id);
-			if (media == null) return NotFound();
-			var result = await service.EnrichMedia(media.GetDTO());
-			result?.UpdateModel(media);
+			var medias = db.Medias.EvaluateUserQuery(query).Where(m => !m.Locked);
+			List<MediaDTO> dtos = [];
+			foreach (var media in medias)
+			{
+				var dto = media.GetDTO();
+				dto = await service.EnrichMedia(dto);
+				if (dto == null) continue;
+				dto.UpdateModel(media);
+				dtos.Add(dto);
+			}
+
 			db.SaveChanges();
-			return Ok(result);
+			return Ok(dtos);
 		}
 
-		[HttpPost("autoname/{id}")]
-		public IActionResult AutoNameAndMetadata([FromRoute] int id)
+		[HttpPost("autoname")]
+		public IActionResult AutoNameAndMetadata([FromHeader] string query = "")
 		{
-			Media? media = db.Medias.Find(id);
-			if (media == null) return NotFound();
-			FileInfo? file = media.File;
-			if (file == null) return NoContent();
-			string newFileName = media.GenerateFileName(file.Extension);
-			file.MoveTo(Path.Combine(file.DirectoryName ?? "", newFileName));
-			media.FilePath = repo.GetRelativePath(file);
-			media.SyncToMediaFile();
+			var medias = db.Medias.EvaluateUserQuery(query);
+			List<string> renamedMedias = [];
+			foreach (var media in medias)
+			{
+				if (!media.IsOnFile) continue;
+				FileInfo file = media.File!;
+				string newFileName = media.GenerateFileName(file.Extension);
+				file.MoveTo(Path.Combine(file.DirectoryName ?? "", newFileName));
+				media.FilePath = repo.GetRelativePath(file);
+				media.SyncToMediaFile();
+				renamedMedias.Add(media.FilePath);
+			}
+
 			db.SaveChanges();
-			return Ok(media.FilePath);
+			return Ok(renamedMedias);
 		}
 	}
 }
