@@ -109,6 +109,7 @@ public class PlayRepoDbContext : DbContext
 			media.Hash = hash;
 			media.FilePath = playRepo.GetRelativePath(file);
 			media.MimeType = MimeTypes.GetMimeType(media.File!.Name);
+			media.SyncToMediaFile();
 			progress?.Report(TaskProgress.FromNumbers(++completedCount, mediaBundles.Length));
 		}
 

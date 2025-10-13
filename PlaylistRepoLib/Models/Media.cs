@@ -164,16 +164,12 @@ public partial class Media : IHasDTO<Media, MediaDTO>
 			sb.Append(SanitizeFileName(PrimaryArtist, '#'));
 		}
 
-		if (sb.Length > 30)
+		if (sb.Length > 70)
 		{
 			sb.Clear();
-			sb.Append(SanitizeFileName(Title, '#'));
-
-			if (sb.Length > 30)
-			{
-				sb.Clear();
-				sb.Append(Id);
-			}
+			string truncatedTitle = SanitizeFileName(Title, '#');
+			truncatedTitle = truncatedTitle[..Math.Min(truncatedTitle.Length, 70)];
+			sb.Append(truncatedTitle);
 		}
 
 		if (!extension.StartsWith('.'))

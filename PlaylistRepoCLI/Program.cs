@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
 using System.Web;
+using TagLib.Ogg.Codecs;
 
 namespace PlaylistRepoCLI;
 
@@ -25,6 +26,8 @@ public class Program
 				(CreateOptions opts) => RunCreateAsync(opts),
 				(ListOptions opts) => RunListAsync(opts),
 				(ExportOptions opts) => RunExportAsync(opts),
+				(EnrichOptions opts) => RunEnrichAsync(opts),
+				(AutoRenameOptions opts) => RunAutoRenameAsync(opts),
 				errs => Task.FromResult(-1)
 			);
 	}
@@ -303,10 +306,10 @@ public class Program
 	[Verb("export", HelpText = "Export a particular playlist in a specific format: .xspf .m3u8 .zip .csv")]
 	class ExportOptions : ApiOptions
 	{
-		[Value(0, MetaName = "Playlist ID", Required = true, HelpText = "A filter upon the output returned.")]
+		[Value(0, MetaName = "Playlist ID", Required = true, HelpText = "The playlist to export.")]
 		public int PlaylistId { get; set; }
 
-		[Value(0, MetaName = "Export Path", Required = true, HelpText = "Full path of exported file.")]
+		[Value(1, MetaName = "Export Path", Required = true, HelpText = "Full path of exported file.")]
 		public string ExportPath { get; set; } = "";
 	}
 
@@ -336,5 +339,49 @@ public class Program
 			stream.Dispose();
 		}
 		return 0;
+	}
+
+	[Verb("enrich", HelpText = "Enrich Metadata of a media record")]
+	class EnrichOptions : ApiOptions
+	{
+		[Value(0, MetaName = "Media ID", Required = true, HelpText = "The media id whose metadata is enriched")]
+		public int MediaId { get; set; }
+	}
+
+	private static async Task<int> RunEnrichAsync(EnrichOptions opts)
+	{
+		using var api = opts.CreateAPI();
+		var response = await api.Request(HttpMethod.Post, $"/api/metadata/enrich/{opts.MediaId}");
+		if (response.IsSuccessStatusCode)
+		{
+			var dto = await response.Content.ReadFromJsonAsync<MediaDTO>();
+			Console.WriteLine($"Media enriched {dto}");
+			return 0;
+		}
+		Console.WriteLine("An error has occured.");
+		Console.WriteLine(response);
+		return 1;
+	}
+
+	[Verb("autoname", HelpText = "Automatically name this media file")]
+	class AutoRenameOptions : ApiOptions
+	{
+		[Value(0, MetaName = "Media ID", Required = true, HelpText = "The media id whose file is renamed")]
+		public int MediaId { get; set; }
+	}
+
+	private static async Task<int> RunAutoRenameAsync(AutoRenameOptions opts)
+	{
+		using var api = opts.CreateAPI();
+		var response = await api.Request(HttpMethod.Post, $"/api/metadata/autoname/{opts.MediaId}");
+		if (response.IsSuccessStatusCode)
+		{
+			var s = await response.Content.ReadFromJsonAsync<string>();
+			Console.WriteLine($"Media renamed: {s}");
+			return 0;
+		}
+		Console.WriteLine("An error has occured.");
+		Console.WriteLine(response);
+		return 1;
 	}
 }

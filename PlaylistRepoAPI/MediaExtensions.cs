@@ -7,11 +7,18 @@ namespace PlaylistRepoAPI
 	{
 		public static void SyncToMediaFile(this Media media)
 		{
-			using var tagFile = media.GetTagFile();
-
-			tagFile.Tag.Title = media.Title;
-			tagFile.Tag.Album = media.Album ?? "";
-			tagFile.Tag.Performers = media.Artists ?? [];
+			try
+			{
+				using var tagFile = media.GetTagFile();
+				tagFile.Tag.Title = media.Title;
+				tagFile.Tag.Album = media.Album ?? "";
+				tagFile.Tag.Performers = media.Artists ?? [];
+				tagFile.Tag.Genres = [media.Genre];
+			}
+			catch
+			{
+				// do nothing
+			}	
 		}
 
 		public static void SyncFromMediaFile(this Media media)
@@ -27,7 +34,8 @@ namespace PlaylistRepoAPI
 				if (tagFile.Tag.Title != null) media.Title = tagFile.Tag.Title;
 				if (tagFile.Tag.Album != null) media.Album = tagFile.Tag.Album;
 				if (tagFile.Tag.Performers != null) media.Artists = tagFile.Tag.Performers;
-				media.LengthMilliseconds = tagFile.Properties.Duration.Ticks / 10000L; // 10000 ticks is one millisecond
+				if (tagFile.Tag.Genres.Length > 0) media.Genre = tagFile.Tag.Genres[0];
+				media.LengthMilliseconds = tagFile.Properties.Duration.Ticks / TimeSpan.TicksPerMillisecond;
 			}
 			catch
 			{

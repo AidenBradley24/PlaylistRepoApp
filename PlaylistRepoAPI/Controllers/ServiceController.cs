@@ -18,7 +18,7 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpGet("status/{id}")]
-		public ActionResult<TaskStatus> GetTaskStatus(Guid id)
+		public IActionResult GetTaskStatus(Guid id)
 		{
 			var status = taskService.GetProgress(id);
 			if (status == null)
@@ -34,8 +34,6 @@ namespace PlaylistRepoAPI.Controllers
 			if (success) return Ok();
 			return BadRequest();
 		}
-
-		// TODO add a sandboxed change directory
 
 		[HttpPost("test")]
 		public IActionResult Test([FromHeader] int milliseconds)
