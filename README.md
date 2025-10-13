@@ -182,3 +182,25 @@ Export a particular playlist in a specific format: .xspf .m3u8 .zip .csv
 ```bash
 playlistrepo export 1 "C:\Exports\playlist.zip"
 ```
+
+## enrich
+Perform automatic metadata enrichment on media
+
+**Options:**
+- `<User query>`: A filter upon the output enriched
+
+**Example:**
+```bash
+playlistrepo enrich "type ^ 'audio'"
+```
+
+## autoname
+Rename media files within the directory to recommended names. Also fix metadata of media files to match database.
+
+**Options:**
+- `<User query>`: A filter upon the what is autonamed
+
+**Example:**
+```bash
+playlistrepo autoname ""
+```
