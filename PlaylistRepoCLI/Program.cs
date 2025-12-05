@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Web;
 
 namespace PlaylistRepoCLI;
@@ -27,8 +28,15 @@ public class Program
 				(ExportOptions opts) => RunExportAsync(opts),
 				(EnrichOptions opts) => RunEnrichAsync(opts),
 				(AutoRenameOptions opts) => RunAutoRenameAsync(opts),
+				(ConfigOptions opts) => RunConfigAsync(opts),
 				errs => Task.FromResult(-1)
 			);
+	}
+
+	static JsonDocument GetConfig()
+	{
+		using var fs = File.OpenRead(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json"));
+		return JsonDocument.Parse(fs);
 	}
 
 	abstract class ApiOptions
@@ -52,30 +60,76 @@ public class Program
 		[Option('d', "dir", HelpText = "Specify a directory to run the serve on. Defaults to current directory.", Required = false)]
 		public string? PathToHost { get; set; }
 
-		[Option("open-browser", Required = false, Default = true)]
-		public bool OpenBrowser { get; set; }
+		[Option("open-browser", Required = false, Default = null)]
+		public bool? OpenBrowser { get; set; }
+
+		[Option("vlc-playlist", HelpText = "Open vlc media player to a set playlist", Required = false, Default = null)]
+		public int? VlcPlaylist { get; set; }
 	}
 
 	private static Task<int> RunHostAsync(HostOptions opts)
 	{
 		var dir = new DirectoryInfo(opts.PathToHost ?? Environment.CurrentDirectory);
 		using var api = new ApiHandeler(dir);
+		var config = GetConfig();
+
 		Console.WriteLine($"Started hosting playlist repository at '{dir.FullName}'");
 		Console.WriteLine(api.ApiUrl);
-		if (opts.OpenBrowser)
+
+		if (opts.OpenBrowser ?? config.RootElement.GetProperty("open-browser-on-serve").GetBoolean())
 		{
 			Process.Start(new ProcessStartInfo(api.ApiUrl) { UseShellExecute = true }); ;
 		}
+
+		{
+			int? vlcPlaylist = config.RootElement.GetProperty("open-vlc-on-serve").GetBoolean() || opts.VlcPlaylist != null
+				? opts.VlcPlaylist != null ? opts.VlcPlaylist : config.RootElement.GetProperty("default-playlist-index").GetInt32()
+				 : null;
+			if (vlcPlaylist != null)
+			{
+				string vlcPath = config.RootElement.GetProperty("vlc-path").GetString() ?? "";
+				var startInfo = new ProcessStartInfo()
+				{
+					FileName = vlcPath,
+					UseShellExecute = true,
+					Arguments = $"{api.ApiUrl}/api/play/playlist/{vlcPlaylist}.xspf"
+				};
+				Process.Start(startInfo);
+			}
+		}
+
 		Console.WriteLine("type 'exit' or ctrl-c to exit");
 		bool exit = false;
 		Console.CancelKeyPress += (_, _) => exit = true;
+
 		while (!exit)
 		{
 			Console.Write(">> ");
-			string line = Console.ReadLine() ?? "";
-			if (line.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
+			string line = (Console.ReadLine() ?? "").ToLowerInvariant();
+			string[] words = line.SplitArgs();
+			if (words.Length < 1) continue;
+			switch (line.ToLowerInvariant())
+			{
+				case "exit":
+					Console.WriteLine("Host Terminated");
+					return Task.FromResult(0);
+				case "vlc":
+					{
+						string vlcPath = config.RootElement.GetProperty("vlc-path").GetString() ?? "";
+						int playlistIndex = words.Length >= 2
+							? int.Parse(words[1])
+							: config.RootElement.GetProperty("default-playlist-index").GetInt32();
+						var startInfo = new ProcessStartInfo()
+						{
+							FileName = vlcPath,
+							UseShellExecute = true,
+							Arguments = $"{api.ApiUrl}/api/play/playlist/{playlistIndex}.xspf"
+						};
+						Process.Start(startInfo);
+					}
+					break;
+			}
 		}
-		Console.WriteLine("Host Terminated");
 		return Task.FromResult(0);
 	}
 
@@ -396,5 +450,19 @@ public class Program
 		Console.WriteLine("An error has occured.");
 		Console.WriteLine(response);
 		return 1;
+	}
+
+	[Verb("config")]
+	class ConfigOptions { }
+
+	private static Task<int> RunConfigAsync(ConfigOptions opts)
+	{
+		var startInfo = new ProcessStartInfo()
+		{
+			FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json"),
+			UseShellExecute = true,
+		};
+		Process.Start(startInfo);
+		return Task.FromResult(1);
 	}
 }

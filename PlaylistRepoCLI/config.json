@@ -1,0 +1,7 @@
+{
+  // Playlist Repository CLI Configuration
+  "vlc-path": "vlc",
+  "open-vlc-on-serve": false,
+  "open-browser-on-serve": true,
+  "default-playlist-index":  1
+}
