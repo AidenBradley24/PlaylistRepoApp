@@ -1,6 +1,6 @@
 # Playlist Repository
 
-Store your media in a system like GIT.
+Store your media in a system like Git.
 
 Host, download, query, and manage your media with one system.
 Use yt-dlp to download media playlists from various platforms like YouTube. Then combine them into a local database and media server.
@@ -19,7 +19,7 @@ Designed to completely replace and combine the functionality of my previous YTAu
 
 ### OPTION 1 -- *Build Yourself*
 - Clone this github repository
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Node.js & npm](https://nodejs.org/en/download)
 - [Inno Setup (to make installer, windows only)](https://jrsoftware.org/isdl.php)
 
