@@ -6,6 +6,7 @@ import { useEdits } from "./EditContext";
 import { BsSortDown, BsSortUp, BsXLg, BsFillLockFill, BsFillUnlockFill } from "react-icons/bs";
 import { MdFileDownloadDone, MdFileDownloadOff } from "react-icons/md";
 import { formatMillisecondsToHHMMSS } from "../utils";
+import { useSearchParams } from "react-router-dom";
 
 import "./records.css";
 
@@ -17,9 +18,15 @@ export interface MediaViewProps {
 }
 
 const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize = 20 }) => {
+
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [records, setRecords] = useState<Media[]>([]);
-    const [page, setPage] = useState(1);
+    const page = Number(searchParams.get("page")) || 1;
+    const setPage = (newPage: number) => { setSearchParams({ ...Object.fromEntries(searchParams), page: newPage.toString() }) }
+
     const [total, setTotal] = useState(0);
+
 
     const [sortColumn, setSortColumn] = useState<string | null>();
     const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
@@ -31,12 +38,19 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
 
     const { refreshKey } = useRefresh();
     const { setViewingMediaId, setShowMediaModal } = useEdits();
+    const previousQueryRef = useRef(query);
 
     useEffect(() => {
         const timeout = records.length === 0 ? 0 : 500;
+        const hasQueryChanged = previousQueryRef.current !== query;
+
         const handler = setTimeout(() => {
             setDebouncedQuery(query);
-            setPage(1);
+
+            if (hasQueryChanged) {
+                setPage(1);
+                previousQueryRef.current = query;
+            }
         }, timeout);
 
         return () => {
@@ -264,7 +278,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
             {/* Pagination controls */}
             <Pagination className="justify-content-center">
                 <Pagination.Prev
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
                 />
                 {getPageNumbers().map((p, idx) =>
@@ -281,7 +295,7 @@ const MediaView: React.FC<MediaViewProps> = ({ query, setQuery, path, pageSize =
                     )
                 )}
                 <Pagination.Next
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => setPage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
                 />
             </Pagination>

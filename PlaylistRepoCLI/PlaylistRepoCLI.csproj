@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/AidenBradley24/PlaylistRepoApp</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/AidenBradley24/PlaylistRepoApp</RepositoryUrl>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
