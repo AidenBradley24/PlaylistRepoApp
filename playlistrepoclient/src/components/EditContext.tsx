@@ -39,16 +39,16 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
 
-    const queryFromUrl = searchParams.get("q") ?? "";
+    const queryFromUrl = searchParams.get("query") ?? "";
     const [query, setQuery] = useState<string>(queryFromUrl);
 
     const [showMediaModal, setShowMediaModal] = useState<boolean>(false);
-    const mediaFromUrl = Number(searchParams.get("m")) ?? 0;
+    const mediaFromUrl = Number(searchParams.get("media")) ?? 0;
     const [viewingMediaId, setViewingMediaId] = useState<number>(mediaFromUrl);
     const [viewingMedia, setViewingMedia] = useState<Media | null>(null);
     const [editingMedia, setEditingMedia] = useState<Media | null>(null);
 
-    const playlistFromUrl = Number(searchParams.get("p")) ?? 0;
+    const playlistFromUrl = Number(searchParams.get("playlist")) ?? 0;
     const [viewingPlaylistId, setViewingPlaylistId] = useState<number>(playlistFromUrl);
 
     const [showPlaylistModal, setShowPlaylistModal] = useState<boolean>(false);
@@ -60,10 +60,17 @@ export const EditProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [editingRemote, setEditingRemote] = useState<RemotePlaylist | null>(null);
 
     useEffect(() => {
-        const params = {} as any;
-        if (viewingPlaylistId !== 0) params["p"] = viewingPlaylistId;
-        if (query) params['q'] = query;
-        if (viewingMediaId !== 0) params["m"] = viewingMediaId;
+        const params = new URLSearchParams(searchParams);
+
+        if (viewingPlaylistId !== 0) params.set("playlist", String(viewingPlaylistId));
+        else params.delete("playlist");
+
+        if (query) params.set("query", query);
+        else params.delete("query");
+
+        if (viewingMediaId !== 0) params.set("media", String(viewingMediaId));
+        else params.delete("media");    
+
         setSearchParams(params);
     }, [query, viewingMediaId, viewingPlaylistId, setSearchParams]);
 

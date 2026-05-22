@@ -48,8 +48,8 @@ const RemoteTab: React.FC = () => {
         const response = await fetch(`api/data/remotes/${deletionRemote.id}`, {
             method: "DELETE",
             headers: {
-                alsoDeleteMedia: 'true',
-                alsoDeleteMediaFiles: 'true'
+                alsoDeleteMedia: 'false',
+                alsoDeleteMediaFiles: 'false'
             }
         });
 
