@@ -1,7 +1,6 @@
 ﻿using PlaylistRepoLib.Models.DTOs;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -78,6 +77,10 @@ public partial class Media : IHasDTO<Media, MediaDTO>
 	public int Order { get; set; } = 0;
 
 	public bool Locked { get; set; } = false;
+
+	[EmbeddedUserQueryable("plays", nameof(MediaPlayStats.PlayCount))]
+	[EmbeddedUserQueryable("last", nameof(MediaPlayStats.LastPlayed))]
+	public MediaPlayStats? PlayStats { get; set; } = null;
 
 	[NotMapped]
 	[JsonIgnore]

@@ -12,12 +12,12 @@ public class PlayRepoDbContext : DbContext
 	public PlayRepoDbContext(IPlayRepoService playRepo)
 	{
 		this.playRepo = playRepo;
-		Database.EnsureCreated();
 	}
 
 	public DbSet<Media> Medias { get; set; }
 	public DbSet<RemotePlaylist> RemotePlaylists { get; set; }
 	public DbSet<Playlist> Playlists { get; set; }
+	public DbSet<MediaPlayStats> MediaPlayStats { get; set; }
 
 	protected override void OnConfiguring(DbContextOptionsBuilder options)
 	{
@@ -27,7 +27,18 @@ public class PlayRepoDbContext : DbContext
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
-		base.OnModelCreating(modelBuilder);
+		modelBuilder.Entity<Media>()
+			.HasKey(x => x.Id);
+		modelBuilder.Entity<RemotePlaylist>()
+			.HasKey(x => x.Id);
+		modelBuilder.Entity<Playlist>()
+			.HasKey(x => x.Id);
+		modelBuilder.Entity<MediaPlayStats>()
+			.HasKey(x => x.MediaId);
+		modelBuilder.Entity<MediaPlayStats>()
+			.HasOne(x => x.Media)
+			.WithOne(x => x.PlayStats)
+			.HasForeignKey<MediaPlayStats>(x => x.MediaId);
 	}
 
 	/// <summary>

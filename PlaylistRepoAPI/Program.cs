@@ -54,6 +54,8 @@ builder.Services.AddSwaggerGen();
 #endif
 
 var app = builder.Build();
+
+await LegacyDatabaseUpgrader.UpgradeIfNeededAsync(app.Services);
 app.UseHttpsRedirection();
 
 #if DEBUG
