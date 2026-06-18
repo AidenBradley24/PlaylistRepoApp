@@ -1,8 +1,11 @@
 import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import type { MediaAttributeStats } from "../models";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button, Form, Card, Alert, ListGroup } from "react-bootstrap";
 import { useSearchParams } from "react-router-dom";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface MediaAttributeChartOptions {
     outputType: string | 'MediaCount' | 'PlayCount',

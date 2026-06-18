@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@types/react-router-dom": "^5.3.3",
     "bootstrap": "^5.3.7",
     "chart.js": "^4.5.1",
     "react": "^19.1.1",
