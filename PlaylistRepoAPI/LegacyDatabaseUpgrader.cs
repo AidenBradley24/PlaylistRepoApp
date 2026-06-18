@@ -9,6 +9,10 @@ public static class LegacyDatabaseUpgrader
 	{
 		using var scope = services.CreateScope();
 		var repo = scope.ServiceProvider.GetRequiredService<IPlayRepoService>();
+
+		if (!repo.IsRepoInitialized || repo.DotDir is null)
+			return;
+
 		string dbPath = Path.Combine(repo.DotDir!.FullName, "library.db");
 
 		using var dbScope = services.CreateScope();
