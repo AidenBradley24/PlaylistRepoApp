@@ -107,7 +107,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, onHide, viewingMedia, onS
     }
 
     const isCreate = editingMedia && editingMedia.id === 0;
-    const modalTitle = isCreate ? "Create Media Record" : `${viewingMedia?.title} - Preview`;
+    const modalTitle = isCreate ? "Create Media Record" : `${viewingMedia?.title}`;
 
     return (
         <Modal show={show} onHide={onHide} centered size="lg">

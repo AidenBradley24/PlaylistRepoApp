@@ -12,7 +12,7 @@ public class MediaPlayStats : IHasDTO<MediaPlayStats, MediaPlayStatsDTO>
 
 	public Media Media { get; set; } = null!;
 
-	
+
 	public int PlayCount { get; set; } = 0;
 	public DateTime LastPlayed { get; set; } = DateTime.MinValue;
 }

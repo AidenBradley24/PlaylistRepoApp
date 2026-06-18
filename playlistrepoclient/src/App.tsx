@@ -10,6 +10,7 @@ import HomePage from "./pages/Home";
 import MediaTab from "./pages/MediaTab";
 import PlaylistTab from "./pages/PlaylistTab";
 import RemoteTab from "./pages/RemoteTab";
+import StatsTab from "./pages/StatsTab";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./app.css";
 
@@ -43,6 +44,7 @@ const App: React.FC = () => {
         "/media": "media",
         "/playlists": "playlists",
         "/remotes": "remotes",
+        "/stats": "stats"
     };
 
     const activeKey = routeToKey[location.pathname] ?? "";
@@ -71,6 +73,9 @@ const App: React.FC = () => {
                             <Nav.Item>
                                 <Nav.Link href="/remotes" eventKey="remotes">Remote Playlists</Nav.Link>
                             </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link href="/stats" eventKey="stats">Stats</Nav.Link>
+                            </Nav.Item>
                         </Nav>
                     </Navbar.Collapse>)}
                     <Button
@@ -97,6 +102,7 @@ const App: React.FC = () => {
                         <Route path="/media" element={<MediaTab />} />
                         <Route path="/playlists" element={<PlaylistTab />} />
                         <Route path="/remotes" element={<RemoteTab />} />
+                        <Route path="/stats" element={<StatsTab /> } />
                         <Route path="*" element={<HomePage />} />
                     </Routes>
                 )}
