@@ -1,6 +1,5 @@
-import Chart, { type ChartData, type ChartOptions } from 'chart.js/auto';
-import { Line, Pie } from "react-chartjs-2";
-import type { MediaPlayStats, MediaAttributeStats } from "../models";
+import { Pie } from "react-chartjs-2";
+import type { MediaAttributeStats } from "../models";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button, Form, Card, Alert, ListGroup } from "react-bootstrap";
 import { useSearchParams } from "react-router-dom";
@@ -42,15 +41,15 @@ const MediaAttributePieChart = ({ stats, options }: { stats: MediaAttributeStats
         plugins: {
             title: {
                 text: `Media by ${options.attributeType.charAt(0).toUpperCase() + options.attributeType.slice(1)}`,
-                align: "center",
-                position: "top",
+                align: "center" as const,
+                position: "top" as const,
                 display: true,
                 font: {
                     size: 20,
                 },
             },
             legend: {
-                position: 'left'
+                position: 'left' as const
             }
         }
     }
