@@ -16,7 +16,7 @@ public class MediaHeuristicMetadataEnricher : IMetadataEnricher
 		if (Try_Soundtrack(media, out modified)) goto exit;
 		if (Try_FromKeyword(media, out modified)) goto exit;
 		if (Try_MusicKeyword(media, out modified)) goto exit;
-		exit: return Task.FromResult(modified);
+	exit: return Task.FromResult(modified);
 	}
 
 	#region utils

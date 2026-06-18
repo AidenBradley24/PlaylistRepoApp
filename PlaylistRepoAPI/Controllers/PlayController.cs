@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PlaylistRepoLib.Models;
 
 namespace PlaylistRepoAPI.Controllers
 {
@@ -6,16 +7,48 @@ namespace PlaylistRepoAPI.Controllers
 	[Route("api/[controller]")]
 	public class PlayController(PlayRepoDbContext db) : ControllerBase
 	{
+		/// <summary>
+		/// Play the media file, and update the play stats for the media.
+		/// </summary>
 		[HttpGet("media/{id}")]
 		public IActionResult GetFile([FromRoute] int id)
 		{
 			var media = db.Medias.Find(id);
 			if (media == null) return NotFound();
 			if (!media.IsOnFile) return NoContent();
+
+			var playStatsRef = db.Entry(media).Reference(m => m.PlayStats);
+			if (!playStatsRef.IsLoaded)
+			{
+				playStatsRef.Load();
+			}
+
+			var playStats = playStatsRef.CurrentValue;
+			if (playStats == null)
+			{
+				playStats = new MediaPlayStats
+				{
+					Media = media
+				};
+
+				db.Add(playStats);
+				media.PlayStats = playStats;
+			}
+
+			if (playStats.LastPlayed == default || DateTime.UtcNow - playStats.LastPlayed > TimeSpan.FromMilliseconds(media.LengthMilliseconds))
+			{
+				playStats.PlayCount++;
+				playStats.LastPlayed = DateTime.UtcNow;
+				db.SaveChanges();
+			}
+
 			var fs = media.File!.OpenRead();
-			return File(fs, media.MimeType, true);
+			return File(fs, media.MimeType, enableRangeProcessing: true);
 		}
 
+		/// <summary>
+		/// Preview the media file, and do not update the play stats for the media.
+		/// </summary>
 		[HttpGet("media/preview/{id}")]
 		public IActionResult PreviewFile([FromRoute] int id)
 		{
@@ -25,9 +58,9 @@ namespace PlaylistRepoAPI.Controllers
 			var fs = media.File!.OpenRead();
 			if (media.MimeType.StartsWith("text"))
 			{
-				return File(fs, "text/plain", true);
+				return File(fs, "text/plain", enableRangeProcessing: true);
 			}
-			return File(fs, media.MimeType, true);
+			return File(fs, media.MimeType, enableRangeProcessing: true);
 		}
 
 		[HttpGet("playlist/{file}")]

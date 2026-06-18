@@ -412,7 +412,7 @@ public class Program
 		{
 			var dtos = await response.Content.ReadFromJsonAsync<MediaDTO[]>();
 			Console.WriteLine($"Media enriched:");
-			foreach(var dto in dtos!)
+			foreach (var dto in dtos!)
 			{
 				Console.WriteLine(dto);
 			}

@@ -1,8 +1,7 @@
-﻿using PlaylistRepoLib.Models.DTOs;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using UserQueries;
 
-namespace PlaylistRepoLib.Models;
+namespace PlaylistRepoLib.Models.DTOs;
 
 public class ApiGetResponse<TModel, TDTO>
 	where TModel : class, new()

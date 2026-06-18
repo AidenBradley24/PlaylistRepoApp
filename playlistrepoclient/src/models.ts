@@ -35,6 +35,21 @@ export interface RemotePlaylist {
     mediaMime: string;
 }
 
+export interface MediaPlayStats
+{
+    mediaId: number;
+    playCount: number;
+    lastPlayed: string | null;
+}
+
+export interface MediaAttributeStats
+{
+    attributeValue: string;
+    mediaCount: number;
+    playCount: number;
+    lastPlayed: string | null;
+}
+
 export interface Patch<T> {
     userQuery: string;
     propertyName: keyof T;

@@ -20,7 +20,7 @@ namespace PlaylistRepoAPI
 			{
 				Console.WriteLine("Error writing tags");
 				// do nothing
-			}	
+			}
 		}
 
 		public static void SyncFromMediaFile(this Media media)
