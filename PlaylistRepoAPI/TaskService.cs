@@ -40,6 +40,11 @@ namespace PlaylistRepoAPI
 	{
 		private readonly ConcurrentDictionary<Guid, TaskProgress> ongoingTasks = [];
 
+		private sealed class TaskProgressReporter(Action<TaskProgress> report) : IProgress<TaskProgress>
+		{
+			public void Report(TaskProgress value) => report(value);
+		}
+
 		public TaskProgress? GetProgress(Guid taskId)
 		{
 			return ongoingTasks.TryGetValue(taskId, out var progress) ? progress : null;
@@ -53,9 +58,8 @@ namespace PlaylistRepoAPI
 		public Guid StartTask(Func<IProgress<TaskProgress>, Guid, object[], Task> taskFunc, Type[] serviceTypes)
 		{
 			var guid = Guid.NewGuid();
-			Progress<TaskProgress> progress = new();
-			progress.ProgressChanged += (o, p) => ongoingTasks[guid] = p;
-			((IProgress<TaskProgress>)progress).Report(new TaskProgress { Progress = -1, Status = "Running" });
+			IProgress<TaskProgress> progress = new TaskProgressReporter(p => ongoingTasks[guid] = p);
+			progress.Report(TaskProgress.FromIndeterminate("Running"));
 			var task = Task.Run(async () =>
 			{
 				try
@@ -67,8 +71,8 @@ namespace PlaylistRepoAPI
 				}
 				catch (Exception ex)
 				{
-					((IProgress<TaskProgress>)progress).Report(TaskProgress.FromException(ex));
-					logger.LogError("An error has occurred when processing the request {request} {ex}", guid, ex);
+					progress.Report(TaskProgress.FromException(ex));
+					logger.LogError(ex, "An error occurred when processing task {TaskId}", guid);
 				}
 			});
 			return guid;

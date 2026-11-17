@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from "r
 import Toast from "react-bootstrap/Toast";
 import ToastContainer from "react-bootstrap/ToastContainer";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { BsCheckCircle, BsXCircle } from "react-icons/bs";
+import { BsCheckCircle, BsExclamationTriangle, BsXCircle } from "react-icons/bs";
 
 const TaskContext = createContext<TaskProviderType | undefined>(undefined);
 
@@ -11,6 +11,7 @@ type Task = {
     guid: string | null; // tasks with no guid cannot update
     progress: TaskProgress | null;
     callback?: (taskRecord: Task) => void;
+    warning?: string;
 };
 
 type TaskProgress = {
@@ -22,35 +23,61 @@ type TaskProgress = {
 
 type TaskProviderType = {
     invokeTask: (name: string, taskFunc: Promise<Response>, callback?: (taskRecord: Task) => void) => Promise<void>;
+    showWarning: (name: string, message: string) => void;
     updateTask: (guid: string) => Promise<void>;
     removeTask: (guid: string) => void;
     removeTaskAt: (index: number) => void;
 };
+
+async function responseError(response: Response): Promise<string> {
+    const text = await response.text();
+    try {
+        const problem = JSON.parse(text) as { title?: string; detail?: string; errors?: Record<string, string[]> };
+        const errors = Object.entries(problem.errors ?? {})
+            .flatMap(([field, messages]) => messages.map((message) => field ? `${field}: ${message}` : message));
+        const detail = errors.join("; ") || problem.detail || problem.title;
+        return `HTTP ${response.status}: ${detail || response.statusText || "Request failed"}`;
+    } catch {
+        return `HTTP ${response.status}: ${text || response.statusText || "Request failed"}`;
+    }
+
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "An unexpected error occurred.";
+}
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const tasksRef = useRef<Task[]>([]);
     tasksRef.current = tasks; // always keep ref in sync
 
+    function showWarning(name: string, message: string) {
+        setTasks((prev) => [...prev, { name, guid: null, progress: null, warning: message }]);
+    }
+
     async function invokeTask(name: string, taskFunc: Promise<Response>, callback?: (taskRecord: Task) => void) {
-        const response = await taskFunc;
-
-        if (response.status !== 202) {
-            console.error("failed to start task: " + name);
-            const errorText = (await response.text()) ?? response.statusText;
-            const task = { name, guid: null, progress: { progress: -2, status: errorText, isCompleted: false, isError: true } };
+        try {
+            const response = await taskFunc;
+            if (response.status !== 202) throw new Error(await responseError(response));
+            const guid = await response.json() as string;
+            const task = { name, guid, progress: null, callback: callback } as Task;
             setTasks((prev) => [...prev, task]);
-            return;
+        } catch (error) {
+            const task = { name, guid: null, progress: { progress: -2, status: `Could not start task: ${errorMessage(error)}`, isCompleted: true, isError: true } };
+            setTasks((prev) => [...prev, task]);
         }
-
-        const guid = await response.json() as string;
-        const task = { name, guid, progress: null, callback: callback } as Task;
-        setTasks((prev) => [...prev, task]);
     }
 
     async function updateTask(guid: string) {
-        const response = await fetch(`api/service/status/${guid}`);
-        const progress = (await response.json()) as TaskProgress;
+        let progress: TaskProgress;
+        try {
+            const response = await fetch(`api/service/status/${guid}`);
+            if (!response.ok) throw new Error(await responseError(response));
+            progress = (await response.json()) as TaskProgress;
+        } catch (error) {
+            progress = { progress: -2, status: `Could not check task status: ${errorMessage(error)}`, isCompleted: true, isError: true };
+        }
         setTasks((oldTasks) => {
             const index = oldTasks.findIndex((t) => t.guid === guid);
             if (index === -1) return oldTasks;
@@ -73,22 +100,29 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const interval = setInterval(async () => {
             const currentTasks = tasksRef.current;
-            await Promise.all(currentTasks.map((task) => { if (task.guid) updateTask(task.guid) }));
+            await Promise.all(currentTasks.map((task) => task.guid && !task.progress?.isCompleted ? updateTask(task.guid) : undefined));
         }, 1000);
 
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <TaskContext.Provider value={{ invokeTask, updateTask, removeTask, removeTaskAt }}>
+        <TaskContext.Provider value={{ invokeTask, showWarning, updateTask, removeTask, removeTaskAt }}>
             {children}
             <ToastContainer position="bottom-end">
                 {tasks.map((task, index) => (
                     <Toast key={index} onClose={() => removeTaskAt(index)}>
                         <Toast.Header>{task.name}</Toast.Header>
                         <Toast.Body>
+                            {task.warning ? (
+                                <div className="d-flex align-items-start gap-2">
+                                    <BsExclamationTriangle className="text-warning flex-shrink-0" size={20} />
+                                    <p className="mb-0">{task.warning}</p>
+                                </div>
+                            ) : (
+                            <>
                             <div className="d-flex align-items-center gap-2">
-                                {task.progress?.isCompleted && (
+                                {task.progress?.isCompleted && !task.progress.isError && (
                                     <BsCheckCircle className="text-success flex-shrink-0" size={20} />
                                 )}
                                 {task.progress?.isError && (
@@ -116,6 +150,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 />
                             </div>
                             <p className="mb-0">{task.progress?.status}</p>
+                            </>
+                            )}
                         </Toast.Body>
                     </Toast>
                 ))}

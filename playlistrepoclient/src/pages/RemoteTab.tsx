@@ -20,7 +20,21 @@ const RemoteTab: React.FC = () => {
 
     const { query, setQuery, setShowRemoteModal, setEditingRemote, viewingRemote, setViewingPlaylistId, viewingPlaylistId } = useEdits();
     const { triggerRefresh } = useRefresh();
-    const { invokeTask } = useTasks();
+    const { invokeTask, showWarning } = useTasks();
+
+    async function warnAboutLockedMedia(remote: RemotePlaylist) {
+        try {
+            const response = await fetch(`api/data/remotes/${remote.id}/locked-undownloaded`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const { count } = await response.json() as { count: number };
+            if (count > 0) {
+                showWarning(`Locked media: ${remote.name}`,
+                    `${count} locked ${count === 1 ? "item has" : "items have"} no downloaded file. Locking prevents downloads; unlock ${count === 1 ? "it" : "them"} to download.`);
+            }
+        } catch {
+            showWarning(`Locked media: ${remote.name}`, "Could not check for locked media without downloaded files. Locked media cannot be downloaded.");
+        }
+    }
 
     async function createNewRemote() {
         const playlist = {} as RemotePlaylist;
@@ -73,6 +87,7 @@ const RemoteTab: React.FC = () => {
 
     async function downloadRemote() {
         if (viewingRemote === null) throw new Error();
+        void warnAboutLockedMedia(viewingRemote);
         const task = fetch("api/action/download", {
             method: "POST",
             headers: { "remoteId": `${viewingRemote.id}`, "query": query }
@@ -83,6 +98,7 @@ const RemoteTab: React.FC = () => {
 
     async function syncRemote() {
         if (viewingRemote === null) throw new Error();
+        void warnAboutLockedMedia(viewingRemote);
         const task = fetch("api/action/sync", {
             method: "POST",
             headers: { "remoteId": `${viewingRemote.id}` }

@@ -5,6 +5,17 @@ namespace PlaylistRepoAPI
 {
 	public static class MediaExtensions
 	{
+		public static string GetAvailableDownloadPath(this Media media, string directory, string extension)
+		{
+			var fileName = media.GenerateFileName(extension);
+			var path = Path.Combine(directory, fileName);
+			var name = Path.GetFileNameWithoutExtension(fileName);
+			var suffix = Path.GetExtension(fileName);
+			for (var index = 2; File.Exists(path) || Directory.Exists(path); index++)
+				path = Path.Combine(directory, $"{name} ({index}){suffix}");
+			return path;
+		}
+
 		public static void SyncToMediaFile(this Media media)
 		{
 			try

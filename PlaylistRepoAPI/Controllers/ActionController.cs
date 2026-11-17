@@ -68,15 +68,21 @@ namespace PlaylistRepoAPI.Controllers
 		}
 
 		[HttpPost("download")]
-		public IActionResult Download([FromHeader] int remoteId, [FromHeader] string query)
+		public IActionResult Download([FromHeader] int remoteId, [FromHeader] string? query)
 		{
 			RemotePlaylist? remote = db.RemotePlaylists.FirstOrDefault(r => r.Id == remoteId);
 			if (remote == null) return BadRequest("Remote does not exist.");
-			var array = remote.AllEntries(db.Medias, false).EvaluateUserQuery(query).Where(m => m.RemoteUID != null).Select(m => m.RemoteUID!).ToArray();
 			Guid id;
 			try
 			{
+				var entries = remote.AllEntries(db.Medias, false);
+				if (!string.IsNullOrWhiteSpace(query)) entries = entries.EvaluateUserQuery(query);
+				var array = entries.Where(m => m.RemoteUID != null && !m.Locked).Select(m => m.RemoteUID!).ToArray();
 				id = taskService.StartTask<IRemoteService>((progress, _, dl) => dl.Download(remote, array, progress));
+			}
+			catch (InvalidUserQueryException ex)
+			{
+				return BadRequest($"Invalid download filter: {ex.Message}");
 			}
 			catch (Exception ex)
 			{

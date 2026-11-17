@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using PlaylistRepoLib.Models;
 using PlaylistRepoLib.Models.DTOs;
 using UserQueries;
@@ -118,6 +119,17 @@ namespace PlaylistRepoAPI.Controllers
 			{
 				return BadRequest($"Invalid user query: {ex.Message}");
 			}
+		}
+
+		[HttpGet("remotes/{id}/locked-undownloaded")]
+		public async Task<IActionResult> GetLockedUndownloadedMedia([FromRoute] int id, [FromServices] IPlayRepoService repo)
+		{
+			if (!await db.RemotePlaylists.AnyAsync(remote => remote.Id == id)) return NotFound();
+
+			var paths = await db.Medias.Where(media => media.RemoteId == id && media.Locked)
+				.Select(media => media.FilePath).ToArrayAsync();
+			var count = paths.Count(path => string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(Path.Combine(repo.RootPath.FullName, path)));
+			return Ok(new { count });
 		}
 
 		#endregion

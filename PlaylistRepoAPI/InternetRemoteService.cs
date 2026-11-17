@@ -8,7 +8,7 @@ namespace PlaylistRepoAPI
 	/// <summary>
 	/// Direct downloads over HTTP. Parses playlist files and interprets media references.
 	/// </summary>
-	public class InternetRemoteService(HttpClient http, PlayRepoDbContext dbContext) : IRemoteService
+	public class InternetRemoteService(HttpClient http, PlayRepoDbContext dbContext, IPlayRepoService repoService) : IRemoteService
 	{
 		public async Task Download(RemotePlaylist remote, IEnumerable<string> mediaUIDs, IProgress<TaskProgress>? progress = null)
 		{
@@ -23,11 +23,12 @@ namespace PlaylistRepoAPI
 				return;
 			}
 			var stream = await response.Content.ReadAsStreamAsync();
-			var mediaRefs = await ParseFile(stream, Path.GetFileName(remote.Link), remote);
+			var mediaRefs = await ParseFile(stream, Path.GetFileName(new Uri(remote.Link).AbsolutePath), remote);
 
 			// Filter mediaRefs by requested UIDs
 			var requestedRefs = mediaRefs.Where(m => m.RemoteUID != null && mediaUIDs.Contains(m.RemoteUID)).ToList();
 			int total = requestedRefs.Count, completed = 0;
+			List<string> errors = [];
 
 			foreach (var mediaRef in requestedRefs)
 			{
@@ -43,20 +44,23 @@ namespace PlaylistRepoAPI
 				// Download media file
 				try
 				{
-					var mediaRequest = new HttpRequestMessage(HttpMethod.Get, mediaRef.FilePath ?? mediaRef.RemoteUID);
+					var mediaUri = new Uri(new Uri(remote.Link), mediaRef.FilePath ?? remote.Link);
+					if (mediaUri.Scheme != Uri.UriSchemeHttp && mediaUri.Scheme != Uri.UriSchemeHttps)
+						throw new InvalidOperationException("Media URL must use HTTP or HTTPS.");
+					var mediaRequest = new HttpRequestMessage(HttpMethod.Get, mediaUri);
 					var mediaResponse = await http.SendAsync(mediaRequest);
 					if (!mediaResponse.IsSuccessStatusCode)
 					{
-						progress?.Report(TaskProgress.FromError($"Failed to download media '{mediaRef.Title}': {mediaResponse.StatusCode}"));
+						errors.Add($"'{mediaRef.Title}': HTTP {(int)mediaResponse.StatusCode} {mediaResponse.ReasonPhrase}");
 						continue;
 					}
 
 					var fileBytes = await mediaResponse.Content.ReadAsByteArrayAsync();
-					var fileName = mediaRef.GenerateFileName(Path.GetExtension(mediaRef.FilePath ?? ".bin"));
-					var filePath = Path.Combine(AppContext.BaseDirectory, "media", fileName);
-
-					Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-					await File.WriteAllBytesAsync(filePath, fileBytes);
+					var directory = Path.Combine(repoService.RootPath.FullName, "media");
+					Directory.CreateDirectory(directory);
+					var filePath = mediaRef.GetAvailableDownloadPath(directory, Path.GetExtension(mediaUri.AbsolutePath));
+					await using (var file = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+						await file.WriteAsync(fileBytes);
 
 					if (media == null)
 					{
@@ -66,11 +70,13 @@ namespace PlaylistRepoAPI
 
 					var dto = new MediaDTO(mediaRef) { Id = media.Id };
 					dto.UpdateModel(media);
-					media.FilePath = filePath;
+					media.RemoteId = remote.Id;
+					media.RemoteUID = mediaRef.RemoteUID;
+					media.FilePath = repoService.GetRelativePath(filePath);
 				}
 				catch (Exception ex)
 				{
-					progress?.Report(TaskProgress.FromException(ex));
+					errors.Add($"'{mediaRef.Title}': {ex.Message}");
 					continue;
 				}
 
@@ -79,6 +85,11 @@ namespace PlaylistRepoAPI
 			}
 
 			await dbContext.SaveChangesAsync();
+			if (errors.Count > 0)
+			{
+				progress?.Report(TaskProgress.FromError($"Failed to download {errors.Count} item(s): {string.Join("; ", errors)}"));
+				return;
+			}
 			progress?.Report(TaskProgress.FromCompleted("Download completed."));
 		}
 
@@ -93,7 +104,7 @@ namespace PlaylistRepoAPI
 				return;
 			}
 			var stream = await response.Content.ReadAsStreamAsync();
-			var mediaRefs = await ParseFile(stream, Path.GetFileName(remote.Link), remote);
+			var mediaRefs = await ParseFile(stream, Path.GetFileName(new Uri(remote.Link).AbsolutePath), remote);
 
 			foreach (var mediaRef in mediaRefs)
 			{
@@ -112,6 +123,8 @@ namespace PlaylistRepoAPI
 				};
 
 				dto.UpdateModel(media);
+				media.RemoteId = remote.Id;
+				media.RemoteUID = mediaRef.RemoteUID;
 			}
 
 			await dbContext.SaveChangesAsync();
@@ -131,16 +144,16 @@ namespace PlaylistRepoAPI
 				return;
 			}
 			var stream = await response.Content.ReadAsStreamAsync();
-			var mediaRefs = await ParseFile(stream, Path.GetFileName(remote.Link), remote);
+			var mediaRefs = await ParseFile(stream, Path.GetFileName(new Uri(remote.Link).AbsolutePath), remote);
 
-			// Only unlocked media
+			// Only unlocked media without an existing local file
 			var unlockedRefs = new List<Media>();
 			foreach (var mediaRef in mediaRefs)
 			{
 				Media? media = await remote.AllEntries(dbContext.Medias)
 					.FirstOrDefaultAsync(m => m.RemoteUID == mediaRef.RemoteUID);
 
-				if (media?.Locked ?? false)
+				if (media?.Locked == true || (media?.FilePath != null && File.Exists(Path.Combine(repoService.RootPath.FullName, media.FilePath))))
 					continue;
 
 				unlockedRefs.Add(mediaRef);
@@ -148,7 +161,6 @@ namespace PlaylistRepoAPI
 
 			// Download all unlocked media
 			await Download(remote, unlockedRefs.Select(m => m.RemoteUID!).Where(uid => uid != null), progress);
-			progress?.Report(TaskProgress.FromCompleted("Sync completed."));
 		}
 
 		public Task Update(IProgress<TaskProgress>? progress = null)
@@ -184,6 +196,8 @@ namespace PlaylistRepoAPI
 				{
 					Title = remote.Name,
 					MimeType = remote.MediaMime,
+					RemoteUID = remote.Link,
+					FilePath = remote.Link,
 				};
 				return [mediaDTO];
 			}
