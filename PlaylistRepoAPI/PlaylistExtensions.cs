@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NuGet.Configuration;
 using PlaylistRepoLib;
 using PlaylistRepoLib.Models;
 using System.Text;
@@ -72,7 +73,7 @@ namespace PlaylistRepoAPI
 		/// <param name="library">The collection of all media</param>
 		/// <param name="outputStream">Stream to export to</param>
 		/// <param name="settings">Additional export settings</param>
-		public static async Task StreamXspfAsync(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings)
+		public static async Task StreamXspfAsync(this IEnumerable<Media> medias, Stream outputStream, PlaylistStreamingSettings settings)
 		{
 			XmlWriter writer = XmlWriter.Create(outputStream, new XmlWriterSettings() { Async = true });
 			await writer.WriteStartDocumentAsync();
@@ -80,10 +81,7 @@ namespace PlaylistRepoAPI
 			await writer.WriteAttributeStringAsync(null, "version", null, "1");
 			await writer.WriteStartElementAsync(null, "trackList", null);
 
-			var query = playlist.AllEntries(library, true);
-			await query.LoadAsync();
-
-			foreach (var media in query)
+			foreach (var media in medias)
 			{
 				await writer.WriteStartElementAsync(null, "track", null);
 
@@ -110,15 +108,12 @@ namespace PlaylistRepoAPI
 		/// <param name="library">The collection of all media</param>
 		/// <param name="outputStream">Stream to export to</param>
 		/// <param name="settings">Additional export settings</param>
-		public static async Task StreamM3U8Async(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings)
+		public static async Task StreamM3U8Async(this IEnumerable<Media> medias, Stream outputStream, PlaylistStreamingSettings settings)
 		{
 			var writer = new StreamWriter(outputStream, Encoding.UTF8);
 			await writer.WriteLineAsync("#EXTM3U");
 
-			var query = playlist.AllEntries(library, true);
-			await query.LoadAsync();
-
-			foreach (var media in query)
+			foreach (var media in medias)
 			{
 				string location = GetLocation(media, settings);
 				string title = media.Title.Replace(",", "").Replace("-", "|").Trim();
@@ -147,7 +142,7 @@ namespace PlaylistRepoAPI
 		/// <param name="library">The collection of all media</param>
 		/// <param name="outputStream">Stream to export to</param>
 		/// <param name="settings">Additional export settings</param>
-		public static async Task StreamCSVAsync(this Playlist playlist, IQueryable<Media> library, Stream outputStream, PlaylistStreamingSettings settings, char delimiter)
+		public static async Task StreamCsvAsync(this IEnumerable<Media> medias, Stream outputStream, PlaylistStreamingSettings settings, char delimiter)
 		{
 			var writer = new StreamWriter(outputStream, Encoding.UTF8);
 			// id, title, ruid, path, hash, mime, primary artist, album, description, rating, length, order
@@ -179,10 +174,7 @@ namespace PlaylistRepoAPI
 			Append("length milliseconds");
 			Append("order");
 
-			var query = playlist.AllEntries(library, true);
-			await query.LoadAsync();
-
-			foreach (var media in query)
+			foreach (var media in medias)
 			{
 				writer.WriteLine();
 				string location = GetLocation(media, settings);

@@ -76,18 +76,65 @@ namespace PlaylistRepoAPI.Controllers
 			string apiURL = (Request.IsHttps ? "https://" : "http://") + Request.Host.Value;
 			string extension = Path.GetExtension(file);
 			if (string.IsNullOrWhiteSpace(extension)) return BadRequest($"Include an extension after the file name. i.e. '{file}.xspf'");
+
+			var medias = playlist.AllEntries(db.Medias, requireFile: true);
+
 			switch (extension)
 			{
 				case ".xspf":
-					await playlist.StreamXspfAsync(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
+					await medias.StreamXspfAsync(stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
 					stream.Position = 0;
 					return File(stream, "application/xspf+xml");
 				case ".m3u8":
-					await playlist.StreamM3U8Async(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
+					await medias.StreamM3U8Async(stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
 					stream.Position = 0;
 					return File(stream, "application/vnd.apple.mpegurl");
 				case ".csv":
-					await playlist.StreamCSVAsync(db.Medias, stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false }, ',');
+					await medias.StreamCsvAsync(stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false }, ',');
+					stream.Position = 0;
+					return File(stream, "text/csv");
+				default:
+					return BadRequest($"Extension: '{extension}' is not valid.");
+			}
+		}
+
+		[HttpGet("playlist/{file}/shuffle")]
+		public async Task<IActionResult> GetPlaylistShuffledAync([FromRoute] string file)
+		{
+			if (!int.TryParse(Path.GetFileNameWithoutExtension(file), out int playlistId))
+				return BadRequest("Invalid playlist id number.");
+
+			var playlist = db.Playlists.Find(playlistId);
+			if (playlist == null) return NotFound();
+
+			var stream = new MemoryStream();
+			string apiURL = (Request.IsHttps ? "https://" : "http://") + Request.Host.Value;
+			string extension = Path.GetExtension(file);
+			if (string.IsNullOrWhiteSpace(extension)) return BadRequest($"Include an extension after the file name. i.e. '{file}.xspf'");
+
+			var weightedMedia = Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+				.Include(playlist.AllEntries(db.Medias, requireFile: true), media => media.PlayStats)
+				.AsEnumerable()
+				.Select((media) =>
+				{
+					double key = Math.Pow(Random.Shared.NextDouble(), 1.0 / (1.0 + Math.Sqrt(media.PlayStats?.PlayCount ?? 0)));
+					return (media, key);
+				})
+				.OrderByDescending(x => x.key)
+				.Select(x => x.media);
+
+			switch (extension)
+			{
+				case ".xspf":
+					await weightedMedia.StreamXspfAsync(stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
+					stream.Position = 0;
+					return File(stream, "application/xspf+xml");
+				case ".m3u8":
+					await weightedMedia.StreamM3U8Async(stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false });
+					stream.Position = 0;
+					return File(stream, "application/vnd.apple.mpegurl");
+				case ".csv":
+					await weightedMedia.StreamCsvAsync(stream, new PlaylistStreamingSettings() { ApiUrl = apiURL, UseDirectory = false }, ',');
 					stream.Position = 0;
 					return File(stream, "text/csv");
 				default:

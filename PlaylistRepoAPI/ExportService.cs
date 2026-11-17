@@ -46,7 +46,9 @@ namespace PlaylistRepoAPI
 				}
 				var playlistFileZipEntry = zip.CreateEntry("playlist.xspf");
 				using var playlistZipStream = playlistFileZipEntry.Open();
-				await playlist.StreamXspfAsync(db.Medias, playlistZipStream, new PlaylistStreamingSettings() { UseDirectory = true, MediaPath = rootMediaPath });
+
+				var medias = playlist.AllEntries(db.Medias, true);
+				await medias.StreamXspfAsync(playlistZipStream, new PlaylistStreamingSettings() { UseDirectory = true, MediaPath = rootMediaPath });
 			}
 
 			records.AddOrUpdate(guid, new ExportRecord(guid, playlist.GenerateFileName("zip"), null), (guid, oldValue) => new ExportRecord(guid, oldValue.ExportName, file));

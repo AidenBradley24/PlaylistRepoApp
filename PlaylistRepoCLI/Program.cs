@@ -88,11 +88,13 @@ public class Program
 			if (vlcPlaylist != null)
 			{
 				string vlcPath = config.RootElement.GetProperty("vlc-path").GetString() ?? "";
+				bool shuffle = config.RootElement.GetProperty("shuffle-playlist").GetBoolean();
+				string shuffleAddition = shuffle ? "/shuffle" : "";
 				var startInfo = new ProcessStartInfo()
 				{
 					FileName = vlcPath,
 					UseShellExecute = true,
-					Arguments = $"{api.ApiUrl}/api/play/playlist/{vlcPlaylist}.xspf"
+					Arguments = $"{api.ApiUrl}/api/play/playlist/{vlcPlaylist}.xspf{shuffleAddition}"
 				};
 				Process.Start(startInfo);
 			}

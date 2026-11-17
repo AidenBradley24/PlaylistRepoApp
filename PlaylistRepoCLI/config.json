@@ -2,5 +2,6 @@
   "vlc-path": "vlc",
   "open-vlc-on-serve": false,
   "open-browser-on-serve": true,
-  "default-playlist-index":  1
+  "default-playlist-index": 1,
+  "shuffle-playlist": false
 }
